@@ -74,7 +74,7 @@
 
     <script>
         // ==========================================
-        const GIST_ID = '4b5faafac858635664755b821b757d35'; 
+        const GIST_ID = 'ВСТАВЬ_СЮДА_ТОЛЬКО_ID_GIST'; 
         const FILE_NAME = 'config.json';
         // ==========================================
         
@@ -159,4 +159,139 @@
                 currentData.totalLevelTime = parseFloat(document.getElementById('totalTime').value);
                 currentData.bossTriggerTimes = document.getElementById('bossTimes').value.split(',').map(n => parseFloat(n.trim()));
                 currentData.phases.forEach((phase, pIndex) => {
-                    phase.phaseName = document.getElementById(`p_name
+                    phase.phaseName = document.getElementById(`p_name_${pIndex}`).value;
+                    phase.startTime = parseFloat(document.getElementById(`p_start_${pIndex}`).value);
+                    phase.endTime = parseFloat(document.getElementById(`p_end_${pIndex}`).value);
+                    phase.spawnInterval = parseFloat(document.getElementById(`p_interval_${pIndex}`).value);
+                    phase.enemiesPerBatch = parseInt(document.getElementById(`p_batch_${pIndex}`).value);
+                    phase.enemies.forEach((enemy, eIndex) => {
+                        enemy.enemyID = document.getElementById(`e_id_${pIndex}_${eIndex}`).value;
+                        enemy.weight = parseFloat(document.getElementById(`e_weight_${pIndex}_${eIndex}`).value);
+                    });
+                });
+            }
+
+            // Синхронизируем вкладку Апгрейдов
+            if (currentData.upgrades && document.getElementById('u_enabled_0')) {
+                currentData.upgrades.forEach((upg, uIndex) => {
+                    upg.isEnabled = document.getElementById(`u_enabled_${uIndex}`).checked;
+                    for (let i = 0; i < 5; i++) {
+                        upg.levelValues[i] = parseFloat(document.getElementById(`u_val_${uIndex}_${i}`).value);
+                    }
+                });
+            }
+        }
+
+        function addPhase() { syncUIToData(); currentData.phases.push({ phaseName: "Новая Волна", startTime: 0, endTime: 60, spawnInterval: 1.0, enemiesPerBatch: 1, enemies: [{ enemyID: ENEMY_IDS[0], weight: 100.0 }] }); renderUI(); }
+        function removePhase(pIndex) { if(!confirm("Точно удалить?")) return; syncUIToData(); currentData.phases.splice(pIndex, 1); renderUI(); }
+        function addEnemy(pIndex) { syncUIToData(); currentData.phases[pIndex].enemies.push({ enemyID: ENEMY_IDS[0], weight: 50.0 }); renderUI(); }
+        function removeEnemy(pIndex, eIndex) { syncUIToData(); currentData.phases[pIndex].enemies.splice(eIndex, 1); renderUI(); }
+
+        function renderUI() {
+            if (!currentData) return;
+            
+            // --- ОТРИСОВКА ВОЛН ---
+            let wHtml = `
+                <div class="panel">
+                    <h3>Общие настройки уровня</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Total Level Time (сек):</label><input type="number" id="totalTime" value="${currentData.totalLevelTime}"></div>
+                        <div style="flex:2"><label>Boss Trigger Times (через запятую):</label><input type="text" id="bossTimes" value="${currentData.bossTriggerTimes.join(', ')}"></div>
+                    </div>
+                </div>`;
+
+            currentData.phases.forEach((phase, pIndex) => {
+                wHtml += `<div class="panel">
+                    <div class="header-row">
+                        <div style="flex:1; display:flex; gap:10px; align-items:center;">
+                            <h3 style="margin:0;">Волна:</h3>
+                            <input type="text" id="p_name_${pIndex}" value="${phase.phaseName}" style="margin:0; font-weight:bold; font-size:16px;">
+                        </div>
+                        <button class="btn-remove" onclick="removePhase(${pIndex})">✖ УДАЛИТЬ ВОЛНУ</button>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1"><label>Start:</label><input type="number" step="0.1" id="p_start_${pIndex}" value="${phase.startTime}"></div>
+                        <div style="flex:1"><label>End:</label><input type="number" step="0.1" id="p_end_${pIndex}" value="${phase.endTime}"></div>
+                        <div style="flex:1"><label>Interval:</label><input type="number" step="0.1" id="p_interval_${pIndex}" value="${phase.spawnInterval}"></div>
+                        <div style="flex:1"><label>Batch:</label><input type="number" id="p_batch_${pIndex}" value="${phase.enemiesPerBatch}"></div>
+                    </div>
+                    <h4>Враги: <button class="btn-add-small" onclick="addEnemy(${pIndex})">➕ Добавить</button></h4>`;
+                
+                phase.enemies.forEach((enemy, eIndex) => {
+                    let optionsHtml = ""; let isKnown = false;
+                    ENEMY_IDS.forEach(id => {
+                        let selected = (id === enemy.enemyID) ? "selected" : "";
+                        if (selected) isKnown = true;
+                        optionsHtml += `<option value="${id}" ${selected}>${id}</option>`;
+                    });
+                    if (!isKnown) optionsHtml += `<option value="${enemy.enemyID}" selected>${enemy.enemyID} (Неизвестный)</option>`;
+
+                    wHtml += `
+                        <div class="row">
+                            <div style="flex:3"><select id="e_id_${pIndex}_${eIndex}">${optionsHtml}</select></div>
+                            <div style="flex:1"><input type="number" id="e_weight_${pIndex}_${eIndex}" value="${enemy.weight}"></div>
+                            <button class="btn-remove-small" onclick="removeEnemy(${pIndex}, ${eIndex})">✖</button>
+                        </div>`;
+                });
+                wHtml += `</div>`;
+            });
+            wHtml += `<button class="btn-add" onclick="addPhase()">➕ ДОБАВИТЬ НОВУЮ ВОЛНУ</button>`;
+            document.getElementById('tab-waves').innerHTML = wHtml;
+
+            // --- ОТРИСОВКА АПГРЕЙДОВ ---
+            let uHtml = '';
+            if (currentData.upgrades) {
+                currentData.upgrades.forEach((upg, uIndex) => {
+                    let checked = upg.isEnabled ? "checked" : "";
+                    uHtml += `
+                    <div class="panel">
+                        <div class="header-row">
+                            <h3 style="margin:0; color:#569cd6;">${upg.type}</h3>
+                            <label style="margin:0; display:flex; align-items:center; gap:5px; cursor:pointer; font-size:15px; color:#fff;">
+                                <input type="checkbox" id="u_enabled_${uIndex}" ${checked} style="width:20px; height:20px; margin:0;">
+                                Карточка Включена
+                            </label>
+                        </div>
+                        <h4 style="color:#888; margin-top:5px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
+                        <div class="row">
+                            <div style="flex:1"><label>Lv 1:</label><input type="number" step="0.01" id="u_val_${uIndex}_0" value="${upg.levelValues[0]}"></div>
+                            <div style="flex:1"><label>Lv 2:</label><input type="number" step="0.01" id="u_val_${uIndex}_1" value="${upg.levelValues[1]}"></div>
+                            <div style="flex:1"><label>Lv 3:</label><input type="number" step="0.01" id="u_val_${uIndex}_2" value="${upg.levelValues[2]}"></div>
+                            <div style="flex:1"><label>Lv 4:</label><input type="number" step="0.01" id="u_val_${uIndex}_3" value="${upg.levelValues[3]}"></div>
+                            <div style="flex:1"><label>Lv 5:</label><input type="number" step="0.01" id="u_val_${uIndex}_4" value="${upg.levelValues[4]}"></div>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                uHtml = "<p style='color:#f48771'>В JSON не найден массив upgrades!</p>";
+            }
+            document.getElementById('tab-upgrades').innerHTML = uHtml;
+        }
+
+        async function saveData() {
+            document.getElementById('status').innerText = "⏳ Отправка в облако...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            
+            syncUIToData(); // Собираем данные с обеих вкладок
+            
+            const updatedJson = JSON.stringify(currentData, null, 2);
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
+                    body: JSON.stringify({ files: { [FILE_NAME]: { content: updatedJson } } })
+                });
+                if (res.ok) {
+                    document.getElementById('status').innerText = "✅ БАЛАНС ОБНОВЛЕН!";
+                    document.getElementById('status').style.color = "#238636";
+                } else throw new Error("Сервер отклонил сохранение");
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ Ошибка: " + e.message;
+                document.getElementById('status').style.color = "#f48771";
+            }
+        }
+        
+        loadData();
+    </script>
+</body>
+</html>
