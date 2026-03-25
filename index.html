@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Unity Config Admin</title>
+    <style>
+        body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h2 { color: #569cd6; text-align: center; margin-bottom: 20px;}
+        h3 { color: #4ec9b0; margin-top: 0; }
+        h4 { color: #ce9178; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        label { display: block; margin-bottom: 5px; font-size: 13px; color: #9cdcfe; }
+        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; font-size: 14px;}
+        input:focus, select:focus { border-color: #007acc; }
+        select { cursor: pointer; appearance: none; }
+        
+        button { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
+        .btn-main { background: #0e639c; color: white; width: 100%; font-size: 16px; padding: 15px;}
+        .btn-main:hover { background: #1177bb; }
+        .btn-save { background: #238636; margin-top: 15px; }
+        .btn-save:hover { background: #2ea043; }
+        
+        .btn-add { background: #1f6b35; color: white; width: 100%; margin-top: 10px; border: 1px dashed #4ec9b0;}
+        .btn-add:hover { background: #2a8a46; }
+        .btn-add-small { background: #2d5a3c; color: white; padding: 5px 10px; font-size: 12px; }
+        .btn-add-small:hover { background: #3a754e; }
+        
+        .btn-remove { background: #8a2a2a; color: white; padding: 8px 12px; margin-left: 10px;}
+        .btn-remove:hover { background: #a83232; }
+        .btn-remove-small { background: #8a2a2a; color: white; padding: 8px; height: 35px; margin-top: 24px;}
+        .btn-remove-small:hover { background: #a83232; }
+
+        .row { display: flex; gap: 15px; margin-bottom: 5px; align-items: flex-start; }
+        .header-row { display: flex; justify-content: space-between; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; align-items: center;}
+        .status { margin-top: 15px; font-weight: bold; text-align: center; font-size: 18px; }
+        
+        .auth-panel { background: #3e3e42; padding: 10px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+        .btn-reset { background: #555; color: white; padding: 5px 10px; font-size: 12px; }
+        .btn-reset:hover { background: #777; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>⚙️ Remote Config Admin Panel</h2>
+        
+        <div class="auth-panel" id="authPanel" style="display: none;">
+            <span style="color: #4ec9b0; font-size: 14px;">🔑 Устройство авторизовано</span>
+            <button class="btn-reset" onclick="resetToken()">Сбросить Токен</button>
+        </div>
+
+        <div id="editor">Загрузка данных из облака...</div>
+        <button class="btn-main btn-save" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        const GIST_ID = '4b5faafac858635664755b821b757d35';
+        const FILE_NAME = 'config.json';
+        // ==========================================
+        
+        const ENEMY_IDS = [
+            "Enemy_Standard", "Enemy_Runner", "Enemy_armor", 
+            "Enemy_Tank_Explotion", "Enemy_Tank", "Enemy_Drone", 
+            "Helth", "Weapon"
+        ];
+
+        let currentData = null;
+        let githubToken = localStorage.getItem('gh_token'); // Читаем токен из памяти браузера
+
+        // Функция проверки и запроса токена
+        function checkAuth() {
+            if (!githubToken) {
+                githubToken = prompt("Введите ваш GitHub Token:\n(Он сохранится только в памяти этого браузера и никуда не утечет)");
+                if (githubToken) {
+                    localStorage.setItem('gh_token', githubToken.trim());
+                    githubToken = githubToken.trim();
+                } else {
+                    document.getElementById('status').innerText = "❌ Нет доступа. Обновите страницу и введите токен.";
+                    document.getElementById('status').style.color = "#f48771";
+                    return false;
+                }
+            }
+            document.getElementById('authPanel').style.display = 'flex';
+            return true;
+        }
+
+        function resetToken() {
+            if(confirm("Удалить токен с этого устройства?")) {
+                localStorage.removeItem('gh_token');
+                location.reload();
+            }
+        }
+
+        async function loadData() {
+            if (!checkAuth()) return;
+
+            document.getElementById('status').innerText = "🔄 Подключение к GitHub...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    headers: { 'Authorization': `token ${githubToken}` }
+                });
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        localStorage.removeItem('gh_token');
+                        throw new Error("Неверный Токен! Я удалил его из памяти. Обновите страницу.");
+                    }
+                    throw new Error("Ошибка загрузки (проверьте Gist ID)");
+                }
+                const gist = await res.json();
+                const content = gist.files[FILE_NAME].content;
+                currentData = JSON.parse(content);
+                renderUI(); 
+                document.getElementById('status').innerText = "✅ Данные загружены!";
+                document.getElementById('status').style.color = "#4ec9b0";
+                setTimeout(() => document.getElementById('status').innerText = "", 3000);
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ " + e.message;
+                document.getElementById('status').style.color = "#f48771";
+            }
+        }
+
+        function syncUIToData() {
+            if (!currentData) return;
+            currentData.totalLevelTime = parseFloat(document.getElementById('totalTime').value);
+            currentData.bossTriggerTimes = document.getElementById('bossTimes').value.split(',').map(n => parseFloat(n.trim()));
+            currentData.phases.forEach((phase, pIndex) => {
+                phase.phaseName = document.getElementById(`p_name_${pIndex}`).value;
+                phase.startTime = parseFloat(document.getElementById(`p_start_${pIndex}`).value);
+                phase.endTime = parseFloat(document.getElementById(`p_end_${pIndex}`).value);
+                phase.spawnInterval = parseFloat(document.getElementById(`p_interval_${pIndex}`).value);
+                phase.enemiesPerBatch = parseInt(document.getElementById(`p_batch_${pIndex}`).value);
+                phase.enemies.forEach((enemy, eIndex) => {
+                    enemy.enemyID = document.getElementById(`e_id_${pIndex}_${eIndex}`).value;
+                    enemy.weight = parseFloat(document.getElementById(`e_weight_${pIndex}_${eIndex}`).value);
+                });
+            });
+        }
+
+        function addPhase() { syncUIToData(); currentData.phases.push({ phaseName: "Новая Волна", startTime: 0, endTime: 60, spawnInterval: 1.0, enemiesPerBatch: 1, enemies: [{ enemyID: ENEMY_IDS[0], weight: 100.0 }] }); renderUI(); }
+        function removePhase(pIndex) { if(!confirm("Точно удалить?")) return; syncUIToData(); currentData.phases.splice(pIndex, 1); renderUI(); }
+        function addEnemy(pIndex) { syncUIToData(); currentData.phases[pIndex].enemies.push({ enemyID: ENEMY_IDS[0], weight: 50.0 }); renderUI(); }
+        function removeEnemy(pIndex, eIndex) { syncUIToData(); currentData.phases[pIndex].enemies.splice(eIndex, 1); renderUI(); }
+
+        function renderUI() {
+            if (!currentData) return;
+            const editor = document.getElementById('editor');
+            let html = `
+                <div class="panel">
+                    <h3>Общие настройки уровня</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Total Level Time (сек):</label><input type="number" id="totalTime" value="${currentData.totalLevelTime}"></div>
+                        <div style="flex:2"><label>Boss Trigger Times (через запятую):</label><input type="text" id="bossTimes" value="${currentData.bossTriggerTimes.join(', ')}"></div>
+                    </div>
+                </div>`;
+
+            currentData.phases.forEach((phase, pIndex) => {
+                html += `<div class="panel">
+                    <div class="header-row">
+                        <div style="flex:1; display:flex; gap:10px; align-items:center;">
+                            <h3 style="margin:0;">Волна:</h3>
+                            <input type="text" id="p_name_${pIndex}" value="${phase.phaseName}" style="margin:0; font-weight:bold; font-size:16px;">
+                        </div>
+                        <button class="btn-remove" onclick="removePhase(${pIndex})">✖ УДАЛИТЬ ВОЛНУ</button>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1"><label>Start:</label><input type="number" step="0.1" id="p_start_${pIndex}" value="${phase.startTime}"></div>
+                        <div style="flex:1"><label>End:</label><input type="number" step="0.1" id="p_end_${pIndex}" value="${phase.endTime}"></div>
+                        <div style="flex:1"><label>Interval:</label><input type="number" step="0.1" id="p_interval_${pIndex}" value="${phase.spawnInterval}"></div>
+                        <div style="flex:1"><label>Batch:</label><input type="number" id="p_batch_${pIndex}" value="${phase.enemiesPerBatch}"></div>
+                    </div>
+                    <h4>Враги: <button class="btn-add-small" onclick="addEnemy(${pIndex})">➕ Добавить</button></h4>`;
+                
+                phase.enemies.forEach((enemy, eIndex) => {
+                    let optionsHtml = "";
+                    let isKnown = false;
+                    ENEMY_IDS.forEach(id => {
+                        let selected = (id === enemy.enemyID) ? "selected" : "";
+                        if (selected) isKnown = true;
+                        optionsHtml += `<option value="${id}" ${selected}>${id}</option>`;
+                    });
+                    if (!isKnown) optionsHtml += `<option value="${enemy.enemyID}" selected>${enemy.enemyID} (Неизвестный)</option>`;
+
+                    html += `
+                        <div class="row">
+                            <div style="flex:3"><select id="e_id_${pIndex}_${eIndex}">${optionsHtml}</select></div>
+                            <div style="flex:1"><input type="number" id="e_weight_${pIndex}_${eIndex}" value="${enemy.weight}"></div>
+                            <button class="btn-remove-small" onclick="removeEnemy(${pIndex}, ${eIndex})">✖</button>
+                        </div>`;
+                });
+                html += `</div>`;
+            });
+            html += `<button class="btn-add" onclick="addPhase()">➕ ДОБАВИТЬ НОВУЮ ВОЛНУ</button>`;
+            editor.innerHTML = html;
+        }
+
+        async function saveData() {
+            document.getElementById('status').innerText = "⏳ Отправка в облако...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            syncUIToData();
+            const updatedJson = JSON.stringify(currentData, null, 2);
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
+                    body: JSON.stringify({ files: { [FILE_NAME]: { content: updatedJson } } })
+                });
+                if (res.ok) {
+                    document.getElementById('status').innerText = "✅ БАЛАНС ОБНОВЛЕН!";
+                    document.getElementById('status').style.color = "#238636";
+                } else throw new Error("Сервер отклонил сохранение");
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ Ошибка: " + e.message;
+                document.getElementById('status').style.color = "#f48771";
+            }
+        }
+        loadData();
+    </script>
+</body>
+</html>
