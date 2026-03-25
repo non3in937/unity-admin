@@ -42,10 +42,10 @@
         .btn-reset:hover { background: #777; }
 
         /* Вкладки */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; background: #2d2d30; color: #888; padding: 12px; font-size: 16px; border-bottom: 3px solid transparent; border-radius: 4px 4px 0 0; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; background: #2d2d30; color: #888; padding: 12px; font-size: 14px; border-bottom: 3px solid transparent; border-radius: 4px 4px 0 0; }
         .tab-btn:hover { background: #3e3e42; color: #ddd; }
-        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; }
+        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold;}
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
@@ -61,12 +61,14 @@
 
         <div class="tabs">
             <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны и Спавн</button>
+            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 База Оружия</button>
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карточки Апгрейдов</button>
         </div>
 
         <div id="status" class="status" style="margin-bottom: 15px;"></div>
 
         <div id="tab-waves" class="tab-content active">Загрузка данных...</div>
+        <div id="tab-weapons" class="tab-content">Загрузка данных...</div>
         <div id="tab-upgrades" class="tab-content">Загрузка данных...</div>
 
         <button class="btn-main btn-save" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
@@ -88,11 +90,12 @@
         let githubToken = localStorage.getItem('gh_token');
 
         function switchTab(tabId) {
-            syncUIToData(); // Сохраняем введенное перед переключением
-            document.getElementById('btn-waves').classList.remove('active');
-            document.getElementById('btn-upgrades').classList.remove('active');
-            document.getElementById('tab-waves').classList.remove('active');
-            document.getElementById('tab-upgrades').classList.remove('active');
+            syncUIToData(); 
+            
+            ['waves', 'weapons', 'upgrades'].forEach(id => {
+                document.getElementById(`btn-${id}`).classList.remove('active');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
             
             document.getElementById(`btn-${tabId}`).classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
@@ -150,11 +153,10 @@
             }
         }
 
-        // Синхронизация полей ввода с объектом currentData
         function syncUIToData() {
             if (!currentData) return;
             
-            // Синхронизируем вкладку Волн
+            // Вкладка Волн
             if (document.getElementById('totalTime')) {
                 currentData.totalLevelTime = parseFloat(document.getElementById('totalTime').value);
                 currentData.bossTriggerTimes = document.getElementById('bossTimes').value.split(',').map(n => parseFloat(n.trim()));
@@ -171,7 +173,17 @@
                 });
             }
 
-            // Синхронизируем вкладку Апгрейдов
+            // Вкладка Оружия
+            if (currentData.weapons && document.getElementById('w_dmg_0')) {
+                currentData.weapons.forEach((w, wIndex) => {
+                    w.damage = parseFloat(document.getElementById(`w_dmg_${wIndex}`).value);
+                    w.fireRate = parseFloat(document.getElementById(`w_fr_${wIndex}`).value);
+                    w.maxDistance = parseFloat(document.getElementById(`w_dist_${wIndex}`).value);
+                    w.spread = parseFloat(document.getElementById(`w_spread_${wIndex}`).value);
+                });
+            }
+
+            // Вкладка Апгрейдов
             if (currentData.upgrades && document.getElementById('u_enabled_0')) {
                 currentData.upgrades.forEach((upg, uIndex) => {
                     upg.isEnabled = document.getElementById(`u_enabled_${uIndex}`).checked;
@@ -199,7 +211,6 @@
                         <div style="flex:2"><label>Boss Trigger Times (через запятую):</label><input type="text" id="bossTimes" value="${currentData.bossTriggerTimes.join(', ')}"></div>
                     </div>
                 </div>`;
-
             currentData.phases.forEach((phase, pIndex) => {
                 wHtml += `<div class="panel">
                     <div class="header-row">
@@ -238,6 +249,26 @@
             wHtml += `<button class="btn-add" onclick="addPhase()">➕ ДОБАВИТЬ НОВУЮ ВОЛНУ</button>`;
             document.getElementById('tab-waves').innerHTML = wHtml;
 
+            // --- ОТРИСОВКА ОРУЖИЯ ---
+            let wepHtml = '';
+            if (currentData.weapons) {
+                currentData.weapons.forEach((w, wIndex) => {
+                    wepHtml += `
+                    <div class="panel">
+                        <h3 style="margin:0 0 10px 0; color:#ce9178;">${w.weaponName}</h3>
+                        <div class="row">
+                            <div style="flex:1"><label>Урон (Damage):</label><input type="number" step="0.1" id="w_dmg_${wIndex}" value="${w.damage}"></div>
+                            <div style="flex:1"><label>Скорострельность:</label><input type="number" step="0.01" id="w_fr_${wIndex}" value="${w.fireRate}"></div>
+                            <div style="flex:1"><label>Дистанция:</label><input type="number" step="0.1" id="w_dist_${wIndex}" value="${w.maxDistance}"></div>
+                            <div style="flex:1"><label>Разброс (Spread):</label><input type="number" step="0.1" id="w_spread_${wIndex}" value="${w.spread}"></div>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                wepHtml = "<p style='color:#f48771'>В JSON не найден массив weapons!</p>";
+            }
+            document.getElementById('tab-weapons').innerHTML = wepHtml;
+
             // --- ОТРИСОВКА АПГРЕЙДОВ ---
             let uHtml = '';
             if (currentData.upgrades) {
@@ -272,7 +303,7 @@
             document.getElementById('status').innerText = "⏳ Отправка в облако...";
             document.getElementById('status').style.color = "#dcdcaa";
             
-            syncUIToData(); // Собираем данные с обеих вкладок
+            syncUIToData(); // Собираем данные со всех трех вкладок
             
             const updatedJson = JSON.stringify(currentData, null, 2);
             try {
