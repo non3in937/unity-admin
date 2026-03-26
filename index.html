@@ -52,18 +52,12 @@
         let currentData = null;
         let token = localStorage.getItem('gh_token');
 
-        // 🔥 Исправленная функция переключения вкладок
         function switchTab(t) {
             syncData();
-            
-            // Снимаем активность со всех
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            
-            // Вешаем активность на нужные по ID
             document.getElementById('btn-' + t).classList.add('active');
             document.getElementById('tab-' + t).classList.add('active');
-            
             render();
         }
 
@@ -78,7 +72,7 @@
             // Волны
             const wavePanels = document.querySelectorAll('#waves-list .panel');
             let newPhases = [];
-            wavePanels.forEach((panel, i) => {
+            wavePanels.forEach((panel) => {
                 let phase = {
                     phaseName: panel.querySelector('.p-name').value,
                     startTime: clean(panel.querySelector('.p-start').value),
@@ -104,11 +98,10 @@
                 });
             }
 
-            // Апгрейды
-            if(document.querySelector('.u-base')) {
+            // Апгрейды (Откачено к старой версии без baseValue)
+            if(document.getElementById('u_en_0')) {
                 currentData.upgrades.forEach((u, i) => {
                     u.isEnabled = document.getElementById(`u_en_${i}`).checked;
-                    u.baseValue = clean(document.getElementById(`u_base_${i}`).value);
                     u.levelValues = [0,1,2,3,4].map(lv => clean(document.getElementById(`u_lv_${i}_${lv}`).value));
                 });
             }
@@ -135,7 +128,7 @@
                 p.enemies.forEach(e => {
                     h += `<div class="row enemy-row">
                         <input type="text" class="e-id" value="${e.enemyID}" style="flex:2">
-                        <input type="number" class="e-w" value="${e.weight}" style="flex:1">
+                        <input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1">
                         <button class="btn-remove" onclick="this.parentElement.remove()">✖</button>
                     </div>`;
                 });
@@ -147,7 +140,7 @@
             // Рендер оружия
             let wh = '';
             currentData.weapons.forEach((w, i) => {
-                wh += `<div class="panel"><h3 style="margin-bottom:10px;">${w.weaponName}</h3><div class="row">
+                wh += `<div class="panel"><h3 style="margin-bottom:10px; color:#ce9178;">${w.weaponName}</h3><div class="row">
                     <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
                     <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}"></div>
                     <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
@@ -156,12 +149,12 @@
             });
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // Рендер апгрейдов
+            // Рендер апгрейдов (Откачено к старой версии без baseValue)
             let uh = '';
             currentData.upgrades.forEach((u, i) => {
                 uh += `<div class="panel">
-                    <div class="header-row"><h3 style="margin:0;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
-                    <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label style="color:#ce9178;">БАЗА (Стартовое значение)</label><input type="number" step="0.1" id="u_base_${i}" class="u-base" value="${u.baseValue}" style="border:1px solid #ce9178"></div></div>
+                    <div class="header-row"><h3 style="margin:0; color:#569cd6;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
+                    <h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
                     <div class="row">
                         ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
                     </div>
