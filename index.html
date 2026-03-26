@@ -13,6 +13,7 @@
         h3 { color: #4ec9b0; margin: 0; }
         label { display: block; margin-bottom: 5px; font-size: 12px; color: #9cdcfe; }
         input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 14px;}
+        select { cursor: pointer; appearance: none; }
         .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-top: 20px;}
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
         .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; }
@@ -49,6 +50,12 @@
         const FILE_NAME = 'config.json';
         // ==========================================
 
+        const ENEMY_IDS = [
+            "Enemy_Standard", "Enemy_Runner", "Enemy_armor", 
+            "Enemy_Tank_Explotion", "Enemy_Tank", "Enemy_Drone", 
+            "Helth", "Weapon"
+        ];
+
         let currentData = null;
         let token = localStorage.getItem('gh_token');
 
@@ -61,7 +68,6 @@
             render();
         }
 
-        // Авто-исправление запятых на точки + защита от пустых полей
         function clean(val) { 
             let parsed = parseFloat(String(val).replace(',', '.')); 
             return isNaN(parsed) ? 0 : parsed;
@@ -98,7 +104,7 @@
                 });
             }
 
-            // Апгрейды (Откачено к старой версии без baseValue)
+            // Апгрейды
             if(document.getElementById('u_en_0')) {
                 currentData.upgrades.forEach((u, i) => {
                     u.isEnabled = document.getElementById(`u_en_${i}`).checked;
@@ -126,8 +132,17 @@
                     </div>
                     <div class="enemies-list">`;
                 p.enemies.forEach(e => {
+                    // 🔥 Генерация выпадающего списка врагов
+                    let optionsHtml = ""; let isKnown = false;
+                    ENEMY_IDS.forEach(id => {
+                        let selected = (id === e.enemyID) ? "selected" : "";
+                        if (selected) isKnown = true;
+                        optionsHtml += `<option value="${id}" ${selected}>${id}</option>`;
+                    });
+                    if (!isKnown) optionsHtml += `<option value="${e.enemyID}" selected>${e.enemyID} (Неизвестный)</option>`;
+
                     h += `<div class="row enemy-row">
-                        <input type="text" class="e-id" value="${e.enemyID}" style="flex:2">
+                        <select class="e-id" style="flex:2">${optionsHtml}</select>
                         <input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1">
                         <button class="btn-remove" onclick="this.parentElement.remove()">✖</button>
                     </div>`;
@@ -149,7 +164,7 @@
             });
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // Рендер апгрейдов (Откачено к старой версии без baseValue)
+            // Рендер апгрейдов
             let uh = '';
             currentData.upgrades.forEach((u, i) => {
                 uh += `<div class="panel">
@@ -167,18 +182,21 @@
             new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
         }
 
+        function addEnemy(btn) {
+            let row = document.createElement('div'); row.className = 'row enemy-row';
+            // 🔥 Выпадающий список для нового врага
+            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
+            row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
+            btn.previousElementSibling.appendChild(row);
+        }
+
         function addPhase() {
             let list = document.getElementById('waves-list');
             let div = document.createElement('div');
             div.className = 'panel';
-            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
+            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
+            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
             list.appendChild(div);
-        }
-
-        function addEnemy(btn) {
-            let row = document.createElement('div'); row.className = 'row enemy-row';
-            row.innerHTML = `<input type="text" class="e-id" value="Enemy_Standard" style="flex:2"><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
-            btn.previousElementSibling.appendChild(row);
         }
 
         async function load() {
