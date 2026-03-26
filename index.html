@@ -30,11 +30,13 @@
     <div class="container">
         <h2>⚙️ Remote Admin PRO</h2>
         <div id="status" class="status"></div>
+        
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('waves')">🌊 Волны</button>
-            <button class="tab-btn" onclick="switchTab('weapons')">🔫 Оружие</button>
-            <button class="tab-btn" onclick="switchTab('upgrades')">🃏 Карточки</button>
+            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны</button>
+            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
+            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карточки</button>
         </div>
+
         <div id="tab-waves" class="tab-content active"><div id="waves-list"></div><button class="btn-add" onclick="addPhase()">➕ Добавить Волну</button></div>
         <div id="tab-weapons" class="tab-content"></div>
         <div id="tab-upgrades" class="tab-content"></div>
@@ -42,21 +44,34 @@
     </div>
 
     <script>
+        // ==========================================
         const GIST_ID = '4b5faafac858635664755b821b757d35';
         const FILE_NAME = 'config.json';
+        // ==========================================
+
         let currentData = null;
         let token = localStorage.getItem('gh_token');
 
+        // 🔥 Исправленная функция переключения вкладок
         function switchTab(t) {
             syncData();
-            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // Снимаем активность со всех
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            // Вешаем активность на нужные по ID
+            document.getElementById('btn-' + t).classList.add('active');
             document.getElementById('tab-' + t).classList.add('active');
+            
             render();
         }
 
-        // Авто-исправление запятых
-        function clean(val) { return parseFloat(String(val).replace(',', '.')); }
+        // Авто-исправление запятых на точки + защита от пустых полей
+        function clean(val) { 
+            let parsed = parseFloat(String(val).replace(',', '.')); 
+            return isNaN(parsed) ? 0 : parsed;
+        }
 
         function syncData() {
             if(!currentData) return;
@@ -69,7 +84,7 @@
                     startTime: clean(panel.querySelector('.p-start').value),
                     endTime: clean(panel.querySelector('.p-end').value),
                     spawnInterval: clean(panel.querySelector('.p-int').value),
-                    enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value),
+                    enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1,
                     enemies: []
                 };
                 panel.querySelectorAll('.enemy-row').forEach(row => {
@@ -132,11 +147,11 @@
             // Рендер оружия
             let wh = '';
             currentData.weapons.forEach((w, i) => {
-                wh += `<div class="panel"><h3>${w.weaponName}</h3><div class="row">
-                    <div style="flex:1"><label>Dmg</label><input type="number" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
-                    <div style="flex:1"><label>Rate</label><input type="number" step="0.1" id="w_fr_${i}" value="${w.fireRate}"></div>
-                    <div style="flex:1"><label>Dist</label><input type="number" id="w_dist_${i}" value="${w.maxDistance}"></div>
-                    <div style="flex:1"><label>Spr</label><input type="number" id="w_spread_${i}" value="${w.spread}"></div>
+                wh += `<div class="panel"><h3 style="margin-bottom:10px;">${w.weaponName}</h3><div class="row">
+                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
+                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}"></div>
+                    <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
+                    <div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div>
                 </div></div>`;
             });
             document.getElementById('tab-weapons').innerHTML = wh;
@@ -145,10 +160,10 @@
             let uh = '';
             currentData.upgrades.forEach((u, i) => {
                 uh += `<div class="panel">
-                    <div class="header-row"><h3>${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px"></div>
-                    <div class="row"><div style="flex:1"><label>БАЗА (Старт)</label><input type="number" step="0.1" id="u_base_${i}" class="u-base" value="${u.baseValue}" style="border:1px solid #4ec9b0"></div></div>
+                    <div class="header-row"><h3 style="margin:0;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label style="color:#ce9178;">БАЗА (Стартовое значение)</label><input type="number" step="0.1" id="u_base_${i}" class="u-base" value="${u.baseValue}" style="border:1px solid #ce9178"></div></div>
                     <div class="row">
-                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
+                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
                     </div>
                 </div>`;
             });
@@ -163,33 +178,56 @@
             let list = document.getElementById('waves-list');
             let div = document.createElement('div');
             div.className = 'panel';
-            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна"><button class="btn-remove" onclick="this.closest('.panel').remove()">✖</button></div><div class="row"><div><label>Start</label><input type="number" class="p-start" value="0"></div><div><label>End</label><input type="number" class="p-end" value="60"></div><div><label>Interval</label><input type="number" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"></div><button class="btn-add" onclick="addEnemy(this)">+ Враг</button>`;
+            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
             list.appendChild(div);
         }
 
         function addEnemy(btn) {
             let row = document.createElement('div'); row.className = 'row enemy-row';
-            row.innerHTML = `<input type="text" class="e-id" value="Enemy_Standard" style="flex:2"><input type="number" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
+            row.innerHTML = `<input type="text" class="e-id" value="Enemy_Standard" style="flex:2"><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
             btn.previousElementSibling.appendChild(row);
         }
 
         async function load() {
-            if(!token) { token = prompt("GitHub Token:"); localStorage.setItem('gh_token', token); }
-            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
-            const gist = await res.json();
-            currentData = JSON.parse(gist.files[FILE_NAME].content);
-            render();
+            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); }
+            if(!token) return;
+            
+            document.getElementById('status').innerText = "🔄 Загрузка...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
+                if(!res.ok) throw new Error("Ошибка доступа");
+                const gist = await res.json();
+                currentData = JSON.parse(gist.files[FILE_NAME].content);
+                render();
+                document.getElementById('status').innerText = "✅ Данные загружены!";
+                document.getElementById('status').style.color = "#4ec9b0";
+                setTimeout(() => document.getElementById('status').innerText = "", 2000);
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ Ошибка загрузки";
+                document.getElementById('status').style.color = "#f48771";
+            }
         }
 
         async function saveData() {
             syncData();
             document.getElementById('status').innerText = "⏳ Сохранение...";
-            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                method: 'PATCH',
-                headers: { Authorization: 'token '+token },
-                body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
-            });
-            document.getElementById('status').innerText = res.ok ? "✅ УСПЕШНО!" : "❌ ОШИБКА!";
+            document.getElementById('status').style.color = "#dcdcaa";
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: 'token '+token },
+                    body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
+                });
+                if(res.ok) {
+                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!";
+                    document.getElementById('status').style.color = "#238636";
+                } else throw new Error();
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!";
+                document.getElementById('status').style.color = "#f48771";
+            }
         }
 
         load();
