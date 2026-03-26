@@ -2,327 +2,197 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Unity Config Admin</title>
+    <title>Unity Config Admin PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
-        .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h2 { color: #569cd6; text-align: center; margin-bottom: 20px;}
-        h3 { color: #4ec9b0; margin-top: 0; }
-        h4 { color: #ce9178; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-        label { display: block; margin-bottom: 5px; font-size: 13px; color: #9cdcfe; }
-        
-        input[type="number"], input[type="text"], select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; font-size: 14px;}
-        input:focus, select:focus { border-color: #007acc; }
-        select { cursor: pointer; appearance: none; }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #4ec9b0;}
-        
-        button { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .btn-main { background: #0e639c; color: white; width: 100%; font-size: 16px; padding: 15px;}
-        .btn-main:hover { background: #1177bb; }
-        .btn-save { background: #238636; margin-top: 15px; }
-        .btn-save:hover { background: #2ea043; }
-        
-        .btn-add { background: #1f6b35; color: white; width: 100%; margin-top: 10px; border: 1px dashed #4ec9b0;}
-        .btn-add:hover { background: #2a8a46; }
-        .btn-add-small { background: #2d5a3c; color: white; padding: 5px 10px; font-size: 12px; }
-        .btn-add-small:hover { background: #3a754e; }
-        
-        .btn-remove { background: #8a2a2a; color: white; padding: 8px 12px; margin-left: 10px;}
-        .btn-remove:hover { background: #a83232; }
-        .btn-remove-small { background: #8a2a2a; color: white; padding: 8px; height: 35px; margin-top: 24px;}
-        .btn-remove-small:hover { background: #a83232; }
-
-        .row { display: flex; gap: 15px; margin-bottom: 5px; align-items: flex-start; }
-        .header-row { display: flex; justify-content: space-between; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; align-items: center;}
-        .status { margin-top: 15px; font-weight: bold; text-align: center; font-size: 18px; }
-        
-        .auth-panel { background: #3e3e42; padding: 10px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
-        .btn-reset { background: #555; color: white; padding: 5px 10px; font-size: 12px; }
-        .btn-reset:hover { background: #777; }
-
-        /* Вкладки */
+        .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; position: relative; }
+        .drag-handle { cursor: grab; padding: 10px; color: #569cd6; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #3e3e42; border-radius: 4px; margin-right: 15px;}
+        h2 { color: #569cd6; text-align: center; }
+        h3 { color: #4ec9b0; margin: 0; }
+        label { display: block; margin-bottom: 5px; font-size: 12px; color: #9cdcfe; }
+        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 14px;}
+        .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-top: 20px;}
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; background: #2d2d30; color: #888; padding: 12px; font-size: 14px; border-bottom: 3px solid transparent; border-radius: 4px 4px 0 0; }
-        .tab-btn:hover { background: #3e3e42; color: #ddd; }
-        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold;}
+        .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; }
+        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .row { display: flex; gap: 10px; align-items: flex-start; }
+        .header-row { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; }
+        .btn-add { background: #1f6b35; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
+        .status { text-align: center; font-weight: bold; margin: 15px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>⚙️ Remote Config Admin Panel</h2>
-        
-        <div class="auth-panel" id="authPanel" style="display: none;">
-            <span style="color: #4ec9b0; font-size: 14px;">🔑 Устройство авторизовано</span>
-            <button class="btn-reset" onclick="resetToken()">Сбросить Токен</button>
-        </div>
-
+        <h2>⚙️ Remote Admin PRO</h2>
+        <div id="status" class="status"></div>
         <div class="tabs">
-            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны и Спавн</button>
-            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 База Оружия</button>
-            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карточки Апгрейдов</button>
+            <button class="tab-btn active" onclick="switchTab('waves')">🌊 Волны</button>
+            <button class="tab-btn" onclick="switchTab('weapons')">🔫 Оружие</button>
+            <button class="tab-btn" onclick="switchTab('upgrades')">🃏 Карточки</button>
         </div>
-
-        <div id="status" class="status" style="margin-bottom: 15px;"></div>
-
-        <div id="tab-waves" class="tab-content active">Загрузка данных...</div>
-        <div id="tab-weapons" class="tab-content">Загрузка данных...</div>
-        <div id="tab-upgrades" class="tab-content">Загрузка данных...</div>
-
-        <button class="btn-main btn-save" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
+        <div id="tab-waves" class="tab-content active"><div id="waves-list"></div><button class="btn-add" onclick="addPhase()">➕ Добавить Волну</button></div>
+        <div id="tab-weapons" class="tab-content"></div>
+        <div id="tab-upgrades" class="tab-content"></div>
+        <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
     </div>
 
     <script>
-        // ==========================================
-        const GIST_ID = '4b5faafac858635664755b821b757d35'; 
+        const GIST_ID = 'ВСТАВЬ_ID_СЮДА';
         const FILE_NAME = 'config.json';
-        // ==========================================
-        
-        const ENEMY_IDS = [
-            "Enemy_Standard", "Enemy_Runner", "Enemy_armor", 
-            "Enemy_Tank_Explotion", "Enemy_Tank", "Enemy_Drone", 
-            "Helth", "Weapon"
-        ];
-
         let currentData = null;
-        let githubToken = localStorage.getItem('gh_token');
+        let token = localStorage.getItem('gh_token');
 
-        function switchTab(tabId) {
-            syncUIToData(); 
-            
-            ['waves', 'weapons', 'upgrades'].forEach(id => {
-                document.getElementById(`btn-${id}`).classList.remove('active');
-                document.getElementById(`tab-${id}`).classList.remove('active');
+        function switchTab(t) {
+            syncData();
+            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + t).classList.add('active');
+            render();
+        }
+
+        // Авто-исправление запятых
+        function clean(val) { return parseFloat(String(val).replace(',', '.')); }
+
+        function syncData() {
+            if(!currentData) return;
+            // Волны
+            const wavePanels = document.querySelectorAll('#waves-list .panel');
+            let newPhases = [];
+            wavePanels.forEach((panel, i) => {
+                let phase = {
+                    phaseName: panel.querySelector('.p-name').value,
+                    startTime: clean(panel.querySelector('.p-start').value),
+                    endTime: clean(panel.querySelector('.p-end').value),
+                    spawnInterval: clean(panel.querySelector('.p-int').value),
+                    enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value),
+                    enemies: []
+                };
+                panel.querySelectorAll('.enemy-row').forEach(row => {
+                    phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) });
+                });
+                newPhases.push(phase);
             });
-            
-            document.getElementById(`btn-${tabId}`).classList.add('active');
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            renderUI();
-        }
+            currentData.phases = newPhases;
 
-        function checkAuth() {
-            if (!githubToken) {
-                githubToken = prompt("Введите ваш GitHub Token:\n(Он сохранится только в памяти этого браузера)");
-                if (githubToken) {
-                    localStorage.setItem('gh_token', githubToken.trim());
-                    githubToken = githubToken.trim();
-                } else {
-                    document.getElementById('status').innerText = "❌ Нет доступа. Обновите страницу и введите токен.";
-                    document.getElementById('status').style.color = "#f48771";
-                    return false;
-                }
-            }
-            document.getElementById('authPanel').style.display = 'flex';
-            return true;
-        }
-
-        function resetToken() {
-            if(confirm("Удалить токен с этого устройства?")) {
-                localStorage.removeItem('gh_token');
-                location.reload();
-            }
-        }
-
-        async function loadData() {
-            if (!checkAuth()) return;
-            document.getElementById('status').innerText = "🔄 Подключение к GitHub...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    headers: { 'Authorization': `token ${githubToken}` }
-                });
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        localStorage.removeItem('gh_token');
-                        throw new Error("Неверный Токен! Я удалил его. Обновите страницу.");
-                    }
-                    throw new Error("Ошибка загрузки");
-                }
-                const gist = await res.json();
-                const content = gist.files[FILE_NAME].content;
-                currentData = JSON.parse(content);
-                renderUI(); 
-                document.getElementById('status').innerText = "✅ Данные загружены!";
-                document.getElementById('status').style.color = "#4ec9b0";
-                setTimeout(() => document.getElementById('status').innerText = "", 3000);
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ " + e.message;
-                document.getElementById('status').style.color = "#f48771";
-            }
-        }
-
-        function syncUIToData() {
-            if (!currentData) return;
-            
-            // Вкладка Волн
-            if (document.getElementById('totalTime')) {
-                currentData.totalLevelTime = parseFloat(document.getElementById('totalTime').value);
-                currentData.bossTriggerTimes = document.getElementById('bossTimes').value.split(',').map(n => parseFloat(n.trim()));
-                currentData.phases.forEach((phase, pIndex) => {
-                    phase.phaseName = document.getElementById(`p_name_${pIndex}`).value;
-                    phase.startTime = parseFloat(document.getElementById(`p_start_${pIndex}`).value);
-                    phase.endTime = parseFloat(document.getElementById(`p_end_${pIndex}`).value);
-                    phase.spawnInterval = parseFloat(document.getElementById(`p_interval_${pIndex}`).value);
-                    phase.enemiesPerBatch = parseInt(document.getElementById(`p_batch_${pIndex}`).value);
-                    phase.enemies.forEach((enemy, eIndex) => {
-                        enemy.enemyID = document.getElementById(`e_id_${pIndex}_${eIndex}`).value;
-                        enemy.weight = parseFloat(document.getElementById(`e_weight_${pIndex}_${eIndex}`).value);
-                    });
+            // Оружие
+            if(document.querySelector('.w-dmg')) {
+                currentData.weapons.forEach((w, i) => {
+                    w.damage = clean(document.getElementById(`w_dmg_${i}`).value);
+                    w.fireRate = clean(document.getElementById(`w_fr_${i}`).value);
+                    w.maxDistance = clean(document.getElementById(`w_dist_${i}`).value);
+                    w.spread = clean(document.getElementById(`w_spr_${i}`).value);
                 });
             }
 
-            // Вкладка Оружия
-            if (currentData.weapons && document.getElementById('w_dmg_0')) {
-                currentData.weapons.forEach((w, wIndex) => {
-                    w.damage = parseFloat(document.getElementById(`w_dmg_${wIndex}`).value);
-                    w.fireRate = parseFloat(document.getElementById(`w_fr_${wIndex}`).value);
-                    w.maxDistance = parseFloat(document.getElementById(`w_dist_${wIndex}`).value);
-                    w.spread = parseFloat(document.getElementById(`w_spread_${wIndex}`).value);
-                });
-            }
-
-            // Вкладка Апгрейдов
-            if (currentData.upgrades && document.getElementById('u_enabled_0')) {
-                currentData.upgrades.forEach((upg, uIndex) => {
-                    upg.isEnabled = document.getElementById(`u_enabled_${uIndex}`).checked;
-                    for (let i = 0; i < 5; i++) {
-                        upg.levelValues[i] = parseFloat(document.getElementById(`u_val_${uIndex}_${i}`).value);
-                    }
+            // Апгрейды
+            if(document.querySelector('.u-base')) {
+                currentData.upgrades.forEach((u, i) => {
+                    u.isEnabled = document.getElementById(`u_en_${i}`).checked;
+                    u.baseValue = clean(document.getElementById(`u_base_${i}`).value);
+                    u.levelValues = [0,1,2,3,4].map(lv => clean(document.getElementById(`u_lv_${i}_${lv}`).value));
                 });
             }
         }
 
-        function addPhase() { syncUIToData(); currentData.phases.push({ phaseName: "Новая Волна", startTime: 0, endTime: 60, spawnInterval: 1.0, enemiesPerBatch: 1, enemies: [{ enemyID: ENEMY_IDS[0], weight: 100.0 }] }); renderUI(); }
-        function removePhase(pIndex) { if(!confirm("Точно удалить?")) return; syncUIToData(); currentData.phases.splice(pIndex, 1); renderUI(); }
-        function addEnemy(pIndex) { syncUIToData(); currentData.phases[pIndex].enemies.push({ enemyID: ENEMY_IDS[0], weight: 50.0 }); renderUI(); }
-        function removeEnemy(pIndex, eIndex) { syncUIToData(); currentData.phases[pIndex].enemies.splice(eIndex, 1); renderUI(); }
-
-        function renderUI() {
-            if (!currentData) return;
-            
-            // --- ОТРИСОВКА ВОЛН ---
-            let wHtml = `
-                <div class="panel">
-                    <h3>Общие настройки уровня</h3>
+        function render() {
+            if(!currentData) return;
+            // Рендер волн
+            let h = '';
+            currentData.phases.forEach((p, i) => {
+                h += `<div class="panel" data-id="${i}">
+                    <div class="header-row">
+                        <div class="drag-handle">☰</div>
+                        <input type="text" class="p-name" value="${p.phaseName}" style="margin:0; font-weight:bold;">
+                        <button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button>
+                    </div>
                     <div class="row">
-                        <div style="flex:1"><label>Total Level Time (сек):</label><input type="number" id="totalTime" value="${currentData.totalLevelTime}"></div>
-                        <div style="flex:2"><label>Boss Trigger Times (через запятую):</label><input type="text" id="bossTimes" value="${currentData.bossTriggerTimes.join(', ')}"></div>
+                        <div style="flex:1"><label>Start</label><input type="number" step="0.1" class="p-start" value="${p.startTime}"></div>
+                        <div style="flex:1"><label>End</label><input type="number" step="0.1" class="p-end" value="${p.endTime}"></div>
+                        <div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div>
+                        <div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div>
+                    </div>
+                    <div class="enemies-list">`;
+                p.enemies.forEach(e => {
+                    h += `<div class="row enemy-row">
+                        <input type="text" class="e-id" value="${e.enemyID}" style="flex:2">
+                        <input type="number" class="e-w" value="${e.weight}" style="flex:1">
+                        <button class="btn-remove" onclick="this.parentElement.remove()">✖</button>
+                    </div>`;
+                });
+                h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button></div>`;
+            });
+            document.getElementById('waves-list').innerHTML = h;
+            initSortable();
+
+            // Рендер оружия
+            let wh = '';
+            currentData.weapons.forEach((w, i) => {
+                wh += `<div class="panel"><h3>${w.weaponName}</h3><div class="row">
+                    <div style="flex:1"><label>Dmg</label><input type="number" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
+                    <div style="flex:1"><label>Rate</label><input type="number" step="0.1" id="w_fr_${i}" value="${w.fireRate}"></div>
+                    <div style="flex:1"><label>Dist</label><input type="number" id="w_dist_${i}" value="${w.maxDistance}"></div>
+                    <div style="flex:1"><label>Spr</label><input type="number" id="w_spread_${i}" value="${w.spread}"></div>
+                </div></div>`;
+            });
+            document.getElementById('tab-weapons').innerHTML = wh;
+
+            // Рендер апгрейдов
+            let uh = '';
+            currentData.upgrades.forEach((u, i) => {
+                uh += `<div class="panel">
+                    <div class="header-row"><h3>${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px"></div>
+                    <div class="row"><div style="flex:1"><label>БАЗА (Старт)</label><input type="number" step="0.1" id="u_base_${i}" class="u-base" value="${u.baseValue}" style="border:1px solid #4ec9b0"></div></div>
+                    <div class="row">
+                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
                     </div>
                 </div>`;
-            currentData.phases.forEach((phase, pIndex) => {
-                wHtml += `<div class="panel">
-                    <div class="header-row">
-                        <div style="flex:1; display:flex; gap:10px; align-items:center;">
-                            <h3 style="margin:0;">Волна:</h3>
-                            <input type="text" id="p_name_${pIndex}" value="${phase.phaseName}" style="margin:0; font-weight:bold; font-size:16px;">
-                        </div>
-                        <button class="btn-remove" onclick="removePhase(${pIndex})">✖ УДАЛИТЬ ВОЛНУ</button>
-                    </div>
-                    <div class="row">
-                        <div style="flex:1"><label>Start:</label><input type="number" step="0.1" id="p_start_${pIndex}" value="${phase.startTime}"></div>
-                        <div style="flex:1"><label>End:</label><input type="number" step="0.1" id="p_end_${pIndex}" value="${phase.endTime}"></div>
-                        <div style="flex:1"><label>Interval:</label><input type="number" step="0.1" id="p_interval_${pIndex}" value="${phase.spawnInterval}"></div>
-                        <div style="flex:1"><label>Batch:</label><input type="number" id="p_batch_${pIndex}" value="${phase.enemiesPerBatch}"></div>
-                    </div>
-                    <h4>Враги: <button class="btn-add-small" onclick="addEnemy(${pIndex})">➕ Добавить</button></h4>`;
-                
-                phase.enemies.forEach((enemy, eIndex) => {
-                    let optionsHtml = ""; let isKnown = false;
-                    ENEMY_IDS.forEach(id => {
-                        let selected = (id === enemy.enemyID) ? "selected" : "";
-                        if (selected) isKnown = true;
-                        optionsHtml += `<option value="${id}" ${selected}>${id}</option>`;
-                    });
-                    if (!isKnown) optionsHtml += `<option value="${enemy.enemyID}" selected>${enemy.enemyID} (Неизвестный)</option>`;
-
-                    wHtml += `
-                        <div class="row">
-                            <div style="flex:3"><select id="e_id_${pIndex}_${eIndex}">${optionsHtml}</select></div>
-                            <div style="flex:1"><input type="number" id="e_weight_${pIndex}_${eIndex}" value="${enemy.weight}"></div>
-                            <button class="btn-remove-small" onclick="removeEnemy(${pIndex}, ${eIndex})">✖</button>
-                        </div>`;
-                });
-                wHtml += `</div>`;
             });
-            wHtml += `<button class="btn-add" onclick="addPhase()">➕ ДОБАВИТЬ НОВУЮ ВОЛНУ</button>`;
-            document.getElementById('tab-waves').innerHTML = wHtml;
+            document.getElementById('tab-upgrades').innerHTML = uh;
+        }
 
-            // --- ОТРИСОВКА ОРУЖИЯ ---
-            let wepHtml = '';
-            if (currentData.weapons) {
-                currentData.weapons.forEach((w, wIndex) => {
-                    wepHtml += `
-                    <div class="panel">
-                        <h3 style="margin:0 0 10px 0; color:#ce9178;">${w.weaponName}</h3>
-                        <div class="row">
-                            <div style="flex:1"><label>Урон (Damage):</label><input type="number" step="0.1" id="w_dmg_${wIndex}" value="${w.damage}"></div>
-                            <div style="flex:1"><label>Скорострельность:</label><input type="number" step="0.01" id="w_fr_${wIndex}" value="${w.fireRate}"></div>
-                            <div style="flex:1"><label>Дистанция:</label><input type="number" step="0.1" id="w_dist_${wIndex}" value="${w.maxDistance}"></div>
-                            <div style="flex:1"><label>Разброс (Spread):</label><input type="number" step="0.1" id="w_spread_${wIndex}" value="${w.spread}"></div>
-                        </div>
-                    </div>`;
-                });
-            } else {
-                wepHtml = "<p style='color:#f48771'>В JSON не найден массив weapons!</p>";
-            }
-            document.getElementById('tab-weapons').innerHTML = wepHtml;
+        function initSortable() {
+            new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
+        }
 
-            // --- ОТРИСОВКА АПГРЕЙДОВ ---
-            let uHtml = '';
-            if (currentData.upgrades) {
-                currentData.upgrades.forEach((upg, uIndex) => {
-                    let checked = upg.isEnabled ? "checked" : "";
-                    uHtml += `
-                    <div class="panel">
-                        <div class="header-row">
-                            <h3 style="margin:0; color:#569cd6;">${upg.type}</h3>
-                            <label style="margin:0; display:flex; align-items:center; gap:5px; cursor:pointer; font-size:15px; color:#fff;">
-                                <input type="checkbox" id="u_enabled_${uIndex}" ${checked} style="width:20px; height:20px; margin:0;">
-                                Карточка Включена
-                            </label>
-                        </div>
-                        <h4 style="color:#888; margin-top:5px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
-                        <div class="row">
-                            <div style="flex:1"><label>Lv 1:</label><input type="number" step="0.01" id="u_val_${uIndex}_0" value="${upg.levelValues[0]}"></div>
-                            <div style="flex:1"><label>Lv 2:</label><input type="number" step="0.01" id="u_val_${uIndex}_1" value="${upg.levelValues[1]}"></div>
-                            <div style="flex:1"><label>Lv 3:</label><input type="number" step="0.01" id="u_val_${uIndex}_2" value="${upg.levelValues[2]}"></div>
-                            <div style="flex:1"><label>Lv 4:</label><input type="number" step="0.01" id="u_val_${uIndex}_3" value="${upg.levelValues[3]}"></div>
-                            <div style="flex:1"><label>Lv 5:</label><input type="number" step="0.01" id="u_val_${uIndex}_4" value="${upg.levelValues[4]}"></div>
-                        </div>
-                    </div>`;
-                });
-            } else {
-                uHtml = "<p style='color:#f48771'>В JSON не найден массив upgrades!</p>";
-            }
-            document.getElementById('tab-upgrades').innerHTML = uHtml;
+        function addPhase() {
+            let list = document.getElementById('waves-list');
+            let div = document.createElement('div');
+            div.className = 'panel';
+            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна"><button class="btn-remove" onclick="this.closest('.panel').remove()">✖</button></div><div class="row"><div><label>Start</label><input type="number" class="p-start" value="0"></div><div><label>End</label><input type="number" class="p-end" value="60"></div><div><label>Interval</label><input type="number" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"></div><button class="btn-add" onclick="addEnemy(this)">+ Враг</button>`;
+            list.appendChild(div);
+        }
+
+        function addEnemy(btn) {
+            let row = document.createElement('div'); row.className = 'row enemy-row';
+            row.innerHTML = `<input type="text" class="e-id" value="Enemy_Standard" style="flex:2"><input type="number" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
+            btn.previousElementSibling.appendChild(row);
+        }
+
+        async function load() {
+            if(!token) { token = prompt("GitHub Token:"); localStorage.setItem('gh_token', token); }
+            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
+            const gist = await res.json();
+            currentData = JSON.parse(gist.files[FILE_NAME].content);
+            render();
         }
 
         async function saveData() {
-            document.getElementById('status').innerText = "⏳ Отправка в облако...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            
-            syncUIToData(); // Собираем данные со всех трех вкладок
-            
-            const updatedJson = JSON.stringify(currentData, null, 2);
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
-                    body: JSON.stringify({ files: { [FILE_NAME]: { content: updatedJson } } })
-                });
-                if (res.ok) {
-                    document.getElementById('status').innerText = "✅ БАЛАНС ОБНОВЛЕН!";
-                    document.getElementById('status').style.color = "#238636";
-                } else throw new Error("Сервер отклонил сохранение");
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ Ошибка: " + e.message;
-                document.getElementById('status').style.color = "#f48771";
-            }
+            syncData();
+            document.getElementById('status').innerText = "⏳ Сохранение...";
+            const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                method: 'PATCH',
+                headers: { Authorization: 'token '+token },
+                body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
+            });
+            document.getElementById('status').innerText = res.ok ? "✅ УСПЕШНО!" : "❌ ОШИБКА!";
         }
-        
-        loadData();
+
+        load();
     </script>
 </body>
 </html>
