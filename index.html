@@ -34,11 +34,13 @@
         
         <div class="tabs">
             <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны</button>
+            <button class="tab-btn" id="btn-player" onclick="switchTab('player')">🏃 Игрок</button>
             <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карточки</button>
         </div>
 
         <div id="tab-waves" class="tab-content active"><div id="waves-list"></div><button class="btn-add" onclick="addPhase()">➕ Добавить Волну</button></div>
+        <div id="tab-player" class="tab-content"></div>
         <div id="tab-weapons" class="tab-content"></div>
         <div id="tab-upgrades" class="tab-content"></div>
         <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
@@ -94,6 +96,19 @@
             });
             currentData.phases = newPhases;
 
+            // Игрок
+            if(document.getElementById('ps_fSpeed')) {
+                currentData.playerStats.forwardSpeed = clean(document.getElementById('ps_fSpeed').value);
+                currentData.playerStats.strafeSpeed = clean(document.getElementById('ps_sSpeed').value);
+                currentData.playerStats.maxHealth = parseInt(clean(document.getElementById('ps_mHealth').value));
+                currentData.playerStats.maxShields = parseInt(clean(document.getElementById('ps_mShields').value));
+                currentData.playerStats.shieldRegenTime = clean(document.getElementById('ps_sRegen').value);
+                currentData.playerStats.ricochetRadius = clean(document.getElementById('ps_rRadius').value);
+                currentData.playerStats.radiusBonusPerUpgrade = clean(document.getElementById('ps_rBonus').value);
+                currentData.playerStats.ricochetHeadChance = clean(document.getElementById('ps_rHead').value);
+                currentData.playerStats.ricochetLegChance = clean(document.getElementById('ps_rLeg').value);
+            }
+
             // Оружие
             if(document.querySelector('.w-dmg')) {
                 currentData.weapons.forEach((w, i) => {
@@ -132,7 +147,6 @@
                     </div>
                     <div class="enemies-list">`;
                 p.enemies.forEach(e => {
-                    // 🔥 Генерация выпадающего списка врагов
                     let optionsHtml = ""; let isKnown = false;
                     ENEMY_IDS.forEach(id => {
                         let selected = (id === e.enemyID) ? "selected" : "";
@@ -151,6 +165,39 @@
             });
             document.getElementById('waves-list').innerHTML = h;
             initSortable();
+
+            // Рендер игрока
+            let ph = '';
+            if(currentData.playerStats) {
+                ph = `
+                <div class="panel">
+                    <h3 style="margin-bottom:10px; color:#569cd6;">🏃 Бег и Движение</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}"></div>
+                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}"></div>
+                    </div>
+                    
+                    <h3 style="margin-top:20px; margin-bottom:10px; color:#f48771;">❤️ Здоровье и Щиты</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}"></div>
+                        <div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div>
+                        <div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div>
+                    </div>
+                    
+                    <h3 style="margin-top:20px; margin-bottom:10px; color:#dcdcaa;">🎯 Рикошет и Спецэффекты</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Базовый Радиус Рикошета</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div>
+                        <div style="flex:1"><label>Доп. Радиус за Уровень</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1"><label>Шанс в Голову (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div>
+                        <div style="flex:1"><label>Шанс в Ногу (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div>
+                    </div>
+                </div>`;
+            } else {
+                ph = "<p style='color:#f48771'>В JSON не найден массив playerStats!</p>";
+            }
+            document.getElementById('tab-player').innerHTML = ph;
 
             // Рендер оружия
             let wh = '';
@@ -184,7 +231,6 @@
 
         function addEnemy(btn) {
             let row = document.createElement('div'); row.className = 'row enemy-row';
-            // 🔥 Выпадающий список для нового врага
             let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
             row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
             btn.previousElementSibling.appendChild(row);
