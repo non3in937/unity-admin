@@ -26,7 +26,10 @@
         .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
         .status { text-align: center; font-weight: bold; margin: 15px 0; }
         
-        /* Стили для вкладки бэкапов */
+        /* 🔥 Стили для калькулятора превью */
+        .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
+        .preview-box b { color: #dcdcaa; }
+        
         .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
         .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
     </style>
@@ -52,12 +55,9 @@
         <div id="tab-backups" class="tab-content">
             <div class="panel">
                 <h3 style="color:#569cd6; margin-bottom:10px; text-align:center;">📦 Сохранение и Восстановление</h3>
-                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
-                
+                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом. Если что-то сломается, вы сможете загрузить его обратно.</p>
                 <button class="backup-btn" onclick="exportBackup()">📥 СКАЧАТЬ БЭКАП (.json)</button>
-                
                 <hr style="border: 0; border-top: 1px solid #3e3e42; margin-bottom: 20px;">
-                
                 <h4 style="color:#ce9178; text-align:center; margin-bottom:5px;">Восстановить из файла:</h4>
                 <div class="file-input-wrapper">
                     <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:#4ec9b0;" onchange="importBackup(event)">
@@ -70,7 +70,7 @@
 
     <script>
         // ==========================================
-        const GIST_ID = '4b5faafac858635664755b821b757d35';
+        const GIST_ID = 'ВСТАВЬ_СЮДА_ТОЛЬКО_ID_GIST';
         const FILE_NAME = 'config.json';
         // ==========================================
 
@@ -90,6 +90,7 @@
             document.getElementById('btn-' + t).classList.add('active');
             document.getElementById('tab-' + t).classList.add('active');
             render();
+            updatePreviews(); // 🔥 Вызываем превью при смене вкладки
         }
 
         function clean(val) { 
@@ -99,7 +100,6 @@
 
         function syncData() {
             if(!currentData) return;
-            // Волны
             if(document.querySelector('#waves-list .panel')) {
                 const wavePanels = document.querySelectorAll('#waves-list .panel');
                 let newPhases = [];
@@ -120,7 +120,6 @@
                 currentData.phases = newPhases;
             }
 
-            // Игрок
             if(document.getElementById('ps_fSpeed')) {
                 currentData.playerStats.forwardSpeed = clean(document.getElementById('ps_fSpeed').value);
                 currentData.playerStats.strafeSpeed = clean(document.getElementById('ps_sSpeed').value);
@@ -133,7 +132,6 @@
                 currentData.playerStats.ricochetLegChance = clean(document.getElementById('ps_rLeg').value);
             }
 
-            // Оружие
             if(document.querySelector('.w-dmg')) {
                 currentData.weapons.forEach((w, i) => {
                     w.damage = clean(document.getElementById(`w_dmg_${i}`).value);
@@ -143,7 +141,6 @@
                 });
             }
 
-            // Апгрейды
             if(document.getElementById('u_en_0')) {
                 currentData.upgrades.forEach((u, i) => {
                     u.isEnabled = document.getElementById(`u_en_${i}`).checked;
@@ -190,20 +187,20 @@
             document.getElementById('waves-list').innerHTML = h;
             initSortable();
 
-            // Рендер игрока
+            // Рендер игрока (Добавили oninput для моментального обновления превью)
             let ph = '';
             if(currentData.playerStats) {
                 ph = `
                 <div class="panel">
                     <h3 style="margin-bottom:10px; color:#569cd6;">🏃 Бег и Движение</h3>
                     <div class="row">
-                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}"></div>
-                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}"></div>
+                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div>
+                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div>
                     </div>
                     
                     <h3 style="margin-top:20px; margin-bottom:10px; color:#f48771;">❤️ Здоровье и Щиты</h3>
                     <div class="row">
-                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}"></div>
+                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div>
                         <div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div>
                         <div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div>
                     </div>
@@ -213,134 +210,132 @@
                         <div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div>
                         <div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div>
                     </div>
-                    <div class="row">
-                        <div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div>
-                        <div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div>
-                    </div>
                 </div>`;
             }
             document.getElementById('tab-player').innerHTML = ph;
 
-            // Рендер оружия
+            // Рендер оружия (Добавили oninput)
             let wh = '';
             currentData.weapons.forEach((w, i) => {
                 wh += `<div class="panel"><h3 style="margin-bottom:10px; color:#ce9178;">${w.weaponName}</h3><div class="row">
-                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
-                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}"></div>
+                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div>
+                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div>
                     <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
                     <div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div>
                 </div></div>`;
             });
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // Рендер апгрейдов
+            // Рендер апгрейдов с Контейнером для Превью
             let uh = '';
             currentData.upgrades.forEach((u, i) => {
                 uh += `<div class="panel">
                     <div class="header-row"><h3 style="margin:0; color:#569cd6;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
                     <h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
                     <div class="row">
-                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
+                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}" oninput="updatePreviews()"></div>`).join('')}
                     </div>
+                    <div class="preview-box" id="preview_u_${i}">⏳ Считаем...</div>
                 </div>`;
             });
             document.getElementById('tab-upgrades').innerHTML = uh;
+            
+            updatePreviews(); // Считаем сразу при отрисовке
         }
 
-        function initSortable() {
-            if(document.getElementById('waves-list')) {
-                new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
-            }
-        }
+        // 🔥 МАТЕМАТИКА ИГРЫ (КАЛЬКУЛЯТОР)
+        function updatePreviews() {
+            if(!currentData || !document.getElementById('preview_u_0')) return;
 
-        function addEnemy(btn) {
-            let row = document.createElement('div'); row.className = 'row enemy-row';
-            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
-            row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
-            btn.previousElementSibling.appendChild(row);
-        }
+            currentData.upgrades.forEach((u, i) => {
+                let previewDiv = document.getElementById(`preview_u_${i}`);
+                if (!previewDiv) return;
 
-        function addPhase() {
-            let list = document.getElementById('waves-list');
-            let div = document.createElement('div');
-            div.className = 'panel';
-            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
-            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
-            list.appendChild(div);
-        }
-
-        // 🔥 ЛОГИКА БЭКАПОВ
-        function exportBackup() {
-            syncData();
-            if(!currentData) return;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(dlAnchorElem);
-            dlAnchorElem.click();
-            dlAnchorElem.remove();
-        }
-
-        function importBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    currentData = JSON.parse(e.target.result);
-                    render();
-                    document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB.";
-                    document.getElementById('status').style.color = "#4ec9b0";
-                    event.target.value = ''; // Сбрасываем поле выбора
-                } catch (err) {
-                    alert("Ошибка чтения файла! Это не похоже на правильный JSON.");
+                // Собираем введенные уровни
+                let levels = [];
+                for(let lv=0; lv<5; lv++) {
+                    levels.push(clean(document.getElementById(`u_lv_${i}_${lv}`).value));
                 }
-            };
-            reader.readAsText(file);
+
+                let text = "";
+                
+                // 1. УРОН И СКОРОСТРЕЛЬНОСТЬ (Множители для каждой пушки)
+                if (u.type === "Damage" || u.type === "FireRate") {
+                    let weaponTexts = currentData.weapons.map((w, wIdx) => {
+                        let baseDmg = clean(document.getElementById(`w_dmg_${wIdx}`)?.value || w.damage);
+                        let baseFr = clean(document.getElementById(`w_fr_${wIdx}`)?.value || w.fireRate);
+                        
+                        let currentVal = u.type === "Damage" ? baseDmg : baseFr;
+                        let steps = [];
+                        
+                        for(let lv=0; lv<5; lv++) {
+                            if (u.type === "Damage") currentVal *= (1 + levels[lv]);
+                            else currentVal *= (1 - levels[lv]); // FireRate уменьшает задержку
+                            steps.push(currentVal.toFixed(1));
+                        }
+                        return `<b>${w.weaponName}</b>: ${steps.join(" ➔ ")}`;
+                    });
+                    text = weaponTexts.join("<br>");
+                }
+                // 2. ЗДОРОВЬЕ (Динамическое округление от максимума)
+                else if (u.type === "Health") {
+                    let baseHp = Math.round(clean(document.getElementById('ps_mHealth')?.value || currentData.playerStats.maxHealth));
+                    let currentVal = baseHp;
+                    let steps = [];
+                    for(let lv=0; lv<5; lv++) {
+                        let bonus = Math.round(currentVal * levels[lv]);
+                        if (bonus < 1) bonus = 1;
+                        currentVal += bonus;
+                        steps.push(currentVal);
+                    }
+                    text = `<b>HP Игрока</b>: ${steps.join(" ➔ ")} (сердечек)`;
+                }
+                // 3. СКОРОСТЬ СТРЕЙФА (Множитель)
+                else if (u.type === "Speed") {
+                    let baseSpd = clean(document.getElementById('ps_sSpeed')?.value || currentData.playerStats.strafeSpeed);
+                    let currentVal = baseSpd;
+                    let steps = [];
+                    for(let lv=0; lv<5; lv++) {
+                        currentVal *= (1 + levels[lv]);
+                        steps.push(currentVal.toFixed(1));
+                    }
+                    text = `<b>Скорость Стрейфа</b>: ${steps.join(" ➔ ")}`;
+                }
+                // 4. ЩИТЫ (Хардкод пресеты из кода)
+                else if (u.type === "Shield") {
+                    text = `<b>Щиты (Хардкод в Unity):</b> Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)`;
+                }
+                // 5. ДИСТАНЦИЯ (Хардкод пресеты из кода)
+                else if (u.type === "Distance" || u.type === "BushSpeed") {
+                    text = `<i>Плоские уровни 1-5 (поведение захардкожено в скриптах Unity)</i>`;
+                }
+                // 6. ВСЁ ОСТАЛЬНОЕ (Плоское сложение: Рикошет, Пробивание, Реген)
+                else {
+                    let currentVal = 0; 
+                    let steps = [];
+                    for(let lv=0; lv<5; lv++) {
+                        currentVal += levels[lv];
+                        // Если целое число (Пробивание) - пишем ровно, иначе с сотыми (Реген)
+                        let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2);
+                        steps.push(`+${formatted}`);
+                    }
+                    text = `<b>Суммарная прибавка</b>: ${steps.join(" ➔ ")}`;
+                }
+
+                previewDiv.innerHTML = text;
+            });
         }
 
-        async function load() {
-            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); }
-            if(!token) return;
-            
-            document.getElementById('status').innerText = "🔄 Загрузка...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
-                if(!res.ok) throw new Error("Ошибка доступа");
-                const gist = await res.json();
-                currentData = JSON.parse(gist.files[FILE_NAME].content);
-                render();
-                document.getElementById('status').innerText = "✅ Данные загружены!";
-                document.getElementById('status').style.color = "#4ec9b0";
-                setTimeout(() => document.getElementById('status').innerText = "", 2000);
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ Ошибка загрузки";
-                document.getElementById('status').style.color = "#f48771";
-            }
-        }
+        // --- Вспомогательные функции остались без изменений ---
+        function initSortable() { if(document.getElementById('waves-list')) new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 }); }
+        function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join(''); row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`; btn.previousElementSibling.appendChild(row); }
+        function addPhase() { let list = document.getElementById('waves-list'); let div = document.createElement('div'); div.className = 'panel'; let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join(''); div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`; list.appendChild(div); }
 
-        async function saveData() {
-            syncData();
-            document.getElementById('status').innerText = "⏳ Сохранение...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: { Authorization: 'token '+token },
-                    body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
-                });
-                if(res.ok) {
-                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!";
-                    document.getElementById('status').style.color = "#238636";
-                } else throw new Error();
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!";
-                document.getElementById('status').style.color = "#f48771";
-            }
-        }
+        function exportBackup() { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); }
+        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
+
+        async function load() { if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); } if(!token) return; document.getElementById('status').innerText = "🔄 Загрузка..."; document.getElementById('status').style.color = "#dcdcaa"; try { const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }}); if(!res.ok) throw new Error("Ошибка доступа"); const gist = await res.json(); currentData = JSON.parse(gist.files[FILE_NAME].content); render(); document.getElementById('status').innerText = "✅ Данные загружены!"; document.getElementById('status').style.color = "#4ec9b0"; setTimeout(() => document.getElementById('status').innerText = "", 2000); } catch (e) { document.getElementById('status').innerText = "❌ Ошибка загрузки"; document.getElementById('status').style.color = "#f48771"; } }
+        async function saveData() { syncData(); document.getElementById('status').innerText = "⏳ Сохранение..."; document.getElementById('status').style.color = "#dcdcaa"; try { const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) }); if(res.ok) { document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; document.getElementById('status').style.color = "#238636"; } else throw new Error(); } catch (e) { document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; document.getElementById('status').style.color = "#f48771"; } }
 
         load();
     </script>
