@@ -29,6 +29,22 @@
         /* Стили для вкладки бэкапов */
         .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
         .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
+
+        /* СТИЛИ ДЛЯ КАРТОЧЕК АПГРЕЙДОВ */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+        .upgrade-card { background: #252526; border: 2px solid #3e3e42; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; }
+        .upgrade-card:hover { border-color: #569cd6; transform: translateY(-3px); }
+        .upgrade-card.disabled { opacity: 0.6; border-color: #555; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; }
+        .card-title { font-size: 16px; font-weight: bold; color: #4ec9b0; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .card-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card-levels .full-width { grid-column: span 2; }
+        .card-levels label { color: #dcdcaa; }
+
+        /* 🔥 СТИЛИ ДЛЯ КАЛЬКУЛЯТОРА И ТЕСТОВОЙ БАЗЫ */
+        .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
+        .preview-box b { color: #dcdcaa; }
+        .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; margin-bottom: 15px !important;}
     </style>
 </head>
 <body>
@@ -53,11 +69,8 @@
             <div class="panel">
                 <h3 style="color:#569cd6; margin-bottom:10px; text-align:center;">📦 Сохранение и Восстановление</h3>
                 <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
-                
                 <button class="backup-btn" onclick="exportBackup()">📥 СКАЧАТЬ БЭКАП (.json)</button>
-                
                 <hr style="border: 0; border-top: 1px solid #3e3e42; margin-bottom: 20px;">
-                
                 <h4 style="color:#ce9178; text-align:center; margin-bottom:5px;">Восстановить из файла:</h4>
                 <div class="file-input-wrapper">
                     <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:#4ec9b0;" onchange="importBackup(event)">
@@ -97,6 +110,17 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
+        function getIconForType(type) {
+            const icons = {
+                'Speed': '⚡', 'Damage': '⚔️', 'Health': '❤️', 'Distance': '🔭', 
+                'BushSpeed': '🍃', 'FireRate': '🔥', 'CrystalRadius': '💎', 'XpBoost': '📈', 
+                'StunDuration': '💫', 'Piercing': '🏹', 'Ricochet': '🪃', 'Regeneration': '🩸', 
+                'Shield': '🛡️', 'UltimateUpgrade': '💥'
+            };
+            return icons[type] || '🃏';
+        }
+
+        // ЧИСТАЯ ФУНКЦИЯ СОХРАНЕНИЯ (БЕЗ ИЗМЕНЕНИЙ)
         function syncData() {
             if(!currentData) return;
             // Волны
@@ -154,6 +178,7 @@
 
         function render() {
             if(!currentData) return;
+            
             // Рендер волн
             let h = '';
             currentData.phases.forEach((p, i) => {
@@ -188,22 +213,24 @@
                 h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button></div>`;
             });
             document.getElementById('waves-list').innerHTML = h;
-            initSortable();
+            if(document.getElementById('waves-list')) {
+                new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
+            }
 
-            // Рендер игрока
+            // Рендер игрока (Добавили oninput)
             let ph = '';
             if(currentData.playerStats) {
                 ph = `
                 <div class="panel">
                     <h3 style="margin-bottom:10px; color:#569cd6;">🏃 Бег и Движение</h3>
                     <div class="row">
-                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}"></div>
-                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}"></div>
+                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div>
+                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div>
                     </div>
                     
                     <h3 style="margin-top:20px; margin-bottom:10px; color:#f48771;">❤️ Здоровье и Щиты</h3>
                     <div class="row">
-                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}"></div>
+                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div>
                         <div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div>
                         <div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div>
                     </div>
@@ -221,125 +248,221 @@
             }
             document.getElementById('tab-player').innerHTML = ph;
 
-            // Рендер оружия
+            // Рендер оружия (Добавили oninput)
             let wh = '';
             currentData.weapons.forEach((w, i) => {
                 wh += `<div class="panel"><h3 style="margin-bottom:10px; color:#ce9178;">${w.weaponName}</h3><div class="row">
-                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
-                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}"></div>
+                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div>
+                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div>
                     <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
                     <div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div>
                 </div></div>`;
             });
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // Рендер апгрейдов
-            let uh = '';
+            // Рендер апгрейдов (СЕТКА + КАЛЬКУЛЯТОР + ТЕСТОВАЯ БАЗА)
+            let uh = '<div class="cards-grid">';
             currentData.upgrades.forEach((u, i) => {
-                uh += `<div class="panel">
-                    <div class="header-row"><h3 style="margin:0; color:#569cd6;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
-                    <h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
-                    <div class="row">
-                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
+                let icon = getIconForType(u.type);
+                let disabledClass = u.isEnabled ? '' : 'disabled';
+                let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
+                
+                uh += `<div class="upgrade-card ${disabledClass}" id="card_${i}">
+                    <div class="card-header">
+                        <div class="card-title">${icon} ${u.type}</div>
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <span style="margin-right:8px; font-size:11px; color:#888;">${u.isEnabled?'ВКЛ':'ВЫКЛ'}</span>
+                            <input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(${i}, this)">
+                        </label>
+                    </div>`;
+
+                if (showTestBase) {
+                    uh += `
+                    <div style="margin-bottom:10px;">
+                        <label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохраняется)</label>
+                        <input type="number" step="0.1" id="u_testbase_${i}" class="test-base-input" placeholder="Введи базу..." oninput="updatePreviews()">
+                    </div>`;
+                }
+
+                uh += `<div class="card-levels">
+                        ${u.levelValues.map((v, lv) => `
+                            <div class="${lv === 4 ? 'full-width' : ''}">
+                                <label>Lv ${lv+1}</label>
+                                <input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}" oninput="updatePreviews()">
+                            </div>
+                        `).join('')}
                     </div>
+                    <div class="preview-box" id="preview_u_${i}">⏳ Считаем...</div>
                 </div>`;
             });
+            uh += '</div>';
             document.getElementById('tab-upgrades').innerHTML = uh;
+
+            // Запускаем просчет калькулятора сразу после рендера
+            updatePreviews();
         }
 
-        function initSortable() {
-            if(document.getElementById('waves-list')) {
-                new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
+        // Вспомогательная функция для визуального отключения карточки
+        function toggleCardVisual(index, checkbox) {
+            let card = document.getElementById(`card_${index}`);
+            let textSpan = checkbox.previousElementSibling;
+            if(checkbox.checked) {
+                card.classList.remove('disabled');
+                textSpan.innerText = 'ВКЛ';
+            } else {
+                card.classList.add('disabled');
+                textSpan.innerText = 'ВЫКЛ';
             }
         }
 
-        function addEnemy(btn) {
-            let row = document.createElement('div'); row.className = 'row enemy-row';
-            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
-            row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
-            btn.previousElementSibling.appendChild(row);
-        }
-
-        function addPhase() {
-            let list = document.getElementById('waves-list');
-            let div = document.createElement('div');
-            div.className = 'panel';
-            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
-            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
-            list.appendChild(div);
-        }
-
-        // 🔥 ЛОГИКА БЭКАПОВ
-        function exportBackup() {
-            syncData();
-            if(!currentData) return;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(dlAnchorElem);
-            dlAnchorElem.click();
-            dlAnchorElem.remove();
-        }
-
-        function importBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    currentData = JSON.parse(e.target.result);
-                    render();
-                    document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB.";
-                    document.getElementById('status').style.color = "#4ec9b0";
-                    event.target.value = ''; // Сбрасываем поле выбора
-                } catch (err) {
-                    alert("Ошибка чтения файла! Это не похоже на правильный JSON.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        async function load() {
-            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); }
-            if(!token) return;
-            
-            document.getElementById('status').innerText = "🔄 Загрузка...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            
+        // 🔥 ЧИСТАЯ, БЕЗОПАСНАЯ ЛОГИКА КАЛЬКУЛЯТОРА
+        function updatePreviews() {
             try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
-                if(!res.ok) throw new Error("Ошибка доступа");
-                const gist = await res.json();
-                currentData = JSON.parse(gist.files[FILE_NAME].content);
-                render();
-                document.getElementById('status').innerText = "✅ Данные загружены!";
-                document.getElementById('status').style.color = "#4ec9b0";
-                setTimeout(() => document.getElementById('status').innerText = "", 2000);
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ Ошибка загрузки";
-                document.getElementById('status').style.color = "#f48771";
-            }
-        }
+                if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
 
-        async function saveData() {
-            syncData();
-            document.getElementById('status').innerText = "⏳ Сохранение...";
-            document.getElementById('status').style.color = "#dcdcaa";
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: { Authorization: 'token '+token },
-                    body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
+                currentData.upgrades.forEach((u, i) => {
+                    let previewDiv = document.getElementById('preview_u_' + i);
+                    if (!previewDiv) return;
+
+                    let tbInput = document.getElementById('u_testbase_' + i);
+                    let hasTestBase = (tbInput && tbInput.value !== "");
+                    let tBase = hasTestBase ? clean(tbInput.value) : 0;
+
+                    let levels = [];
+                    for(let lv=0; lv<5; lv++) {
+                        let lvInput = document.getElementById('u_lv_' + i + '_' + lv);
+                        levels.push(lvInput ? clean(lvInput.value) : 0);
+                    }
+
+                    let text = "";
+                    
+                    if (u.type === "Damage" || u.type === "FireRate") {
+                        if (hasTestBase) {
+                            let currentVal = tBase;
+                            let steps = [];
+                            for(let lv=0; lv<5; lv++) {
+                                currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
+                                steps.push(currentVal.toFixed(1));
+                            }
+                            text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ");
+                        } else {
+                            if (currentData.weapons) {
+                                let weaponTexts = currentData.weapons.map((w, wIdx) => {
+                                    let dmgInput = document.getElementById('w_dmg_' + wIdx);
+                                    let frInput = document.getElementById('w_fr_' + wIdx);
+                                    let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
+                                    let baseFr = clean(frInput ? frInput.value : w.fireRate);
+                                    
+                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr;
+                                    let steps = [];
+                                    for(let lv=0; lv<5; lv++) {
+                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
+                                        steps.push(currentVal.toFixed(1));
+                                    }
+                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
+                                });
+                                text = weaponTexts.join("<br><br>");
+                            }
+                        }
+                    }
+                    else if (u.type === "Health") {
+                        let hpInput = document.getElementById('ps_mHealth');
+                        let baseHpValue = 3;
+                        if (hpInput) {
+                            baseHpValue = clean(hpInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.maxHealth) {
+                            baseHpValue = currentData.playerStats.maxHealth;
+                        }
+                        
+                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
+                        let currentVal = baseHp;
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            let bonus = Math.round(currentVal * levels[lv]);
+                            if (bonus < 1) bonus = 1;
+                            currentVal += bonus;
+                            steps.push(currentVal);
+                        }
+                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
+                    }
+                    else if (u.type === "Speed") {
+                        let spdInput = document.getElementById('ps_sSpeed');
+                        let baseSpdValue = 20;
+                        if (spdInput) {
+                            baseSpdValue = clean(spdInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.strafeSpeed) {
+                            baseSpdValue = currentData.playerStats.strafeSpeed;
+                        }
+
+                        let baseSpd = hasTestBase ? tBase : baseSpdValue;
+                        let currentVal = baseSpd;
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal *= (1 + levels[lv]);
+                            steps.push(currentVal.toFixed(1));
+                        }
+                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
+                    }
+                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в Unity)</i>";
+                    else {
+                        let currentVal = hasTestBase ? tBase : 0; 
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal += levels[lv];
+                            let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2);
+                            steps.push(hasTestBase ? formatted : "+" + formatted);
+                        }
+                        text = hasTestBase ? "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ") : "<b>Суммарная прибавка</b>:<br>" + steps.join(" ➔ ");
+                    }
+                    previewDiv.innerHTML = text;
                 });
-                if(res.ok) {
-                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!";
-                    document.getElementById('status').style.color = "#238636";
-                } else throw new Error();
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!";
-                document.getElementById('status').style.color = "#f48771";
+            } catch (err) {
+                console.error("Ошибка калькулятора (не ломает логику):", err);
             }
+        }
+
+        // Остальные базовые функции (без изменений)
+        function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
+        function addPhase() { let list = document.getElementById('waves-list'); let div = document.createElement('div'); div.className = 'panel'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); div.innerHTML = '<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest(\'.panel\').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>'; list.appendChild(div); }
+
+        function exportBackup() { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); }
+        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
+
+        async function load() { 
+            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); } 
+            if(!token) return; 
+            document.getElementById('status').innerText = "🔄 Загрузка..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }}); 
+                if(!res.ok) throw new Error("Ошибка доступа"); 
+                const gist = await res.json(); 
+                currentData = JSON.parse(gist.files[FILE_NAME].content); 
+                render(); 
+                document.getElementById('status').innerText = "✅ Данные загружены!"; 
+                document.getElementById('status').style.color = "#4ec9b0"; 
+                setTimeout(() => document.getElementById('status').innerText = "", 2000); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ Ошибка загрузки"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
+        }
+
+        async function saveData() { 
+            syncData(); 
+            document.getElementById('status').innerText = "⏳ Сохранение..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) }); 
+                if(res.ok) { 
+                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
+                    document.getElementById('status').style.color = "#238636"; 
+                } else throw new Error(); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
         }
 
         load();
