@@ -26,10 +26,7 @@
         .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
         .status { text-align: center; font-weight: bold; margin: 15px 0; }
         
-        .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
-        .preview-box b { color: #dcdcaa; }
-        .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; }
-        
+        /* Стили для вкладки бэкапов */
         .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
         .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
     </style>
@@ -55,9 +52,12 @@
         <div id="tab-backups" class="tab-content">
             <div class="panel">
                 <h3 style="color:#569cd6; margin-bottom:10px; text-align:center;">📦 Сохранение и Восстановление</h3>
-                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом. Если что-то сломается, вы сможете загрузить его обратно.</p>
+                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
+                
                 <button class="backup-btn" onclick="exportBackup()">📥 СКАЧАТЬ БЭКАП (.json)</button>
+                
                 <hr style="border: 0; border-top: 1px solid #3e3e42; margin-bottom: 20px;">
+                
                 <h4 style="color:#ce9178; text-align:center; margin-bottom:5px;">Восстановить из файла:</h4>
                 <div class="file-input-wrapper">
                     <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:#4ec9b0;" onchange="importBackup(event)">
@@ -83,20 +83,13 @@
         let currentData = null;
         let token = localStorage.getItem('gh_token');
 
-        // 🔥 Пуленепробиваемое переключение вкладок
         function switchTab(t) {
-            try { syncData(); } catch(e) { console.error("Sync error:", e); }
-            
+            syncData();
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            
-            let btn = document.getElementById('btn-' + t);
-            let tab = document.getElementById('tab-' + t);
-            if(btn) btn.classList.add('active');
-            if(tab) tab.classList.add('active');
-            
-            try { render(); } catch(e) { console.error("Render error:", e); }
-            try { updatePreviews(); } catch(e) { console.error("Preview error:", e); }
+            document.getElementById('btn-' + t).classList.add('active');
+            document.getElementById('tab-' + t).classList.add('active');
+            render();
         }
 
         function clean(val) { 
@@ -106,310 +99,247 @@
 
         function syncData() {
             if(!currentData) return;
-            try {
-                // Волны
-                if(document.querySelector('#waves-list .panel')) {
-                    const wavePanels = document.querySelectorAll('#waves-list .panel');
-                    let newPhases = [];
-                    wavePanels.forEach((panel) => {
-                        let phase = {
-                            phaseName: panel.querySelector('.p-name').value,
-                            startTime: clean(panel.querySelector('.p-start').value),
-                            endTime: clean(panel.querySelector('.p-end').value),
-                            spawnInterval: clean(panel.querySelector('.p-int').value),
-                            enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1,
-                            enemies: []
-                        };
-                        panel.querySelectorAll('.enemy-row').forEach(row => {
-                            phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) });
-                        });
-                        newPhases.push(phase);
+            // Волны
+            if(document.querySelector('#waves-list .panel')) {
+                const wavePanels = document.querySelectorAll('#waves-list .panel');
+                let newPhases = [];
+                wavePanels.forEach((panel) => {
+                    let phase = {
+                        phaseName: panel.querySelector('.p-name').value,
+                        startTime: clean(panel.querySelector('.p-start').value),
+                        endTime: clean(panel.querySelector('.p-end').value),
+                        spawnInterval: clean(panel.querySelector('.p-int').value),
+                        enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1,
+                        enemies: []
+                    };
+                    panel.querySelectorAll('.enemy-row').forEach(row => {
+                        phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) });
                     });
-                    currentData.phases = newPhases;
-                }
+                    newPhases.push(phase);
+                });
+                currentData.phases = newPhases;
+            }
 
-                // Игрок
-                if(document.getElementById('ps_fSpeed')) {
-                    if (!currentData.playerStats) currentData.playerStats = {};
-                    currentData.playerStats.forwardSpeed = clean(document.getElementById('ps_fSpeed').value);
-                    currentData.playerStats.strafeSpeed = clean(document.getElementById('ps_sSpeed').value);
-                    currentData.playerStats.maxHealth = parseInt(clean(document.getElementById('ps_mHealth').value));
-                    currentData.playerStats.maxShields = parseInt(clean(document.getElementById('ps_mShields').value));
-                    currentData.playerStats.shieldRegenTime = clean(document.getElementById('ps_sRegen').value);
-                    currentData.playerStats.ricochetRadius = clean(document.getElementById('ps_rRadius').value);
-                    currentData.playerStats.radiusBonusPerUpgrade = clean(document.getElementById('ps_rBonus').value);
-                    currentData.playerStats.ricochetHeadChance = clean(document.getElementById('ps_rHead').value);
-                    currentData.playerStats.ricochetLegChance = clean(document.getElementById('ps_rLeg').value);
-                }
+            // Игрок
+            if(document.getElementById('ps_fSpeed')) {
+                currentData.playerStats.forwardSpeed = clean(document.getElementById('ps_fSpeed').value);
+                currentData.playerStats.strafeSpeed = clean(document.getElementById('ps_sSpeed').value);
+                currentData.playerStats.maxHealth = parseInt(clean(document.getElementById('ps_mHealth').value));
+                currentData.playerStats.maxShields = parseInt(clean(document.getElementById('ps_mShields').value));
+                currentData.playerStats.shieldRegenTime = clean(document.getElementById('ps_sRegen').value);
+                currentData.playerStats.ricochetRadius = clean(document.getElementById('ps_rRadius').value);
+                currentData.playerStats.radiusBonusPerUpgrade = clean(document.getElementById('ps_rBonus').value);
+                currentData.playerStats.ricochetHeadChance = clean(document.getElementById('ps_rHead').value);
+                currentData.playerStats.ricochetLegChance = clean(document.getElementById('ps_rLeg').value);
+            }
 
-                // Оружие
-                if(document.querySelector('.w-dmg')) {
-                    if (currentData.weapons) {
-                        currentData.weapons.forEach((w, i) => {
-                            let dmgEl = document.getElementById('w_dmg_' + i);
-                            if(dmgEl) {
-                                w.damage = clean(dmgEl.value);
-                                w.fireRate = clean(document.getElementById('w_fr_' + i).value);
-                                w.maxDistance = clean(document.getElementById('w_dist_' + i).value);
-                                w.spread = clean(document.getElementById('w_spr_' + i).value);
-                            }
-                        });
-                    }
-                }
+            // Оружие
+            if(document.querySelector('.w-dmg')) {
+                currentData.weapons.forEach((w, i) => {
+                    w.damage = clean(document.getElementById(`w_dmg_${i}`).value);
+                    w.fireRate = clean(document.getElementById(`w_fr_${i}`).value);
+                    w.maxDistance = clean(document.getElementById(`w_dist_${i}`).value);
+                    w.spread = clean(document.getElementById(`w_spr_${i}`).value);
+                });
+            }
 
-                // Апгрейды
-                if(document.getElementById('u_en_0')) {
-                    if (currentData.upgrades) {
-                        currentData.upgrades.forEach((u, i) => {
-                            let enEl = document.getElementById('u_en_' + i);
-                            if(enEl) {
-                                u.isEnabled = enEl.checked;
-                                let levelsArr = [];
-                                for(let lv=0; lv<5; lv++) {
-                                    levelsArr.push(clean(document.getElementById('u_lv_' + i + '_' + lv).value));
-                                }
-                                u.levelValues = levelsArr;
-                            }
-                        });
-                    }
-                }
-            } catch (e) {
-                console.error("Ошибка при сохранении данных с экрана:", e);
+            // Апгрейды
+            if(document.getElementById('u_en_0')) {
+                currentData.upgrades.forEach((u, i) => {
+                    u.isEnabled = document.getElementById(`u_en_${i}`).checked;
+                    u.levelValues = [0,1,2,3,4].map(lv => clean(document.getElementById(`u_lv_${i}_${lv}`).value));
+                });
             }
         }
 
         function render() {
             if(!currentData) return;
-            
             // Рендер волн
             let h = '';
-            if (currentData.phases) {
-                currentData.phases.forEach((p, i) => {
-                    h += '<div class="panel" data-id="' + i + '">';
-                    h += '<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="' + p.phaseName + '" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest(\'.panel\').remove()" style="margin-left:10px">✖</button></div>';
-                    h += '<div class="row"><div style="flex:1"><label>Start</label><input type="number" step="0.1" class="p-start" value="' + p.startTime + '"></div><div style="flex:1"><label>End</label><input type="number" step="0.1" class="p-end" value="' + p.endTime + '"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="' + p.spawnInterval + '"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="' + p.enemiesPerBatch + '"></div></div>';
-                    h += '<div class="enemies-list">';
-                    if (p.enemies) {
-                        p.enemies.forEach(e => {
-                            let optionsHtml = ""; let isKnown = false;
-                            ENEMY_IDS.forEach(id => {
-                                let selected = (id === e.enemyID) ? "selected" : "";
-                                if (selected) isKnown = true;
-                                optionsHtml += '<option value="' + id + '" ' + selected + '>' + id + '</option>';
-                            });
-                            if (!isKnown) optionsHtml += '<option value="' + e.enemyID + '" selected>' + e.enemyID + ' (Неизвестный)</option>';
-                            h += '<div class="row enemy-row"><select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="' + e.weight + '" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>';
-                        });
-                    }
-                    h += '</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button></div>';
+            currentData.phases.forEach((p, i) => {
+                h += `<div class="panel" data-id="${i}">
+                    <div class="header-row">
+                        <div class="drag-handle">☰</div>
+                        <input type="text" class="p-name" value="${p.phaseName}" style="margin:0; font-weight:bold;">
+                        <button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1"><label>Start</label><input type="number" step="0.1" class="p-start" value="${p.startTime}"></div>
+                        <div style="flex:1"><label>End</label><input type="number" step="0.1" class="p-end" value="${p.endTime}"></div>
+                        <div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div>
+                        <div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div>
+                    </div>
+                    <div class="enemies-list">`;
+                p.enemies.forEach(e => {
+                    let optionsHtml = ""; let isKnown = false;
+                    ENEMY_IDS.forEach(id => {
+                        let selected = (id === e.enemyID) ? "selected" : "";
+                        if (selected) isKnown = true;
+                        optionsHtml += `<option value="${id}" ${selected}>${id}</option>`;
+                    });
+                    if (!isKnown) optionsHtml += `<option value="${e.enemyID}" selected>${e.enemyID} (Неизвестный)</option>`;
+
+                    h += `<div class="row enemy-row">
+                        <select class="e-id" style="flex:2">${optionsHtml}</select>
+                        <input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1">
+                        <button class="btn-remove" onclick="this.parentElement.remove()">✖</button>
+                    </div>`;
                 });
-            }
+                h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button></div>`;
+            });
             document.getElementById('waves-list').innerHTML = h;
             initSortable();
 
             // Рендер игрока
             let ph = '';
             if(currentData.playerStats) {
-                ph = '<div class="panel">';
-                ph += '<h3 style="margin-bottom:10px; color:#569cd6;">🏃 Бег и Движение</h3><div class="row"><div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="' + currentData.playerStats.forwardSpeed + '" oninput="updatePreviews()"></div><div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="' + currentData.playerStats.strafeSpeed + '" oninput="updatePreviews()"></div></div>';
-                ph += '<h3 style="margin-top:20px; margin-bottom:10px; color:#f48771;">❤️ Здоровье и Щиты</h3><div class="row"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="' + currentData.playerStats.maxHealth + '" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="' + currentData.playerStats.maxShields + '"></div><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="' + currentData.playerStats.shieldRegenTime + '"></div></div>';
-                ph += '<h3 style="margin-top:20px; margin-bottom:10px; color:#dcdcaa;">🎯 Рикошет</h3><div class="row"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="' + currentData.playerStats.ricochetRadius + '"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="' + currentData.playerStats.radiusBonusPerUpgrade + '"></div></div>';
-                ph += '</div>';
+                ph = `
+                <div class="panel">
+                    <h3 style="margin-bottom:10px; color:#569cd6;">🏃 Бег и Движение</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Скорость Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}"></div>
+                        <div style="flex:1"><label>Скорость Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}"></div>
+                    </div>
+                    
+                    <h3 style="margin-top:20px; margin-bottom:10px; color:#f48771;">❤️ Здоровье и Щиты</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}"></div>
+                        <div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div>
+                        <div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div>
+                    </div>
+                    
+                    <h3 style="margin-top:20px; margin-bottom:10px; color:#dcdcaa;">🎯 Рикошет</h3>
+                    <div class="row">
+                        <div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div>
+                        <div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div>
+                    </div>
+                    <div class="row">
+                        <div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div>
+                        <div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div>
+                    </div>
+                </div>`;
             }
             document.getElementById('tab-player').innerHTML = ph;
 
             // Рендер оружия
             let wh = '';
-            if (currentData.weapons) {
-                currentData.weapons.forEach((w, i) => {
-                    wh += '<div class="panel"><h3 style="margin-bottom:10px; color:#ce9178;">' + w.weaponName + '</h3><div class="row">';
-                    wh += '<div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_' + i + '" class="w-dmg" value="' + w.damage + '" oninput="updatePreviews()"></div>';
-                    wh += '<div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_' + i + '" value="' + w.fireRate + '" oninput="updatePreviews()"></div>';
-                    wh += '<div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_' + i + '" value="' + w.maxDistance + '"></div>';
-                    wh += '<div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_' + i + '" value="' + w.spread + '"></div>';
-                    wh += '</div></div>';
-                });
-            }
+            currentData.weapons.forEach((w, i) => {
+                wh += `<div class="panel"><h3 style="margin-bottom:10px; color:#ce9178;">${w.weaponName}</h3><div class="row">
+                    <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}"></div>
+                    <div style="flex:1"><label>Скор-сть</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}"></div>
+                    <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
+                    <div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div>
+                </div></div>`;
+            });
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // Рендер апгрейдов с Тестовой Базой
+            // Рендер апгрейдов
             let uh = '';
-            if (currentData.upgrades) {
-                currentData.upgrades.forEach((u, i) => {
-                    let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
-                    
-                    uh += '<div class="panel">';
-                    uh += '<div class="header-row"><h3 style="margin:0; color:#569cd6;">' + u.type + '</h3><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:20px; margin:0 0 0 auto;"></div>';
-                    
-                    if (showTestBase) {
-                        uh += '<div class="row" style="margin-bottom:10px;"><div style="flex:1"><label style="color:#dcdcaa;">🧪 База для теста (не сохраняется в игру)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div></div>';
-                    }
-
-                    uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="row">';
-                    
-                    if (u.levelValues) {
-                        u.levelValues.forEach((v, lv) => {
-                            uh += '<div style="flex:1"><label>Lv ' + (lv+1) + '</label><input type="number" step="0.01" id="u_lv_' + i + '_' + lv + '" value="' + v + '" oninput="updatePreviews()"></div>';
-                        });
-                    }
-                    uh += '</div><div class="preview-box" id="preview_u_' + i + '">⏳ Считаем...</div></div>';
-                });
-            }
+            currentData.upgrades.forEach((u, i) => {
+                uh += `<div class="panel">
+                    <div class="header-row"><h3 style="margin:0; color:#569cd6;">${u.type}</h3><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:20px; margin:0 0 0 auto;"></div>
+                    <h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4>
+                    <div class="row">
+                        ${u.levelValues.map((v, lv) => `<div style="flex:1"><label>Lv ${lv+1}</label><input type="number" step="0.01" id="u_lv_${i}_${lv}" value="${v}"></div>`).join('')}
+                    </div>
+                </div>`;
+            });
             document.getElementById('tab-upgrades').innerHTML = uh;
-            
-            try { updatePreviews(); } catch(e) {} 
         }
 
-        // 🔥 МАТЕМАТИКА ИГРЫ (Очищена от любых конфликтующих символов)
-        function updatePreviews() {
-            try {
-                if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
-
-                currentData.upgrades.forEach((u, i) => {
-                    let previewDiv = document.getElementById('preview_u_' + i);
-                    if (!previewDiv) return;
-
-                    let tbInput = document.getElementById('u_testbase_' + i);
-                    let hasTestBase = (tbInput && tbInput.value !== "");
-                    let tBase = hasTestBase ? clean(tbInput.value) : 0;
-
-                    let levels = [];
-                    for(let lv=0; lv<5; lv++) {
-                        let lvInput = document.getElementById('u_lv_' + i + '_' + lv);
-                        levels.push(lvInput ? clean(lvInput.value) : 0);
-                    }
-
-                    let text = "";
-                    
-                    if (u.type === "Damage" || u.type === "FireRate") {
-                        if (hasTestBase) {
-                            let currentVal = tBase;
-                            let steps = [];
-                            for(let lv=0; lv<5; lv++) {
-                                currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
-                                steps.push(currentVal.toFixed(1));
-                            }
-                            text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>: " + steps.join(" ➔ ");
-                        } else {
-                            if (currentData.weapons) {
-                                let weaponTexts = currentData.weapons.map((w, wIdx) => {
-                                    let dmgInput = document.getElementById('w_dmg_' + wIdx);
-                                    let frInput = document.getElementById('w_fr_' + wIdx);
-                                    let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
-                                    let baseFr = clean(frInput ? frInput.value : w.fireRate);
-                                    
-                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr;
-                                    let steps = [];
-                                    for(let lv=0; lv<5; lv++) {
-                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
-                                        steps.push(currentVal.toFixed(1));
-                                    }
-                                    return "<b>" + w.weaponName + "</b>: " + steps.join(" ➔ ");
-                                });
-                                text = weaponTexts.join("<br>");
-                            }
-                        }
-                    }
-                    else if (u.type === "Health") {
-                        let hpInput = document.getElementById('ps_mHealth');
-                        let baseHpValue = 3;
-                        if (hpInput) {
-                            baseHpValue = clean(hpInput.value);
-                        } else if (currentData.playerStats && currentData.playerStats.maxHealth) {
-                            baseHpValue = currentData.playerStats.maxHealth;
-                        }
-                        
-                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
-                        let currentVal = baseHp;
-                        let steps = [];
-                        for(let lv=0; lv<5; lv++) {
-                            let bonus = Math.round(currentVal * levels[lv]);
-                            if (bonus < 1) bonus = 1;
-                            currentVal += bonus;
-                            steps.push(currentVal);
-                        }
-                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>: " + steps.join(" ➔ ") + " (сердечек)";
-                    }
-                    else if (u.type === "Speed") {
-                        let spdInput = document.getElementById('ps_sSpeed');
-                        let baseSpdValue = 20;
-                        if (spdInput) {
-                            baseSpdValue = clean(spdInput.value);
-                        } else if (currentData.playerStats && currentData.playerStats.strafeSpeed) {
-                            baseSpdValue = currentData.playerStats.strafeSpeed;
-                        }
-
-                        let baseSpd = hasTestBase ? tBase : baseSpdValue;
-                        let currentVal = baseSpd;
-                        let steps = [];
-                        for(let lv=0; lv<5; lv++) {
-                            currentVal *= (1 + levels[lv]);
-                            steps.push(currentVal.toFixed(1));
-                        }
-                        text = "<b>Скорость Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>: " + steps.join(" ➔ ");
-                    }
-                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод в Unity):</b> Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
-                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в скриптах Unity)</i>";
-                    else {
-                        let currentVal = hasTestBase ? tBase : 0; 
-                        let steps = [];
-                        for(let lv=0; lv<5; lv++) {
-                            currentVal += levels[lv];
-                            let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2);
-                            steps.push(hasTestBase ? formatted : "+" + formatted);
-                        }
-                        text = hasTestBase ? "<b>🧪 ТЕСТ (База " + tBase + ")</b>: " + steps.join(" ➔ ") : "<b>Суммарная прибавка</b>: " + steps.join(" ➔ ");
-                    }
-                    previewDiv.innerHTML = text;
-                });
-            } catch (err) {
-                console.error("Ошибка калькулятора (не влияет на игру):", err);
+        function initSortable() {
+            if(document.getElementById('waves-list')) {
+                new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 });
             }
         }
 
-        // --- Вспомогательные функции ---
-        function initSortable() { if(document.getElementById('waves-list')) new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 }); }
-        function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
-        function addPhase() { let list = document.getElementById('waves-list'); let div = document.createElement('div'); div.className = 'panel'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); div.innerHTML = '<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest(\'.panel\').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>'; list.appendChild(div); }
-        function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
-        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
-
-        async function load() { 
-            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); } 
-            if(!token) return; 
-            document.getElementById('status').innerText = "🔄 Загрузка..."; 
-            document.getElementById('status').style.color = "#dcdcaa"; 
-            try { 
-                const res = await fetch('https://api.github.com/gists/' + GIST_ID, { headers: { Authorization: 'token '+token }}); 
-                if(!res.ok) throw new Error("API Error"); 
-                const gist = await res.json(); 
-                currentData = JSON.parse(gist.files[FILE_NAME].content); 
-                render(); 
-                document.getElementById('status').innerText = "✅ Данные загружены!"; 
-                document.getElementById('status').style.color = "#4ec9b0"; 
-                setTimeout(() => document.getElementById('status').innerText = "", 2000); 
-            } catch (e) { 
-                document.getElementById('status').innerText = "❌ Ошибка загрузки"; 
-                document.getElementById('status').style.color = "#f48771"; 
-            } 
+        function addEnemy(btn) {
+            let row = document.createElement('div'); row.className = 'row enemy-row';
+            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
+            row.innerHTML = `<select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>`;
+            btn.previousElementSibling.appendChild(row);
         }
 
-        async function saveData() { 
-            syncData(); 
-            document.getElementById('status').innerText = "⏳ Сохранение..."; 
-            document.getElementById('status').style.color = "#dcdcaa"; 
-            try { 
-                const res = await fetch('https://api.github.com/gists/' + GIST_ID, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) }); 
-                if(res.ok) { 
-                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
-                    document.getElementById('status').style.color = "#238636"; 
-                } else {
-                    throw new Error("Save Error"); 
+        function addPhase() {
+            let list = document.getElementById('waves-list');
+            let div = document.createElement('div');
+            div.className = 'panel';
+            let optionsHtml = ENEMY_IDS.map(id => `<option value="${id}">${id}</option>`).join('');
+            div.innerHTML = `<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest('.panel').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>`;
+            list.appendChild(div);
+        }
+
+        // 🔥 ЛОГИКА БЭКАПОВ
+        function exportBackup() {
+            syncData();
+            if(!currentData) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(dlAnchorElem);
+            dlAnchorElem.click();
+            dlAnchorElem.remove();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    currentData = JSON.parse(e.target.result);
+                    render();
+                    document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB.";
+                    document.getElementById('status').style.color = "#4ec9b0";
+                    event.target.value = ''; // Сбрасываем поле выбора
+                } catch (err) {
+                    alert("Ошибка чтения файла! Это не похоже на правильный JSON.");
                 }
-            } catch (e) { 
-                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
-                document.getElementById('status').style.color = "#f48771"; 
-            } 
+            };
+            reader.readAsText(file);
+        }
+
+        async function load() {
+            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); }
+            if(!token) return;
+            
+            document.getElementById('status').innerText = "🔄 Загрузка...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
+                if(!res.ok) throw new Error("Ошибка доступа");
+                const gist = await res.json();
+                currentData = JSON.parse(gist.files[FILE_NAME].content);
+                render();
+                document.getElementById('status').innerText = "✅ Данные загружены!";
+                document.getElementById('status').style.color = "#4ec9b0";
+                setTimeout(() => document.getElementById('status').innerText = "", 2000);
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ Ошибка загрузки";
+                document.getElementById('status').style.color = "#f48771";
+            }
+        }
+
+        async function saveData() {
+            syncData();
+            document.getElementById('status').innerText = "⏳ Сохранение...";
+            document.getElementById('status').style.color = "#dcdcaa";
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: 'token '+token },
+                    body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } })
+                });
+                if(res.ok) {
+                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!";
+                    document.getElementById('status').style.color = "#238636";
+                } else throw new Error();
+            } catch (e) {
+                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!";
+                document.getElementById('status').style.color = "#f48771";
+            }
         }
 
         load();
