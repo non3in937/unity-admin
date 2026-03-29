@@ -46,6 +46,7 @@
         /* Цвета для EVO карточек */
         .evo-card { border-color: #c586c0; background: #201a23; }
         .evo-card .card-title { color: #c586c0; }
+        .recipe-badge { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 11px; color: #9cdcfe; }
     </style>
 </head>
 <body>
@@ -124,7 +125,6 @@
             return icons[type] || '🃏';
         }
 
-        // 🔥 ПРОВЕРКА И СОЗДАНИЕ СТРУКТУРЫ EVO
         function ensureEvoData() {
             if (!currentData.evos) {
                 currentData.evos = {
@@ -187,7 +187,6 @@
                 }
             } catch(e) { console.error("Карточки:", e); }
 
-            // 🔥 СОХРАНЕНИЕ EVO
             try {
                 if(document.getElementById('evo_ac_regen')) {
                     ensureEvoData();
@@ -268,33 +267,38 @@
             uh += '</div>';
             document.getElementById('tab-upgrades').innerHTML = uh;
             
-            // 🔥 РЕНДЕР EVO ВКЛАДКИ
+            // 🔥 РЕНДЕР EVO ВКЛАДКИ С РЕЦЕПТАМИ
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
             
             // Absolute Control
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header"><div class="card-title">🧊 Absolute Control</div></div>
+            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
                 <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div>`;
             
             // Hurricane Strafe
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header"><div class="card-title">🌪 Hurricane Strafe</div></div>
+            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
                 <div class="row"><div style="flex:1"><label>Стрейф</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div><div style="flex:1"><label>Бонус Поворота</label><input type="number" step="0.1" id="evo_hs_turn" value="${eData.hurricaneStrafe.evoMaxTurnBonus}"></div></div>
                 <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела (FireRate)</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
 
             // Lead Drill
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header"><div class="card-title">🔩 Lead Drill</div></div>
+            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
                 <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div>`;
 
             // Homing
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header"><div class="card-title">🎯 Homing</div></div>
+            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div>
                 <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div>
                 <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Дальность пушек</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div>`;
 
             // Tank
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header"><div class="card-title">💥 Tank Breakthrough</div></div>
+            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div>`;
 
