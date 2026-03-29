@@ -32,8 +32,8 @@
         /* СТИЛИ КАРТОЧЕК */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
         .upgrade-card { background: #252526; border: 2px solid #3e3e42; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; }
-        .upgrade-card:hover { border-color: #569cd6; transform: translateY(-3px); }
-        .upgrade-card.disabled { opacity: 0.6; border-color: #555; }
+        .upgrade-card:hover { transform: translateY(-3px); }
+        .upgrade-card.disabled { opacity: 0.6; border-color: #555 !important; }
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; }
         .card-title { font-size: 16px; font-weight: bold; color: #4ec9b0; margin: 0; display: flex; align-items: center; gap: 8px; }
         .card-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -45,13 +45,19 @@
         .preview-box b { color: #dcdcaa; }
         .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; margin-bottom: 15px !important;}
         
-        .evo-card { border-color: #c586c0; background: #201a23; }
-        .evo-card .card-title { color: #c586c0; }
+        .player-card { border-color: #4ec9b0; } .player-card:hover { border-color: #72ebd1; }
+        .weapon-card { border-color: #ce9178; } .weapon-card .card-title { color: #ce9178; } .weapon-card:hover { border-color: #e5a489; }
+        .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card) { border-color: #569cd6; } .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card):hover { border-color: #7abaff; }
+        
+        /* 🔥 УНИКАЛЬНЫЕ ЦВЕТА EVO КАРТОЧЕК */
+        .evo-card { background: #201a23; }
         .recipe-badge { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 11px; color: #9cdcfe; }
         
-        .player-card { border-color: #4ec9b0; }
-        .weapon-card { border-color: #ce9178; }
-        .weapon-card .card-title { color: #ce9178; }
+        .evo-ac { border-color: #4fc1ff; } .evo-ac .card-title { color: #4fc1ff; } .evo-ac:hover { border-color: #8ce1ff; } /* Лед (Голубой) */
+        .evo-hs { border-color: #dcdcaa; } .evo-hs .card-title { color: #dcdcaa; } .evo-hs:hover { border-color: #f5f5c3; } /* Ураган (Желтый) */
+        .evo-ld { border-color: #b5cea8; } .evo-ld .card-title { color: #b5cea8; } .evo-ld:hover { border-color: #d2ecc5; } /* Бур (Светло-зеленый) */
+        .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } /* Самонаведение (Фиолетовый) */
+        .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } /* Танк (Красный) */
     </style>
 </head>
 <body>
@@ -219,7 +225,7 @@
             if(!currentData) return;
             ensureEvoData();
             
-            // --- РЕНДЕР: ВОЛНЫ ---
+            // --- ВОЛНЫ ---
             let h = '';
             if (currentData.phases) {
                 currentData.phases.forEach((p, i) => {
@@ -231,73 +237,36 @@
             document.getElementById('waves-list').innerHTML = h;
             initSortable();
 
-            // --- РЕНДЕР: ИГРОК (В виде карточек) ---
+            // --- ИГРОК ---
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
-                // Карточка: Движение
-                ph += `<div class="upgrade-card player-card">
-                        <div class="card-header"><div class="card-title">🏃 Движение</div></div>
-                        <div class="row" style="margin-bottom:10px;">
-                            <div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div>
-                            <div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div>
-                        </div>
-                       </div>`;
-                // Карточка: Выживаемость
-                ph += `<div class="upgrade-card player-card">
-                        <div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
-                        <div class="row" style="margin-bottom:10px;">
-                            <div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div>
-                            <div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div>
-                        </div>
-                        <div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div>
-                       </div>`;
-                // Карточка: Рикошет
-                ph += `<div class="upgrade-card player-card">
-                        <div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
-                        <div class="row" style="margin-bottom:10px;">
-                            <div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div>
-                            <div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div>
-                        </div>
-                        <div class="row">
-                            <div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div>
-                            <div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div>
-                        </div>
-                       </div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
             }
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
 
-            // --- РЕНДЕР: ОРУЖИЕ (В виде карточек) ---
+            // --- ОРУЖИЕ ---
             let wh = '<div class="cards-grid">';
             if (currentData.weapons) {
                 currentData.weapons.forEach((w, i) => {
-                    let wIcon = '🔫';
-                    if (w.weaponName === 'AssaultRifle') wIcon = '☄️';
-                    if (w.weaponName === 'Shotgun') wIcon = '💥';
-
-                    wh += `<div class="upgrade-card weapon-card">
-                            <div class="card-header"><div class="card-title">${wIcon} ${w.weaponName}</div></div>
-                            <div class="row" style="margin-bottom:10px;">
-                                <div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div>
-                                <div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div>
-                            </div>
-                            <div class="row">
-                                <div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div>
-                                <div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div>
-                            </div>
-                           </div>`;
+                    let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
+                    wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${w.weaponName}</div></div>
+                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div></div></div>`;
                 });
             }
             wh += '</div>';
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // --- РЕНДЕР: КАРТОЧКИ АПГРЕЙДОВ ---
+            // --- КАРТОЧКИ ---
             let uh = '<div class="cards-grid">';
             if (currentData.upgrades) {
                 currentData.upgrades.forEach((u, i) => {
-                    let icon = getIconForType(u.type);
-                    let disabledClass = u.isEnabled ? '' : 'disabled';
-                    let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
+                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
                     uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header"><div class="card-title">' + icon + ' ' + u.type + '</div><label style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:#888;">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label></div>';
                     if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
                     uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
@@ -308,32 +277,32 @@
             uh += '</div>';
             document.getElementById('tab-upgrades').innerHTML = uh;
             
-            // --- РЕНДЕР: EVO ---
+            // --- EVO ---
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
             
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
                 <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div>`;
             
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
                 <div class="row"><div style="flex:1"><label>Стрейф</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div><div style="flex:1"><label>Бонус Поворота</label><input type="number" step="0.1" id="evo_hs_turn" value="${eData.hurricaneStrafe.evoMaxTurnBonus}"></div></div>
-                <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела (FireRate)</h4>
+                <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
                 <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div>
                 <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div>
                 <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Дальность пушек</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div>`;
