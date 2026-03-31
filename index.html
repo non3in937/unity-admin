@@ -528,7 +528,7 @@
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
-        function updatePreviews() {
+       function updatePreviews() {
             if (!currentData || !currentData.upgrades) return;
             
             currentData.upgrades.forEach((u, i) => {
@@ -540,61 +540,68 @@
                 
                 let bases = [];
                 
-                // 1. Если юзер ввел кастомную базу для теста
-                if (customBaseStr !== "") {
+                // 1. ЕСЛИ ВВЕДЕНА КАСТОМНАЯ БАЗА (Тестовый режим)
+                if (customBaseStr !== "" && !isNaN(parseFloat(customBaseStr))) {
                     bases.push({ label: "🧪 Тест-база", val: parseFloat(customBaseStr), isDeltaOnly: false });
                 } 
-                // 2. Умное автоопределение из других вкладок и хардкода
+                // 2. УМНЫЙ РЕЖИМ (Сам ищет базы в других вкладках)
                 else {
-                    if (u.type === "Damage") {
-                        currentData.weapons.forEach(w => bases.push({ label: "⚔️ " + translateWeapon(w.weaponName), val: w.damage }));
-                    } else if (u.type === "FireRate") {
-                        currentData.weapons.forEach(w => bases.push({ label: "🔥 " + translateWeapon(w.weaponName), val: w.fireRate }));
-                    } else if (u.type === "Distance") {
-                        currentData.weapons.forEach(w => bases.push({ label: "🔭 " + translateWeapon(w.weaponName), val: w.maxDistance }));
+                    if (u.type === "Damage" && currentData.weapons) {
+                        currentData.weapons.forEach(w => bases.push({ label: "⚔️ " + translateWeapon(w.weaponName), val: parseFloat(w.damage) || 0 }));
+                    } else if (u.type === "FireRate" && currentData.weapons) {
+                        currentData.weapons.forEach(w => bases.push({ label: "🔥 " + translateWeapon(w.weaponName), val: parseFloat(w.fireRate) || 0 }));
+                    } else if (u.type === "Distance" && currentData.weapons) {
+                        currentData.weapons.forEach(w => bases.push({ label: "🔭 " + translateWeapon(w.weaponName), val: parseFloat(w.maxDistance) || 0 }));
                     } else if (u.type === "Speed") {
-                        bases.push({ label: "🏃 Скорость игрока", val: currentData.playerStats ? currentData.playerStats.forwardSpeed : 15 });
+                        let speedBase = currentData.playerStats ? currentData.playerStats.forwardSpeed : 15;
+                        bases.push({ label: "🏃 Скорость игрока", val: parseFloat(speedBase) || 15 });
                     } else if (u.type === "Health") {
-                        bases.push({ label: "❤️ Здоровье", val: currentData.playerStats ? currentData.playerStats.maxHealth : 100 });
+                        let hpBase = currentData.playerStats ? currentData.playerStats.maxHealth : 100;
+                        bases.push({ label: "❤️ Здоровье игрока", val: parseFloat(hpBase) || 100 });
                     } else if (u.type === "Shield") {
-                        bases.push({ label: "🛡️ Щиты", val: currentData.playerStats ? currentData.playerStats.maxShields : 0 });
+                        let shBase = currentData.playerStats ? currentData.playerStats.maxShields : 0;
+                        bases.push({ label: "🛡️ Щиты", val: parseFloat(shBase) || 0 });
                     } else if (u.type === "BushSpeed") {
-                        bases.push({ label: "🍃 Кусты (хардкод)", val: 6 }); // Из Obstacle_Bush.cs
+                        bases.push({ label: "🍃 Скорость в кустах", val: 6 }); // Хардкод из Unity
                     } else if (u.type === "Ricochet") {
-                        bases.push({ label: "🪃 Рикошет (отскоки)", val: 0 }); 
+                        bases.push({ label: "🪃 Кол-во рикошетов", val: 0 }); 
                     } else if (u.type === "Piercing") {
-                        bases.push({ label: "🏹 Пробитие (насквозь)", val: 0 });
+                        bases.push({ label: "🏹 Кол-во пробитий", val: 0 });
                     } else if (u.type === "Regeneration") {
-                        bases.push({ label: "🩸 Реген HP", val: 0 });
+                        bases.push({ label: "🩸 Реген (HP/сек)", val: 0 });
+                    } else if (u.type === "CrystalRadius") {
+                        let rBase = currentData.playerStats ? currentData.playerStats.ricochetRadius : 5; // Берем базовый радиус
+                        bases.push({ label: "💎 Радиус сбора", val: parseFloat(rBase) || 5 });
                     } else {
-                        // Если база неизвестна, просто показываем сколько прибавит
-                        bases.push({ label: "➕ Накопительный бонус", val: 0, isDeltaOnly: true });
+                        // Если это неизвестный модификатор, просто показываем сколько прибавит
+                        bases.push({ label: "➕ Бонус к значению", val: 0, isDeltaOnly: true });
                     }
                 }
 
-                // --- ОТРИСОВКА РЕЗУЛЬТАТОВ ---
-                let html = "<div style='display:flex; flex-direction:column; gap:5px;'>";
+                // --- 3. ОТРИСОВКА РЕЗУЛЬТАТОВ (Без каши, всё по полочкам) ---
+                let html = "<div style='display:flex; flex-direction:column; gap:6px;'>";
                 
                 bases.forEach(b => {
-                    html += `<div style="background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px;">`;
+                    html += `<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border-left: 2px solid #569cd6;">`;
+                    
+                    // Заголовок (например: "⚔️ Пистолет (база: 20)")
                     if (!b.isDeltaOnly) {
-                        html += `<div style="color:#4ec9b0; margin-bottom:4px; font-size:11px;"><b>${b.label}</b> (база: <span style="color:#dcdcaa">${parseFloat(b.val.toFixed(2))}</span>)</div>`;
+                        html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b> <span style="color:#888;">(база: ${parseFloat(b.val.toFixed(2))})</span></div>`;
                     } else {
-                        html += `<div style="color:#4ec9b0; margin-bottom:4px; font-size:11px;"><b>${b.label}</b></div>`;
+                        html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b></div>`;
                     }
                     
                     let currentTotal = b.val;
-                    let sum = 0;
                     
-                    html += `<div style="display:flex; justify-content:space-between; font-size:11px; color:#888;">`;
+                    // Выводим 5 уровней в один ряд
+                    html += `<div style="display:flex; justify-content:space-between; font-size:12px; color:#dcdcaa;">`;
                     for (let lv = 0; lv < 5; lv++) {
                         let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
                         let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
                         
-                        currentTotal += val;
-                        sum += val;
+                        currentTotal += val; // Плюсуем бонус текущего уровня к общей сумме
                         
-                        let displayVal = b.isDeltaOnly ? `+${parseFloat(sum.toFixed(3))}` : parseFloat(currentTotal.toFixed(3));
+                        let displayVal = b.isDeltaOnly ? `+${parseFloat(currentTotal.toFixed(2))}` : parseFloat(currentTotal.toFixed(2));
                         html += `<span>L${lv + 1}: <b style="color:#fff;">${displayVal}</b></span>`;
                     }
                     html += `</div></div>`;
@@ -603,6 +610,13 @@
                 html += "</div>";
                 preview.innerHTML = html;
             });
+        }
+
+        function translateWeapon(name) {
+            if (name === "Pistol") return "Пистолет";
+            if (name === "AssaultRifle") return "Автомат";
+            if (name === "Shotgun") return "Дробовик";
+            return name;
         }
 
         function translateWeapon(name) {
