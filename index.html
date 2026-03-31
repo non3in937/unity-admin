@@ -535,33 +535,81 @@
                 let preview = document.getElementById('preview_u_' + i);
                 if (!preview) return;
 
-                let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
                 let baseInput = document.getElementById('u_testbase_' + i);
-                let baseVal = baseInput ? parseFloat(baseInput.value) : 0;
+                let customBaseStr = baseInput ? baseInput.value : "";
                 
-                let html = "";
-                let currentSum = 0;
-
-                if (showTestBase && baseInput && baseInput.value !== "") {
-                    html += `Итог, если база <b>${baseVal}</b>:<br>`;
-                    let currentTotal = baseVal;
-                    for (let lv = 0; lv < 5; lv++) {
-                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
-                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
-                        currentTotal += val; // Прибавляем бонус уровня
-                        html += `Lv ${lv + 1}: <b>${parseFloat(currentTotal.toFixed(3))}</b><br>`;
-                    }
-                } else {
-                    html += `Накопительный бонус:<br>`;
-                    for (let lv = 0; lv < 5; lv++) {
-                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
-                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
-                        currentSum += val; // Считаем общую сумму бонусов
-                        html += `Lv ${lv + 1}: <b>+${parseFloat(currentSum.toFixed(3))}</b><br>`;
+                let bases = [];
+                
+                // 1. Если юзер ввел кастомную базу для теста
+                if (customBaseStr !== "") {
+                    bases.push({ label: "🧪 Тест-база", val: parseFloat(customBaseStr), isDeltaOnly: false });
+                } 
+                // 2. Умное автоопределение из других вкладок и хардкода
+                else {
+                    if (u.type === "Damage") {
+                        currentData.weapons.forEach(w => bases.push({ label: "⚔️ " + translateWeapon(w.weaponName), val: w.damage }));
+                    } else if (u.type === "FireRate") {
+                        currentData.weapons.forEach(w => bases.push({ label: "🔥 " + translateWeapon(w.weaponName), val: w.fireRate }));
+                    } else if (u.type === "Distance") {
+                        currentData.weapons.forEach(w => bases.push({ label: "🔭 " + translateWeapon(w.weaponName), val: w.maxDistance }));
+                    } else if (u.type === "Speed") {
+                        bases.push({ label: "🏃 Скорость игрока", val: currentData.playerStats ? currentData.playerStats.forwardSpeed : 15 });
+                    } else if (u.type === "Health") {
+                        bases.push({ label: "❤️ Здоровье", val: currentData.playerStats ? currentData.playerStats.maxHealth : 100 });
+                    } else if (u.type === "Shield") {
+                        bases.push({ label: "🛡️ Щиты", val: currentData.playerStats ? currentData.playerStats.maxShields : 0 });
+                    } else if (u.type === "BushSpeed") {
+                        bases.push({ label: "🍃 Кусты (хардкод)", val: 6 }); // Из Obstacle_Bush.cs
+                    } else if (u.type === "Ricochet") {
+                        bases.push({ label: "🪃 Рикошет (отскоки)", val: 0 }); 
+                    } else if (u.type === "Piercing") {
+                        bases.push({ label: "🏹 Пробитие (насквозь)", val: 0 });
+                    } else if (u.type === "Regeneration") {
+                        bases.push({ label: "🩸 Реген HP", val: 0 });
+                    } else {
+                        // Если база неизвестна, просто показываем сколько прибавит
+                        bases.push({ label: "➕ Накопительный бонус", val: 0, isDeltaOnly: true });
                     }
                 }
+
+                // --- ОТРИСОВКА РЕЗУЛЬТАТОВ ---
+                let html = "<div style='display:flex; flex-direction:column; gap:5px;'>";
+                
+                bases.forEach(b => {
+                    html += `<div style="background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px;">`;
+                    if (!b.isDeltaOnly) {
+                        html += `<div style="color:#4ec9b0; margin-bottom:4px; font-size:11px;"><b>${b.label}</b> (база: <span style="color:#dcdcaa">${parseFloat(b.val.toFixed(2))}</span>)</div>`;
+                    } else {
+                        html += `<div style="color:#4ec9b0; margin-bottom:4px; font-size:11px;"><b>${b.label}</b></div>`;
+                    }
+                    
+                    let currentTotal = b.val;
+                    let sum = 0;
+                    
+                    html += `<div style="display:flex; justify-content:space-between; font-size:11px; color:#888;">`;
+                    for (let lv = 0; lv < 5; lv++) {
+                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
+                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
+                        
+                        currentTotal += val;
+                        sum += val;
+                        
+                        let displayVal = b.isDeltaOnly ? `+${parseFloat(sum.toFixed(3))}` : parseFloat(currentTotal.toFixed(3));
+                        html += `<span>L${lv + 1}: <b style="color:#fff;">${displayVal}</b></span>`;
+                    }
+                    html += `</div></div>`;
+                });
+                
+                html += "</div>";
                 preview.innerHTML = html;
             });
+        }
+
+        function translateWeapon(name) {
+            if (name === "Pistol") return "Пистолет";
+            if (name === "AssaultRifle") return "Автомат";
+            if (name === "Shotgun") return "Дробовик";
+            return name;
         }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
