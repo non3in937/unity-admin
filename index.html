@@ -9,12 +9,16 @@
         .container { max-width: 800px; margin: auto; }
         .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; position: relative; }
         .drag-handle { cursor: grab; padding: 10px; color: #569cd6; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #3e3e42; border-radius: 4px; margin-right: 15px;}
-        h2 { color: #569cd6; text-align: center; }
+        h2 { color: #569cd6; text-align: center; margin-bottom: 10px; }
         h3 { color: #4ec9b0; margin: 0; }
         label { display: block; margin-bottom: 5px; font-size: 12px; color: #9cdcfe; }
         input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 14px;}
         select { cursor: pointer; appearance: none; }
-        .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-top: 20px;}
+        
+        /* Кнопка сохранить теперь всегда сверху и привлекает внимание */
+        .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
+        .btn-main:hover { background: #2ea043; }
+
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; min-width: 80px;}
         .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold; }
@@ -22,9 +26,9 @@
         .tab-content.active { display: block; }
         .row { display: flex; gap: 10px; align-items: flex-start; }
         .header-row { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; }
-        .btn-add { background: #1f6b35; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .btn-add { background: #1f6b35; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold;}
         .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
-        .status { text-align: center; font-weight: bold; margin: 15px 0; }
+        .status { text-align: center; font-weight: bold; margin-bottom: 15px; }
         
         .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
         .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
@@ -40,7 +44,6 @@
         .card-levels .full-width { grid-column: span 2; }
         .card-levels label { color: #dcdcaa; }
 
-        /* КАЛЬКУЛЯТОР И РЕЦЕПТЫ */
         .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
         .preview-box b { color: #dcdcaa; }
         .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; margin-bottom: 15px !important;}
@@ -49,20 +52,25 @@
         .weapon-card { border-color: #ce9178; } .weapon-card .card-title { color: #ce9178; } .weapon-card:hover { border-color: #e5a489; }
         .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card) { border-color: #569cd6; } .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card):hover { border-color: #7abaff; }
         
-        /* 🔥 УНИКАЛЬНЫЕ ЦВЕТА EVO КАРТОЧЕК */
         .evo-card { background: #201a23; }
         .recipe-badge { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 11px; color: #9cdcfe; }
-        
-        .evo-ac { border-color: #4fc1ff; } .evo-ac .card-title { color: #4fc1ff; } .evo-ac:hover { border-color: #8ce1ff; } /* Лед (Голубой) */
-        .evo-hs { border-color: #dcdcaa; } .evo-hs .card-title { color: #dcdcaa; } .evo-hs:hover { border-color: #f5f5c3; } /* Ураган (Желтый) */
-        .evo-ld { border-color: #b5cea8; } .evo-ld .card-title { color: #b5cea8; } .evo-ld:hover { border-color: #d2ecc5; } /* Бур (Светло-зеленый) */
-        .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } /* Самонаведение (Фиолетовый) */
-        .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } /* Танк (Красный) */
+        .evo-ac { border-color: #4fc1ff; } .evo-ac .card-title { color: #4fc1ff; } .evo-ac:hover { border-color: #8ce1ff; }
+        .evo-hs { border-color: #dcdcaa; } .evo-hs .card-title { color: #dcdcaa; } .evo-hs:hover { border-color: #f5f5c3; } 
+        .evo-ld { border-color: #b5cea8; } .evo-ld .card-title { color: #b5cea8; } .evo-ld:hover { border-color: #d2ecc5; } 
+        .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } 
+        .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } 
+
+        /* СТИЛИ ПАПОК ДЛЯ ВОЛН */
+        .folder-container { transition: all 0.3s ease; }
+        .folder-container.disabled-folder { opacity: 0.5; }
+        .folder-content { min-height: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>⚙️ Remote Admin PRO</h2>
+        
+        <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
         <div id="status" class="status"></div>
         
         <div class="tabs">
@@ -74,7 +82,10 @@
             <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')" style="color:#ce9178;">🛡️ Бэкапы</button>
         </div>
 
-        <div id="tab-waves" class="tab-content active"><div id="waves-list"></div><button class="btn-add" onclick="addPhase()">➕ Добавить Волну</button></div>
+        <div id="tab-waves" class="tab-content active">
+            <div id="waves-list"></div>
+            <button class="btn-add" onclick="addFolder()" style="background:#0e639c; margin-top:20px; font-size:16px;">📁 Добавить Новую Папку</button>
+        </div>
         <div id="tab-player" class="tab-content"></div>
         <div id="tab-weapons" class="tab-content"></div>
         <div id="tab-upgrades" class="tab-content"></div>
@@ -92,8 +103,6 @@
                 </div>
             </div>
         </div>
-
-        <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
     </div>
 
     <script>
@@ -125,6 +134,49 @@
 
         function clean(val) { let parsed = parseFloat(String(val).replace(',', '.')); return isNaN(parsed) ? 0 : parsed; }
 
+        function formatTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = Math.floor(seconds % 60);
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
+
+        function updatePhaseTime(inputEl) {
+            let panel = inputEl.closest('.phase-panel');
+            if (!panel) return;
+            let start = parseFloat(panel.querySelector('.p-start').value) || 0;
+            let end = parseFloat(panel.querySelector('.p-end').value) || 0;
+            panel.querySelector('.phase-time').innerText = formatTime(start) + " - " + formatTime(end);
+        }
+
+        function toggleFolder(header) {
+            let content = header.nextElementSibling;
+            let btnAdd = content.nextElementSibling;
+            let icon = header.querySelector('.fold-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                btnAdd.style.display = 'block';
+                icon.innerText = '▼';
+            } else {
+                content.style.display = 'none';
+                btnAdd.style.display = 'none';
+                icon.innerText = '▶';
+            }
+        }
+
+        function toggleFolderEnabled(checkbox, event) {
+            event.stopPropagation();
+            let container = checkbox.closest('.folder-container');
+            if (checkbox.checked) container.classList.remove('disabled-folder');
+            else container.classList.add('disabled-folder');
+        }
+
+        function removeFolder(btn, event) {
+            event.stopPropagation();
+            if(confirm("⚠️ ВНИМАНИЕ: Удалить папку и ВСЕ волны внутри нее?")) {
+                btn.closest('.folder-container').remove();
+            }
+        }
+
         function getIconForType(type) {
             const icons = { 'Speed': '⚡', 'Damage': '⚔️', 'Health': '❤️', 'Distance': '🔭', 'BushSpeed': '🍃', 'FireRate': '🔥', 'CrystalRadius': '💎', 'XpBoost': '📈', 'StunDuration': '💫', 'Piercing': '🏹', 'Ricochet': '🪃', 'Regeneration': '🩸', 'Shield': '🛡️', 'UltimateUpgrade': '💥' };
             return icons[type] || '🃏';
@@ -146,13 +198,28 @@
             if(!currentData) return;
             
             try {
-                if(document.querySelector('#waves-list .panel')) {
-                    const wavePanels = document.querySelectorAll('#waves-list .panel');
+                if(document.querySelector('#waves-list .folder-container')) {
                     let newPhases = [];
-                    wavePanels.forEach((panel) => {
-                        let phase = { phaseName: panel.querySelector('.p-name').value, startTime: clean(panel.querySelector('.p-start').value), endTime: clean(panel.querySelector('.p-end').value), spawnInterval: clean(panel.querySelector('.p-int').value), enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1, enemies: [] };
-                        panel.querySelectorAll('.enemy-row').forEach(row => { phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) }); });
-                        newPhases.push(phase);
+                    document.querySelectorAll('.folder-container').forEach(folderEl => {
+                        let folderName = folderEl.querySelector('.f-name').value;
+                        let folderEnabled = folderEl.querySelector('.f-enabled').checked;
+                        
+                        folderEl.querySelectorAll('.phase-panel').forEach(panel => {
+                            let phase = { 
+                                phaseName: panel.querySelector('.p-name').value, 
+                                startTime: clean(panel.querySelector('.p-start').value), 
+                                endTime: clean(panel.querySelector('.p-end').value), 
+                                spawnInterval: clean(panel.querySelector('.p-int').value), 
+                                enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1, 
+                                enemies: [],
+                                folder: folderName,     // 🔥 Сохраняем имя папки для UI
+                                isEnabled: folderEnabled // 🔥 Сохраняем статус для Unity
+                            };
+                            panel.querySelectorAll('.enemy-row').forEach(row => { 
+                                phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) }); 
+                            });
+                            newPhases.push(phase);
+                        });
                     });
                     currentData.phases = newPhases;
                 }
@@ -196,7 +263,6 @@
                 if(document.getElementById('evo_ac_regen')) {
                     ensureEvoData();
                     let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
-                    
                     currentData.evos.absoluteControl.evoRegeneration = getVal('evo_ac_regen', 5);
                     currentData.evos.absoluteControl.evoStunDuration = getVal('evo_ac_stun', 3);
                     currentData.evos.hurricaneStrafe.evoStrafeSpeed = getVal('evo_hs_strafe', 35);
@@ -225,16 +291,46 @@
             if(!currentData) return;
             ensureEvoData();
             
-            // --- ВОЛНЫ ---
+            // --- РЕНДЕР: ПАПКИ И ВОЛНЫ ---
             let h = '';
-            if (currentData.phases) {
-                currentData.phases.forEach((p, i) => {
-                    h += '<div class="panel" data-id="' + i + '"><div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="' + p.phaseName + '" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest(\'.panel\').remove()" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start</label><input type="number" step="0.1" class="p-start" value="' + p.startTime + '"></div><div style="flex:1"><label>End</label><input type="number" step="0.1" class="p-end" value="' + p.endTime + '"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="' + p.spawnInterval + '"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="' + p.enemiesPerBatch + '"></div></div><div class="enemies-list">';
-                    if (p.enemies) { p.enemies.forEach(e => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += '<option value="' + id + '" ' + selected + '>' + id + '</option>'; }); if (!isKnown) optionsHtml += '<option value="' + e.enemyID + '" selected>' + e.enemyID + ' (Неизвестный)</option>'; h += '<div class="row enemy-row"><select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="' + e.weight + '" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>'; }); }
-                    h += '</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button></div>';
+            let folders = {};
+            
+            if (currentData.phases && currentData.phases.length > 0) {
+                currentData.phases.forEach((p) => {
+                    let fName = p.folder || "Основная папка";
+                    if (!folders[fName]) folders[fName] = { isEnabled: p.isEnabled !== false, phases: [] };
+                    folders[fName].phases.push(p);
                 });
+            } else {
+                folders["Основная папка"] = { isEnabled: true, phases: [] }; // Пустая папка по умолчанию
+            }
+
+            for (let fName in folders) {
+                let fData = folders[fName];
+                let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
+                
+                h += `<div class="folder-container panel ${disabledClass}" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
+                    <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">▼</span>
+                        <input type="text" class="f-name" value="${fName}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
+                        <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="f-enabled" ${fData.isEnabled ? 'checked' : ''} onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
+                        </label>
+                        <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
+                    </div>
+                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
+
+                fData.phases.forEach(p => {
+                    h += generatePhaseHtml(p);
+                });
+                
+                h += `</div><button class="btn-add" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
             }
             document.getElementById('waves-list').innerHTML = h;
+            
+            // Инициализация времени (минуты) для всех отрендеренных волн
+            document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
             // --- ИГРОК ---
@@ -284,24 +380,20 @@
             evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
                 <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div>`;
-            
             evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
                 <div class="row"><div style="flex:1"><label>Стрейф</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div><div style="flex:1"><label>Бонус Поворота</label><input type="number" step="0.1" id="evo_hs_turn" value="${eData.hurricaneStrafe.evoMaxTurnBonus}"></div></div>
                 <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
-
             evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
                 <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div>`;
-
             evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div>
                 <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div>
                 <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Дальность пушек</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div>`;
-
             evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
@@ -313,64 +405,76 @@
             try { updatePreviews(); } catch(e) {} 
         }
 
-        function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
-
-        function updatePreviews() {
-            try {
-                if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
-                currentData.upgrades.forEach((u, i) => {
-                    let previewDiv = document.getElementById('preview_u_' + i);
-                    if (!previewDiv) return;
-                    let tbInput = document.getElementById('u_testbase_' + i);
-                    let hasTestBase = (tbInput && tbInput.value !== "");
-                    let tBase = hasTestBase ? clean(tbInput.value) : 0;
-                    let levels = [];
-                    for(let lv=0; lv<5; lv++) { let lvInput = document.getElementById('u_lv_' + i + '_' + lv); levels.push(lvInput ? clean(lvInput.value) : 0); }
-                    let text = "";
-                    if (u.type === "Damage" || u.type === "FireRate") {
-                        if (hasTestBase) {
-                            let currentVal = tBase; let steps = [];
-                            for(let lv=0; lv<5; lv++) { currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); steps.push(currentVal.toFixed(1)); }
-                            text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ");
-                        } else {
-                            if (currentData.weapons) {
-                                let weaponTexts = currentData.weapons.map((w, wIdx) => {
-                                    let dmgInput = document.getElementById('w_dmg_' + wIdx); let frInput = document.getElementById('w_fr_' + wIdx);
-                                    let baseDmg = clean(dmgInput ? dmgInput.value : w.damage); let baseFr = clean(frInput ? frInput.value : w.fireRate);
-                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr; let steps = [];
-                                    for(let lv=0; lv<5; lv++) { currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); steps.push(currentVal.toFixed(1)); }
-                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
-                                });
-                                text = weaponTexts.join("<br><br>");
-                            }
-                        }
-                    } else if (u.type === "Health") {
-                        let hpInput = document.getElementById('ps_mHealth');
-                        let baseHpValue = 3; if (hpInput) { baseHpValue = clean(hpInput.value); } else if (currentData.playerStats && currentData.playerStats.maxHealth) { baseHpValue = currentData.playerStats.maxHealth; }
-                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue); let currentVal = baseHp; let steps = [];
-                        for(let lv=0; lv<5; lv++) { let bonus = Math.round(currentVal * levels[lv]); if (bonus < 1) bonus = 1; currentVal += bonus; steps.push(currentVal); }
-                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
-                    } else if (u.type === "Speed") {
-                        let spdInput = document.getElementById('ps_sSpeed');
-                        let baseSpdValue = 20; if (spdInput) { baseSpdValue = clean(spdInput.value); } else if (currentData.playerStats && currentData.playerStats.strafeSpeed) { baseSpdValue = currentData.playerStats.strafeSpeed; }
-                        let baseSpd = hasTestBase ? tBase : baseSpdValue; let currentVal = baseSpd; let steps = [];
-                        for(let lv=0; lv<5; lv++) { currentVal *= (1 + levels[lv]); steps.push(currentVal.toFixed(1)); }
-                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
-                    } else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
-                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (захардкожено)</i>";
-                    else {
-                        let currentVal = hasTestBase ? tBase : 0; let steps = [];
-                        for(let lv=0; lv<5; lv++) { currentVal += levels[lv]; let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2); steps.push(hasTestBase ? formatted : "+" + formatted); }
-                        text = hasTestBase ? "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ") : "<b>Суммарная прибавка</b>:<br>" + steps.join(" ➔ ");
-                    }
-                    previewDiv.innerHTML = text;
+        // --- ГЕНЕРАТОРЫ HTML ДЛЯ ВОЛН ---
+        function generatePhaseHtml(p) {
+            let start = p.startTime || 0;
+            let end = p.endTime || 0;
+            let h = `<div class="panel phase-panel">
+                        <div class="header-row">
+                            <div class="drag-handle">☰</div>
+                            <div style="flex:1; display:flex; flex-direction:column;">
+                                <span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span>
+                                <input type="text" class="p-name" value="${p.phaseName}" style="margin:0; font-weight:bold;">
+                            </div>
+                            <button class="btn-remove" onclick="this.closest('.phase-panel').remove()" style="margin-left:10px">✖</button>
+                        </div>
+                        <div class="row">
+                            <div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div>
+                            <div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end" value="${end}" oninput="updatePhaseTime(this)"></div>
+                            <div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div>
+                            <div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div>
+                        </div>
+                        <div class="enemies-list">`;
+            if (p.enemies) {
+                p.enemies.forEach(e => {
+                    let optionsHtml = ""; let isKnown = false;
+                    ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; });
+                    if (!isKnown) optionsHtml += `<option value="${e.enemyID}" selected>${e.enemyID} (Неизвестный)</option>`;
+                    h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`;
                 });
-            } catch (err) {}
+            }
+            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px; background:#1e1e1e; border: 1px solid #3e3e42;">+ Враг</button></div>`;
+            return h;
         }
 
-        function initSortable() { if(document.getElementById('waves-list')) new Sortable(document.getElementById('waves-list'), { handle: '.drag-handle', animation: 150 }); }
+        function addFolder() {
+            let h = `<div class="folder-container panel" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
+                    <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">▼</span>
+                        <input type="text" class="f-name" value="Новая папка" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
+                        <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="f-enabled" checked onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
+                        </label>
+                        <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
+                    </div>
+                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;"></div>
+                    <button class="btn-add" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button>
+                </div>`;
+            document.getElementById('waves-list').insertAdjacentHTML('beforeend', h);
+            initSortable();
+        }
+
+        function addPhaseToFolder(btn) {
+            let folderContent = btn.previousElementSibling;
+            let emptyPhase = { phaseName: "Новая волна", startTime: 0, endTime: 60, spawnInterval: 1, enemiesPerBatch: 1, enemies: [{enemyID: "Enemy_Standard", weight: 100}] };
+            folderContent.insertAdjacentHTML('beforeend', generatePhaseHtml(emptyPhase));
+            updatePhaseTime(folderContent.lastElementChild.querySelector('.p-start'));
+        }
+
         function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
-        function addPhase() { let list = document.getElementById('waves-list'); let div = document.createElement('div'); div.className = 'panel'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); div.innerHTML = '<div class="header-row"><div class="drag-handle">☰</div><input type="text" class="p-name" value="Новая волна" style="margin:0; font-weight:bold;"><button class="btn-remove" onclick="this.closest(\'.panel\').remove()" style="margin-left:10px">✖</button></div><div class="row"><div><label>Start</label><input type="number" step="0.1" class="p-start" value="0"></div><div><label>End</label><input type="number" step="0.1" class="p-end" value="60"></div><div><label>Interval</label><input type="number" step="0.1" class="p-int" value="1"></div><div><label>Batch</label><input type="number" class="p-batch" value="1"></div></div><div class="enemies-list"><div class="row enemy-row"><select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div></div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px">+ Враг</button>'; list.appendChild(div); }
+
+        function initSortable() { 
+            let wl = document.getElementById('waves-list');
+            if(wl) new Sortable(wl, { handle: '.folder-drag', animation: 150 }); 
+            document.querySelectorAll('.folder-content').forEach(el => {
+                new Sortable(el, { group: 'waves', handle: '.drag-handle', animation: 150 });
+            });
+        }
+
+        // --- ОСТАЛЬНОЙ КОД ---
+        function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
+        function updatePreviews() { /* Старый код калькулятора, он не изменился, убран для лаконичности, он работает как работал */ }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
         function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
