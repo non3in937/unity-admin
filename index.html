@@ -528,9 +528,14 @@
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
-       function updatePreviews() {
+      function updatePreviews() {
             if (!currentData || !currentData.upgrades) return;
             
+            // 🔥 РАЗДЕЛЯЕМ КАРТОЧКИ ПО ТИПУ МАТЕМАТИКИ
+            const percentBoostTypes = ["Damage", "Speed", "Health", "XpBoost", "UltimateUpgrade", "BushSpeed"];
+            const percentReduceTypes = ["FireRate"]; // Уменьшает базу (задержку)
+            // Все остальные (Distance, Piercing, Ricochet, Shield, Regeneration, StunDuration, CrystalRadius) - это плоское прибавление (+)
+
             currentData.upgrades.forEach((u, i) => {
                 let preview = document.getElementById('preview_u_' + i);
                 if (!preview) return;
@@ -544,7 +549,7 @@
                 if (customBaseStr !== "" && !isNaN(parseFloat(customBaseStr))) {
                     bases.push({ label: "🧪 Тест-база", val: parseFloat(customBaseStr), isDeltaOnly: false });
                 } 
-                // 2. УМНЫЙ РЕЖИМ (Сам ищет базы в других вкладках)
+                // 2. УМНЫЙ РЕЖИМ (Сам ищет базы)
                 else {
                     if (u.type === "Damage" && currentData.weapons) {
                         currentData.weapons.forEach(w => bases.push({ label: "⚔️ " + translateWeapon(w.weaponName), val: parseFloat(w.damage) || 0 }));
@@ -562,46 +567,72 @@
                         let shBase = currentData.playerStats ? currentData.playerStats.maxShields : 0;
                         bases.push({ label: "🛡️ Щиты", val: parseFloat(shBase) || 0 });
                     } else if (u.type === "BushSpeed") {
-                        bases.push({ label: "🍃 Скорость в кустах", val: 6 }); // Хардкод из Unity
+                        bases.push({ label: "🍃 Скорость в кустах", val: 6 }); // Хардкод базы
                     } else if (u.type === "Ricochet") {
-                        bases.push({ label: "🪃 Кол-во рикошетов", val: 0 }); 
+                        bases.push({ label: "🪃 Рикошетов", val: 0 }); 
                     } else if (u.type === "Piercing") {
-                        bases.push({ label: "🏹 Кол-во пробитий", val: 0 });
+                        bases.push({ label: "🏹 Пробитий", val: 0 });
                     } else if (u.type === "Regeneration") {
                         bases.push({ label: "🩸 Реген (HP/сек)", val: 0 });
                     } else if (u.type === "CrystalRadius") {
-                        let rBase = currentData.playerStats ? currentData.playerStats.ricochetRadius : 5; // Берем базовый радиус
+                        let rBase = currentData.playerStats ? currentData.playerStats.ricochetRadius : 5; 
                         bases.push({ label: "💎 Радиус сбора", val: parseFloat(rBase) || 5 });
+                    } else if (u.type === "StunDuration") {
+                        bases.push({ label: "💫 Оглушение (сек)", val: 0 });
                     } else {
-                        // Если это неизвестный модификатор, просто показываем сколько прибавит
-                        bases.push({ label: "➕ Бонус к значению", val: 0, isDeltaOnly: true });
+                        // Если база неизвестна
+                        bases.push({ label: "➕ Бонус", val: 0, isDeltaOnly: true });
                     }
                 }
 
-                // --- 3. ОТРИСОВКА РЕЗУЛЬТАТОВ (Без каши, всё по полочкам) ---
+                // --- 3. ОТРИСОВКА И ПРАВИЛЬНАЯ МАТЕМАТИКА ---
                 let html = "<div style='display:flex; flex-direction:column; gap:6px;'>";
                 
                 bases.forEach(b => {
                     html += `<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border-left: 2px solid #569cd6;">`;
                     
-                    // Заголовок (например: "⚔️ Пистолет (база: 20)")
                     if (!b.isDeltaOnly) {
                         html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b> <span style="color:#888;">(база: ${parseFloat(b.val.toFixed(2))})</span></div>`;
                     } else {
                         html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b></div>`;
                     }
                     
-                    let currentTotal = b.val;
+                    let sum = 0; // Накопительный бонус
                     
-                    // Выводим 5 уровней в один ряд
                     html += `<div style="display:flex; justify-content:space-between; font-size:12px; color:#dcdcaa;">`;
                     for (let lv = 0; lv < 5; lv++) {
                         let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
                         let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
+                        sum += val; // Плюсуем прокачку (например 0.05 + 0.05 = 0.1)
+
+                        let displayVal = "";
                         
-                        currentTotal += val; // Плюсуем бонус текущего уровня к общей сумме
-                        
-                        let displayVal = b.isDeltaOnly ? `+${parseFloat(currentTotal.toFixed(2))}` : parseFloat(currentTotal.toFixed(2));
+                        // ЕСЛИ БАЗА 0 ИЛИ МЫ ПОКАЗЫВАЕМ ПРОСТО ПРИРОСТ:
+                        if (b.isDeltaOnly || b.val === 0) {
+                            if (percentReduceTypes.includes(u.type)) {
+                                displayVal = `-${parseFloat((sum * 100).toFixed(1))}%`; // Покажет -10%
+                            } else if (percentBoostTypes.includes(u.type)) {
+                                displayVal = `+${parseFloat((sum * 100).toFixed(1))}%`; // Покажет +10%
+                            } else {
+                                displayVal = `+${parseFloat(sum.toFixed(2))}`; // Покажет +1.5
+                            }
+                        } 
+                        // ЕСЛИ СЧИТАЕМ ИТОГОВОЕ ЗНАЧЕНИЕ С БАЗОЙ:
+                        else {
+                            let result = 0;
+                            if (percentReduceTypes.includes(u.type)) {
+                                // Файррейт: База * (1 - бонус) -> 0.5 * (1 - 0.1) = 0.45
+                                result = b.val * (1 - sum); 
+                            } else if (percentBoostTypes.includes(u.type)) {
+                                // Урон, ХП: База * (1 + бонус) -> 20 * (1 + 0.1) = 22
+                                result = b.val * (1 + sum);
+                            } else {
+                                // Дистанция, Щиты: База + бонус -> 150 + 1 = 151
+                                result = b.val + sum;
+                            }
+                            displayVal = parseFloat(result.toFixed(2));
+                        }
+
                         html += `<span>L${lv + 1}: <b style="color:#fff;">${displayVal}</b></span>`;
                     }
                     html += `</div></div>`;
@@ -610,6 +641,13 @@
                 html += "</div>";
                 preview.innerHTML = html;
             });
+        }
+
+        function translateWeapon(name) {
+            if (name === "Pistol") return "Пистолет";
+            if (name === "AssaultRifle") return "Автомат";
+            if (name === "Shotgun") return "Дробовик";
+            return name;
         }
 
         function translateWeapon(name) {
