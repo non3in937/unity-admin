@@ -15,9 +15,12 @@
         input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 14px;}
         select { cursor: pointer; appearance: none; }
         
-        /* Кнопка сохранить теперь всегда сверху и привлекает внимание */
         .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
         .btn-main:hover { background: #2ea043; }
+
+        /* 🔥 СТИЛЬ ДЛЯ КНОПКИ UNDO */
+        .btn-undo { background: #c586c0; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 15px; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(197, 134, 192, 0.3); display: none; transition: transform 0.1s;}
+        .btn-undo:active { transform: scale(0.98); }
 
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; min-width: 80px;}
@@ -33,7 +36,6 @@
         .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
         .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
 
-        /* СТИЛИ КАРТОЧЕК */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
         .upgrade-card { background: #252526; border: 2px solid #3e3e42; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; }
         .upgrade-card:hover { transform: translateY(-3px); }
@@ -60,7 +62,6 @@
         .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } 
         .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } 
 
-        /* СТИЛИ ПАПОК ДЛЯ ВОЛН */
         .folder-container { transition: all 0.3s ease; }
         .folder-container.disabled-folder { opacity: 0.5; }
         .folder-content { min-height: 20px; }
@@ -83,6 +84,8 @@
         </div>
 
         <div id="tab-waves" class="tab-content active">
+            <button class="btn-undo" id="btn-undo" onclick="undo()">↩️ ОТМЕНИТЬ СЛУЧАЙНОЕ УДАЛЕНИЕ</button>
+            
             <div id="waves-list"></div>
             <button class="btn-add" onclick="addFolder()" style="background:#0e639c; margin-top:20px; font-size:16px;">📁 Добавить Новую Папку</button>
         </div>
@@ -119,6 +122,9 @@
 
         let currentData = null;
         let token = localStorage.getItem('gh_token');
+        
+        // 🔥 Стек для хранения истории удалений волн
+        let undoStack = []; 
 
         function switchTab(t) {
             try { syncData(); } catch(e) { console.error("Sync error:", e); }
@@ -148,19 +154,68 @@
             panel.querySelector('.phase-time').innerText = formatTime(start) + " - " + formatTime(end);
         }
 
+        // 🔥 СОХРАНЕНИЕ ПЕРЕД УДАЛЕНИЕМ (ДЛЯ UNDO)
+        function saveStateForUndo() {
+            try { syncData(); } catch(e){}
+            // Копируем только массив волн
+            undoStack.push(JSON.stringify(currentData.phases));
+            document.getElementById('btn-undo').style.display = 'block';
+        }
+
+        // 🔥 ФУНКЦИЯ ВОЗВРАТА (UNDO)
+        function undo() {
+            if (undoStack.length === 0) return;
+            let restoredPhases = undoStack.pop();
+            currentData.phases = JSON.parse(restoredPhases);
+            render();
+            
+            if (undoStack.length === 0) document.getElementById('btn-undo').style.display = 'none';
+            
+            let status = document.getElementById('status');
+            status.innerText = "✅ Удаление успешно отменено!";
+            status.style.color = "#c586c0";
+            setTimeout(() => status.innerText = "", 2000);
+        }
+
+        // 🔥 МГНОВЕННОЕ УДАЛЕНИЕ ПАПКИ (БЕЗ ВОПРОСОВ)
+        function removeFolder(btn, event) {
+            event.stopPropagation();
+            saveStateForUndo();
+            btn.closest('.folder-container').remove();
+            syncData(); // Обновляем data сразу после удаления из DOM
+        }
+
+        // 🔥 МГНОВЕННОЕ УДАЛЕНИЕ ВОЛНЫ (БЕЗ ВОПРОСОВ)
+        function removePhase(btn) {
+            saveStateForUndo();
+            btn.closest('.phase-panel').remove();
+            syncData(); // Обновляем data
+        }
+
+        // 🔥 ЛОГИКА СВОРАЧИВАНИЯ С ПАМЯТЬЮ
         function toggleFolder(header) {
             let content = header.nextElementSibling;
             let btnAdd = content.nextElementSibling;
             let icon = header.querySelector('.fold-icon');
+            let fName = header.querySelector('.f-name').value;
+            
+            // Читаем из памяти
+            let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
+
             if (content.style.display === 'none') {
                 content.style.display = 'block';
-                btnAdd.style.display = 'block';
+                if(btnAdd) btnAdd.style.display = 'block';
                 icon.innerText = '▼';
+                collapsed = collapsed.filter(n => n !== fName); // Удаляем из свернутых
             } else {
                 content.style.display = 'none';
-                btnAdd.style.display = 'none';
+                if(btnAdd) btnAdd.style.display = 'none';
                 icon.innerText = '▶';
+                if (!collapsed.includes(fName)) collapsed.push(fName); // Добавляем в свернутые
             }
+            
+            // Записываем обратно в память
+            localStorage.setItem('collapsedFolders', JSON.stringify(collapsed));
         }
 
         function toggleFolderEnabled(checkbox, event) {
@@ -168,13 +223,6 @@
             let container = checkbox.closest('.folder-container');
             if (checkbox.checked) container.classList.remove('disabled-folder');
             else container.classList.add('disabled-folder');
-        }
-
-        function removeFolder(btn, event) {
-            event.stopPropagation();
-            if(confirm("⚠️ ВНИМАНИЕ: Удалить папку и ВСЕ волны внутри нее?")) {
-                btn.closest('.folder-container').remove();
-            }
         }
 
         function getIconForType(type) {
@@ -212,8 +260,8 @@
                                 spawnInterval: clean(panel.querySelector('.p-int').value), 
                                 enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1, 
                                 enemies: [],
-                                folder: folderName,     // 🔥 Сохраняем имя папки для UI
-                                isEnabled: folderEnabled // 🔥 Сохраняем статус для Unity
+                                folder: folderName,     
+                                isEnabled: folderEnabled 
                             };
                             panel.querySelectorAll('.enemy-row').forEach(row => { 
                                 phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) }); 
@@ -302,34 +350,41 @@
                     folders[fName].phases.push(p);
                 });
             } else {
-                folders["Основная папка"] = { isEnabled: true, phases: [] }; // Пустая папка по умолчанию
+                folders["Основная папка"] = { isEnabled: true, phases: [] }; 
             }
+
+            // 🔥 Читаем память свернутых папок
+            let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
 
             for (let fName in folders) {
                 let fData = folders[fName];
                 let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
                 
+                // Проверяем, была ли папка свернута
+                let isCollapsed = collapsed.includes(fName);
+                let displayStyle = isCollapsed ? 'none' : 'block';
+                let iconText = isCollapsed ? '▶' : '▼';
+                
                 h += `<div class="folder-container panel ${disabledClass}" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
                     <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
                         <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
-                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">▼</span>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${iconText}</span>
                         <input type="text" class="f-name" value="${fName}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
                         <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
                             <input type="checkbox" class="f-enabled" ${fData.isEnabled ? 'checked' : ''} onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
                         </label>
                         <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
                     </div>
-                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
+                    <div class="folder-content sortable-list" style="display:${displayStyle}; margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
 
                 fData.phases.forEach(p => {
                     h += generatePhaseHtml(p);
                 });
                 
-                h += `</div><button class="btn-add" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
+                h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle}; background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
             }
             document.getElementById('waves-list').innerHTML = h;
             
-            // Инициализация времени (минуты) для всех отрендеренных волн
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
@@ -405,7 +460,6 @@
             try { updatePreviews(); } catch(e) {} 
         }
 
-        // --- ГЕНЕРАТОРЫ HTML ДЛЯ ВОЛН ---
         function generatePhaseHtml(p) {
             let start = p.startTime || 0;
             let end = p.endTime || 0;
@@ -416,7 +470,7 @@
                                 <span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span>
                                 <input type="text" class="p-name" value="${p.phaseName}" style="margin:0; font-weight:bold;">
                             </div>
-                            <button class="btn-remove" onclick="this.closest('.phase-panel').remove()" style="margin-left:10px">✖</button>
+                            <button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button>
                         </div>
                         <div class="row">
                             <div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div>
@@ -449,7 +503,7 @@
                         <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
                     </div>
                     <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;"></div>
-                    <button class="btn-add" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button>
+                    <button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button>
                 </div>`;
             document.getElementById('waves-list').insertAdjacentHTML('beforeend', h);
             initSortable();
@@ -472,9 +526,8 @@
             });
         }
 
-        // --- ОСТАЛЬНОЙ КОД ---
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
-        function updatePreviews() { /* Старый код калькулятора, он не изменился, убран для лаконичности, он работает как работал */ }
+        function updatePreviews() { /* Старый калькулятор... */ }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
         function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
@@ -508,6 +561,8 @@
                 if(res.ok) { 
                     document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
                     document.getElementById('status').style.color = "#238636"; 
+                    undoStack = []; // Очищаем историю удалений после успешного сохранения
+                    document.getElementById('btn-undo').style.display = 'none';
                 } else throw new Error(); 
             } catch (e) { 
                 document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
