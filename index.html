@@ -527,7 +527,42 @@
         }
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
-        function updatePreviews() { /* Старый калькулятор... */ }
+        
+        function updatePreviews() {
+            if (!currentData || !currentData.upgrades) return;
+            
+            currentData.upgrades.forEach((u, i) => {
+                let preview = document.getElementById('preview_u_' + i);
+                if (!preview) return;
+
+                let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed");
+                let baseInput = document.getElementById('u_testbase_' + i);
+                let baseVal = baseInput ? parseFloat(baseInput.value) : 0;
+                
+                let html = "";
+                let currentSum = 0;
+
+                if (showTestBase && baseInput && baseInput.value !== "") {
+                    html += `Итог, если база <b>${baseVal}</b>:<br>`;
+                    let currentTotal = baseVal;
+                    for (let lv = 0; lv < 5; lv++) {
+                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
+                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
+                        currentTotal += val; // Прибавляем бонус уровня
+                        html += `Lv ${lv + 1}: <b>${parseFloat(currentTotal.toFixed(3))}</b><br>`;
+                    }
+                } else {
+                    html += `Накопительный бонус:<br>`;
+                    for (let lv = 0; lv < 5; lv++) {
+                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
+                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
+                        currentSum += val; // Считаем общую сумму бонусов
+                        html += `Lv ${lv + 1}: <b>+${parseFloat(currentSum.toFixed(3))}</b><br>`;
+                    }
+                }
+                preview.innerHTML = html;
+            });
+        }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
         function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
