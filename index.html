@@ -529,118 +529,109 @@
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
       function updatePreviews() {
-            if (!currentData || !currentData.upgrades) return;
-            
-            // 🔥 РАЗДЕЛЯЕМ КАРТОЧКИ ПО ТИПУ МАТЕМАТИКИ
-            const percentBoostTypes = ["Damage", "Speed", "Health", "XpBoost", "UltimateUpgrade", "BushSpeed"];
-            const percentReduceTypes = ["FireRate"]; // Уменьшает базу (задержку)
-            // Все остальные (Distance, Piercing, Ricochet, Shield, Regeneration, StunDuration, CrystalRadius) - это плоское прибавление (+)
+            try {
+                if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
 
-            currentData.upgrades.forEach((u, i) => {
-                let preview = document.getElementById('preview_u_' + i);
-                if (!preview) return;
+                currentData.upgrades.forEach((u, i) => {
+                    let previewDiv = document.getElementById('preview_u_' + i);
+                    if (!previewDiv) return;
 
-                let baseInput = document.getElementById('u_testbase_' + i);
-                let customBaseStr = baseInput ? baseInput.value : "";
-                
-                let bases = [];
-                
-                // 1. ЕСЛИ ВВЕДЕНА КАСТОМНАЯ БАЗА (Тестовый режим)
-                if (customBaseStr !== "" && !isNaN(parseFloat(customBaseStr))) {
-                    bases.push({ label: "🧪 Тест-база", val: parseFloat(customBaseStr), isDeltaOnly: false });
-                } 
-                // 2. УМНЫЙ РЕЖИМ (Сам ищет базы)
-                else {
-                    if (u.type === "Damage" && currentData.weapons) {
-                        currentData.weapons.forEach(w => bases.push({ label: "⚔️ " + translateWeapon(w.weaponName), val: parseFloat(w.damage) || 0 }));
-                    } else if (u.type === "FireRate" && currentData.weapons) {
-                        currentData.weapons.forEach(w => bases.push({ label: "🔥 " + translateWeapon(w.weaponName), val: parseFloat(w.fireRate) || 0 }));
-                    } else if (u.type === "Distance" && currentData.weapons) {
-                        currentData.weapons.forEach(w => bases.push({ label: "🔭 " + translateWeapon(w.weaponName), val: parseFloat(w.maxDistance) || 0 }));
-                    } else if (u.type === "Speed") {
-                        let speedBase = currentData.playerStats ? currentData.playerStats.forwardSpeed : 15;
-                        bases.push({ label: "🏃 Скорость игрока", val: parseFloat(speedBase) || 15 });
-                    } else if (u.type === "Health") {
-                        let hpBase = currentData.playerStats ? currentData.playerStats.maxHealth : 100;
-                        bases.push({ label: "❤️ Здоровье игрока", val: parseFloat(hpBase) || 100 });
-                    } else if (u.type === "Shield") {
-                        let shBase = currentData.playerStats ? currentData.playerStats.maxShields : 0;
-                        bases.push({ label: "🛡️ Щиты", val: parseFloat(shBase) || 0 });
-                    } else if (u.type === "BushSpeed") {
-                        bases.push({ label: "🍃 Скорость в кустах", val: 6 }); // Хардкод базы
-                    } else if (u.type === "Ricochet") {
-                        bases.push({ label: "🪃 Рикошетов", val: 0 }); 
-                    } else if (u.type === "Piercing") {
-                        bases.push({ label: "🏹 Пробитий", val: 0 });
-                    } else if (u.type === "Regeneration") {
-                        bases.push({ label: "🩸 Реген (HP/сек)", val: 0 });
-                    } else if (u.type === "CrystalRadius") {
-                        let rBase = currentData.playerStats ? currentData.playerStats.ricochetRadius : 5; 
-                        bases.push({ label: "💎 Радиус сбора", val: parseFloat(rBase) || 5 });
-                    } else if (u.type === "StunDuration") {
-                        bases.push({ label: "💫 Оглушение (сек)", val: 0 });
-                    } else {
-                        // Если база неизвестна
-                        bases.push({ label: "➕ Бонус", val: 0, isDeltaOnly: true });
+                    let tbInput = document.getElementById('u_testbase_' + i);
+                    let hasTestBase = (tbInput && tbInput.value !== "");
+                    let tBase = hasTestBase ? clean(tbInput.value) : 0;
+
+                    let levels = [];
+                    for(let lv=0; lv<5; lv++) {
+                        let lvInput = document.getElementById('u_lv_' + i + '_' + lv);
+                        levels.push(lvInput ? clean(lvInput.value) : 0);
                     }
-                }
 
-                // --- 3. ОТРИСОВКА И ПРАВИЛЬНАЯ МАТЕМАТИКА ---
-                let html = "<div style='display:flex; flex-direction:column; gap:6px;'>";
-                
-                bases.forEach(b => {
-                    html += `<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border-left: 2px solid #569cd6;">`;
+                    let text = "";
                     
-                    if (!b.isDeltaOnly) {
-                        html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b> <span style="color:#888;">(база: ${parseFloat(b.val.toFixed(2))})</span></div>`;
-                    } else {
-                        html += `<div style="color:#9cdcfe; margin-bottom:6px; font-size:12px;"><b>${b.label}</b></div>`;
+                    if (u.type === "Damage" || u.type === "FireRate") {
+                        if (hasTestBase) {
+                            let currentVal = tBase;
+                            let steps = [];
+                            for(let lv=0; lv<5; lv++) {
+                                currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
+                                steps.push(currentVal.toFixed(1));
+                            }
+                            text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ");
+                        } else {
+                            if (currentData.weapons) {
+                                let weaponTexts = currentData.weapons.map((w, wIdx) => {
+                                    let dmgInput = document.getElementById('w_dmg_' + wIdx);
+                                    let frInput = document.getElementById('w_fr_' + wIdx);
+                                    let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
+                                    let baseFr = clean(frInput ? frInput.value : w.fireRate);
+                                    
+                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr;
+                                    let steps = [];
+                                    for(let lv=0; lv<5; lv++) {
+                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
+                                        steps.push(currentVal.toFixed(1));
+                                    }
+                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
+                                });
+                                text = weaponTexts.join("<br><br>");
+                            }
+                        }
                     }
-                    
-                    let sum = 0; // Накопительный бонус
-                    
-                    html += `<div style="display:flex; justify-content:space-between; font-size:12px; color:#dcdcaa;">`;
-                    for (let lv = 0; lv < 5; lv++) {
-                        let lvInput = document.getElementById(`u_lv_${i}_${lv}`);
-                        let val = lvInput ? parseFloat(lvInput.value) || 0 : 0;
-                        sum += val; // Плюсуем прокачку (например 0.05 + 0.05 = 0.1)
-
-                        let displayVal = "";
+                    else if (u.type === "Health") {
+                        let hpInput = document.getElementById('ps_mHealth');
+                        let baseHpValue = 3;
+                        if (hpInput) {
+                            baseHpValue = clean(hpInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.maxHealth) {
+                            baseHpValue = currentData.playerStats.maxHealth;
+                        }
                         
-                        // ЕСЛИ БАЗА 0 ИЛИ МЫ ПОКАЗЫВАЕМ ПРОСТО ПРИРОСТ:
-                        if (b.isDeltaOnly || b.val === 0) {
-                            if (percentReduceTypes.includes(u.type)) {
-                                displayVal = `-${parseFloat((sum * 100).toFixed(1))}%`; // Покажет -10%
-                            } else if (percentBoostTypes.includes(u.type)) {
-                                displayVal = `+${parseFloat((sum * 100).toFixed(1))}%`; // Покажет +10%
-                            } else {
-                                displayVal = `+${parseFloat(sum.toFixed(2))}`; // Покажет +1.5
-                            }
-                        } 
-                        // ЕСЛИ СЧИТАЕМ ИТОГОВОЕ ЗНАЧЕНИЕ С БАЗОЙ:
-                        else {
-                            let result = 0;
-                            if (percentReduceTypes.includes(u.type)) {
-                                // Файррейт: База * (1 - бонус) -> 0.5 * (1 - 0.1) = 0.45
-                                result = b.val * (1 - sum); 
-                            } else if (percentBoostTypes.includes(u.type)) {
-                                // Урон, ХП: База * (1 + бонус) -> 20 * (1 + 0.1) = 22
-                                result = b.val * (1 + sum);
-                            } else {
-                                // Дистанция, Щиты: База + бонус -> 150 + 1 = 151
-                                result = b.val + sum;
-                            }
-                            displayVal = parseFloat(result.toFixed(2));
+                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
+                        let currentVal = baseHp;
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            let bonus = Math.round(currentVal * levels[lv]);
+                            if (bonus < 1) bonus = 1;
+                            currentVal += bonus;
+                            steps.push(currentVal);
+                        }
+                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
+                    }
+                    else if (u.type === "Speed") {
+                        let spdInput = document.getElementById('ps_sSpeed');
+                        let baseSpdValue = 20;
+                        if (spdInput) {
+                            baseSpdValue = clean(spdInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.strafeSpeed) {
+                            baseSpdValue = currentData.playerStats.strafeSpeed;
                         }
 
-                        html += `<span>L${lv + 1}: <b style="color:#fff;">${displayVal}</b></span>`;
+                        let baseSpd = hasTestBase ? tBase : baseSpdValue;
+                        let currentVal = baseSpd;
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal *= (1 + levels[lv]);
+                            steps.push(currentVal.toFixed(1));
+                        }
+                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
                     }
-                    html += `</div></div>`;
+                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в Unity)</i>";
+                    else {
+                        let currentVal = hasTestBase ? tBase : 0; 
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal += levels[lv];
+                            let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2);
+                            steps.push(hasTestBase ? formatted : "+" + formatted);
+                        }
+                        text = hasTestBase ? "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ") : "<b>Суммарная прибавка</b>:<br>" + steps.join(" ➔ ");
+                    }
+                    previewDiv.innerHTML = text;
                 });
-                
-                html += "</div>";
-                preview.innerHTML = html;
-            });
+            } catch (err) {
+                console.error("Ошибка калькулятора (не ломает логику):", err);
+            }
         }
 
         function translateWeapon(name) {
