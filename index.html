@@ -18,7 +18,6 @@
         .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
         .btn-main:hover { background: #2ea043; }
 
-        /* 🔥 СТИЛЬ ДЛЯ КНОПКИ UNDO */
         .btn-undo { background: #c586c0; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 15px; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(197, 134, 192, 0.3); display: none; transition: transform 0.1s;}
         .btn-undo:active { transform: scale(0.98); }
 
@@ -123,7 +122,6 @@
         let currentData = null;
         let token = localStorage.getItem('gh_token');
         
-        // 🔥 Стек для хранения истории удалений волн
         let undoStack = []; 
 
         function switchTab(t) {
@@ -154,15 +152,12 @@
             panel.querySelector('.phase-time').innerText = formatTime(start) + " - " + formatTime(end);
         }
 
-        // 🔥 СОХРАНЕНИЕ ПЕРЕД УДАЛЕНИЕМ (ДЛЯ UNDO)
         function saveStateForUndo() {
             try { syncData(); } catch(e){}
-            // Копируем только массив волн
             undoStack.push(JSON.stringify(currentData.phases));
             document.getElementById('btn-undo').style.display = 'block';
         }
 
-        // 🔥 ФУНКЦИЯ ВОЗВРАТА (UNDO)
         function undo() {
             if (undoStack.length === 0) return;
             let restoredPhases = undoStack.pop();
@@ -177,44 +172,39 @@
             setTimeout(() => status.innerText = "", 2000);
         }
 
-        // 🔥 МГНОВЕННОЕ УДАЛЕНИЕ ПАПКИ (БЕЗ ВОПРОСОВ)
         function removeFolder(btn, event) {
             event.stopPropagation();
             saveStateForUndo();
             btn.closest('.folder-container').remove();
-            syncData(); // Обновляем data сразу после удаления из DOM
+            syncData(); 
         }
 
-        // 🔥 МГНОВЕННОЕ УДАЛЕНИЕ ВОЛНЫ (БЕЗ ВОПРОСОВ)
         function removePhase(btn) {
             saveStateForUndo();
             btn.closest('.phase-panel').remove();
-            syncData(); // Обновляем data
+            syncData(); 
         }
 
-        // 🔥 ЛОГИКА СВОРАЧИВАНИЯ С ПАМЯТЬЮ
         function toggleFolder(header) {
             let content = header.nextElementSibling;
             let btnAdd = content.nextElementSibling;
             let icon = header.querySelector('.fold-icon');
             let fName = header.querySelector('.f-name').value;
             
-            // Читаем из памяти
             let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
 
             if (content.style.display === 'none') {
                 content.style.display = 'block';
                 if(btnAdd) btnAdd.style.display = 'block';
                 icon.innerText = '▼';
-                collapsed = collapsed.filter(n => n !== fName); // Удаляем из свернутых
+                collapsed = collapsed.filter(n => n !== fName); 
             } else {
                 content.style.display = 'none';
                 if(btnAdd) btnAdd.style.display = 'none';
                 icon.innerText = '▶';
-                if (!collapsed.includes(fName)) collapsed.push(fName); // Добавляем в свернутые
+                if (!collapsed.includes(fName)) collapsed.push(fName); 
             }
             
-            // Записываем обратно в память
             localStorage.setItem('collapsedFolders', JSON.stringify(collapsed));
         }
 
@@ -339,7 +329,6 @@
             if(!currentData) return;
             ensureEvoData();
             
-            // --- РЕНДЕР: ПАПКИ И ВОЛНЫ ---
             let h = '';
             let folders = {};
             
@@ -353,14 +342,12 @@
                 folders["Основная папка"] = { isEnabled: true, phases: [] }; 
             }
 
-            // 🔥 Читаем память свернутых папок
             let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
 
             for (let fName in folders) {
                 let fData = folders[fName];
                 let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
                 
-                // Проверяем, была ли папка свернута
                 let isCollapsed = collapsed.includes(fName);
                 let displayStyle = isCollapsed ? 'none' : 'block';
                 let iconText = isCollapsed ? '▶' : '▼';
@@ -388,7 +375,6 @@
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
-            // --- ИГРОК ---
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
@@ -401,7 +387,6 @@
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
 
-            // --- ОРУЖИЕ ---
             let wh = '<div class="cards-grid">';
             if (currentData.weapons) {
                 currentData.weapons.forEach((w, i) => {
@@ -413,7 +398,6 @@
             wh += '</div>';
             document.getElementById('tab-weapons').innerHTML = wh;
 
-            // --- КАРТОЧКИ ---
             let uh = '<div class="cards-grid">';
             if (currentData.upgrades) {
                 currentData.upgrades.forEach((u, i) => {
@@ -428,7 +412,6 @@
             uh += '</div>';
             document.getElementById('tab-upgrades').innerHTML = uh;
             
-            // --- EVO ---
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
             
@@ -528,7 +511,7 @@
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
-      function updatePreviews() {
+        function updatePreviews() {
             try {
                 if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
 
@@ -571,7 +554,7 @@
                                         currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
                                         steps.push(currentVal.toFixed(1));
                                     }
-                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
+                                    return "<b>" + translateWeapon(w.weaponName) + "</b>:<br>" + steps.join(" ➔ ");
                                 });
                                 text = weaponTexts.join("<br><br>");
                             }
@@ -595,7 +578,7 @@
                             currentVal += bonus;
                             steps.push(currentVal);
                         }
-                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
+                        text = "<b>❤️ HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
                     }
                     else if (u.type === "Speed") {
                         let spdInput = document.getElementById('ps_sSpeed');
@@ -613,10 +596,24 @@
                             currentVal *= (1 + levels[lv]);
                             steps.push(currentVal.toFixed(1));
                         }
-                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
+                        text = "<b>🏃 Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
                     }
-                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
-                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в Unity)</i>";
+                    else if (u.type === "Shield") {
+                        text = "<b>🛡️ Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    }
+                    else if (u.type === "Distance") {
+                        text = "<b>🔭 Пресет 'Снайпер' (Хардкод Unity):</b><br><b>Дальность:</b> x1.1 ➔ x1.2 ➔ x1.3 ➔ x1.4 ➔ x1.5<br><b>Разброс:</b> x0.8 ➔ x0.6 ➔ x0.4 ➔ x0.2 ➔ 0<br><b>Доп. Крит:</b> +5% ➔ +10% ➔ +15% ➔ +20% ➔ +30%";
+                    }
+                    else if (u.type === "BushSpeed") {
+                        let currentVal = hasTestBase ? tBase : 6.0; 
+                        let bushSteps = [];
+                        let treeSteps = ["80%", "60%", "40%", "20%", "0%"];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal += levels[lv];
+                            bushSteps.push(currentVal.toFixed(2));
+                        }
+                        text = "<b>🍃 Скор. в кустах" + (hasTestBase ? " (ТЕСТ)" : " (База 6.0)") + "</b>:<br>" + bushSteps.join(" ➔ ") + "<br><b>🌳 Спотыкание о деревья:</b><br>" + treeSteps.join(" ➔ ");
+                    }
                     else {
                         let currentVal = hasTestBase ? tBase : 0; 
                         let steps = [];
@@ -632,20 +629,6 @@
             } catch (err) {
                 console.error("Ошибка калькулятора (не ломает логику):", err);
             }
-        }
-
-        function translateWeapon(name) {
-            if (name === "Pistol") return "Пистолет";
-            if (name === "AssaultRifle") return "Автомат";
-            if (name === "Shotgun") return "Дробовик";
-            return name;
-        }
-
-        function translateWeapon(name) {
-            if (name === "Pistol") return "Пистолет";
-            if (name === "AssaultRifle") return "Автомат";
-            if (name === "Shotgun") return "Дробовик";
-            return name;
         }
 
         function translateWeapon(name) {
@@ -687,7 +670,7 @@
                 if(res.ok) { 
                     document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
                     document.getElementById('status').style.color = "#238636"; 
-                    undoStack = []; // Очищаем историю удалений после успешного сохранения
+                    undoStack = []; 
                     document.getElementById('btn-undo').style.display = 'none';
                 } else throw new Error(); 
             } catch (e) { 
