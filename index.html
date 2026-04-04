@@ -121,7 +121,6 @@
 
         let currentData = null;
         let token = localStorage.getItem('gh_token');
-        
         let undoStack = []; 
 
         function switchTab(t) {
@@ -276,6 +275,9 @@
                     currentData.playerStats.radiusBonusPerUpgrade = getVal('ps_rBonus', currentData.playerStats.radiusBonusPerUpgrade);
                     currentData.playerStats.ricochetHeadChance = getVal('ps_rHead', currentData.playerStats.ricochetHeadChance);
                     currentData.playerStats.ricochetLegChance = getVal('ps_rLeg', currentData.playerStats.ricochetLegChance);
+                    // 🔥 Сохраняем новые переменные опыта
+                    currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 3);
+                    currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 1.4);
                 }
             } catch(e) { console.error("Игрок:", e); }
 
@@ -375,6 +377,7 @@
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
+            // --- ИГРОК ---
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
@@ -383,6 +386,9 @@
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
+                // 🔥 ДОБАВЛЯЕМ НОВУЮ КАРТОЧКУ ОПЫТА
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
+                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 3}"></div><div style="flex:1"><label>Множитель Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 1.4}"></div></div></div>`;
             }
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
@@ -511,7 +517,7 @@
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
-        function updatePreviews() {
+      function updatePreviews() {
             try {
                 if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
 
@@ -554,7 +560,7 @@
                                         currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
                                         steps.push(currentVal.toFixed(1));
                                     }
-                                    return "<b>" + translateWeapon(w.weaponName) + "</b>:<br>" + steps.join(" ➔ ");
+                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
                                 });
                                 text = weaponTexts.join("<br><br>");
                             }
@@ -578,7 +584,7 @@
                             currentVal += bonus;
                             steps.push(currentVal);
                         }
-                        text = "<b>❤️ HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
+                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
                     }
                     else if (u.type === "Speed") {
                         let spdInput = document.getElementById('ps_sSpeed');
@@ -596,24 +602,10 @@
                             currentVal *= (1 + levels[lv]);
                             steps.push(currentVal.toFixed(1));
                         }
-                        text = "<b>🏃 Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
+                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
                     }
-                    else if (u.type === "Shield") {
-                        text = "<b>🛡️ Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
-                    }
-                    else if (u.type === "Distance") {
-                        text = "<b>🔭 Пресет 'Снайпер' (Хардкод Unity):</b><br><b>Дальность:</b> x1.1 ➔ x1.2 ➔ x1.3 ➔ x1.4 ➔ x1.5<br><b>Разброс:</b> x0.8 ➔ x0.6 ➔ x0.4 ➔ x0.2 ➔ 0<br><b>Доп. Крит:</b> +5% ➔ +10% ➔ +15% ➔ +20% ➔ +30%";
-                    }
-                    else if (u.type === "BushSpeed") {
-                        let currentVal = hasTestBase ? tBase : 6.0; 
-                        let bushSteps = [];
-                        let treeSteps = ["80%", "60%", "40%", "20%", "0%"];
-                        for(let lv=0; lv<5; lv++) {
-                            currentVal += levels[lv];
-                            bushSteps.push(currentVal.toFixed(2));
-                        }
-                        text = "<b>🍃 Скор. в кустах" + (hasTestBase ? " (ТЕСТ)" : " (База 6.0)") + "</b>:<br>" + bushSteps.join(" ➔ ") + "<br><b>🌳 Спотыкание о деревья:</b><br>" + treeSteps.join(" ➔ ");
-                    }
+                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в Unity)</i>";
                     else {
                         let currentVal = hasTestBase ? tBase : 0; 
                         let steps = [];
@@ -629,13 +621,6 @@
             } catch (err) {
                 console.error("Ошибка калькулятора (не ломает логику):", err);
             }
-        }
-
-        function translateWeapon(name) {
-            if (name === "Pistol") return "Пистолет";
-            if (name === "AssaultRifle") return "Автомат";
-            if (name === "Shotgun") return "Дробовик";
-            return name;
         }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
@@ -670,7 +655,7 @@
                 if(res.ok) { 
                     document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
                     document.getElementById('status').style.color = "#238636"; 
-                    undoStack = []; 
+                    undoStack = [];
                     document.getElementById('btn-undo').style.display = 'none';
                 } else throw new Error(); 
             } catch (e) { 
