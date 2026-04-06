@@ -275,8 +275,8 @@
                     currentData.playerStats.radiusBonusPerUpgrade = getVal('ps_rBonus', currentData.playerStats.radiusBonusPerUpgrade);
                     currentData.playerStats.ricochetHeadChance = getVal('ps_rHead', currentData.playerStats.ricochetHeadChance);
                     currentData.playerStats.ricochetLegChance = getVal('ps_rLeg', currentData.playerStats.ricochetLegChance);
-                    currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 3);
-                    currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 1.4);
+                    currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 5);
+                    currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 10);
                 }
             } catch(e) { console.error("Игрок:", e); }
 
@@ -385,7 +385,7 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
-                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 3}" oninput="updatePreviews()"></div><div style="flex:1"><label>Множитель Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 1.4}" oninput="updatePreviews()"></div></div></div>`;
+                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
             }
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
@@ -656,30 +656,36 @@
                         text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") + 
                                "<br><br><b>Штраф от деревьев</b>:<br>" + treeSteps.join(" ➔ ");
                     }
-                    // 🔥 ДОБАВЛЕНО: Умный расчет кристаллов для XpBoost
+                    // 🔥 ИСПРАВЛЕНИЕ: Новая линейная математика для XpBoost
                     else if (u.type === "XpBoost") {
                         let bXpInput = document.getElementById('ps_bXP');
                         let gFactorInput = document.getElementById('ps_gFactor');
-                        let baseXP = bXpInput ? clean(bXpInput.value) : (currentData.playerStats ? currentData.playerStats.baseXP : 3);
-                        let gFactor = gFactorInput ? clean(gFactorInput.value) : (currentData.playerStats ? currentData.playerStats.growthFactor : 1.4);
+                        let baseXP = bXpInput ? clean(bXpInput.value) : (currentData.playerStats ? currentData.playerStats.baseXP : 5);
+                        let gFactor = gFactorInput ? clean(gFactorInput.value) : (currentData.playerStats ? currentData.playerStats.growthFactor : 10);
 
                         let multSteps = [];
                         let lvl2Steps = [];
-                        let lvl3Steps = [];
-                        let currentMult = 1.0; // Изначальный множитель игрока (100%)
+                        let lvl10Steps = [];
+                        let lvl20Steps = [];
+                        
+                        let currentMult = 1.0; 
+                        let xpForLvl2 = baseXP;
+                        let xpForLvl10 = baseXP + (gFactor * 8); 
+                        let xpForLvl20 = baseXP + (gFactor * 18); 
 
                         for(let lv=0; lv<5; lv++) {
                             currentMult += levels[lv];
                             multSteps.push("x" + currentMult.toFixed(2));
                             
-                            // Считаем сколько кристаллов по 1 XP нужно собрать
-                            lvl2Steps.push(Math.ceil(baseXP / currentMult));
-                            lvl3Steps.push(Math.ceil((baseXP * gFactor) / currentMult));
+                            lvl2Steps.push(Math.ceil(xpForLvl2 / currentMult));
+                            lvl10Steps.push(Math.ceil(xpForLvl10 / currentMult));
+                            lvl20Steps.push(Math.ceil(xpForLvl20 / currentMult));
                         }
 
-                        text = "<b>Итоговый Множитель Опыта</b>:<br>" + multSteps.join(" ➔ ") + 
-                               "<br><br><b>Алмазов до 2 Ур. (надо " + baseXP + " XP)</b>:<br>" + lvl2Steps.join(" ➔ ") +
-                               "<br><br><b>Алмазов до 3 Ур. (надо " + (baseXP * gFactor).toFixed(1) + " XP)</b>:<br>" + lvl3Steps.join(" ➔ ");
+                        text = "<b>Множитель Опыта от Карточки</b>:<br>" + multSteps.join(" ➔ ") + 
+                               "<br><br><b>Алмазов до 2 Ур. (надо " + xpForLvl2.toFixed(1) + " XP)</b>:<br>" + lvl2Steps.join(" ➔ ") +
+                               "<br><br><b>Алмазов до 10 Ур. (надо " + xpForLvl10.toFixed(1) + " XP)</b>:<br>" + lvl10Steps.join(" ➔ ") +
+                               "<br><br><b>Алмазов до 20 Ур. (надо " + xpForLvl20.toFixed(1) + " XP)</b>:<br>" + lvl20Steps.join(" ➔ ");
                     }
                     else {
                         let currentVal = hasTestBase ? tBase : 0; 
