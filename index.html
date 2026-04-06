@@ -275,7 +275,6 @@
                     currentData.playerStats.radiusBonusPerUpgrade = getVal('ps_rBonus', currentData.playerStats.radiusBonusPerUpgrade);
                     currentData.playerStats.ricochetHeadChance = getVal('ps_rHead', currentData.playerStats.ricochetHeadChance);
                     currentData.playerStats.ricochetLegChance = getVal('ps_rLeg', currentData.playerStats.ricochetLegChance);
-                    // 🔥 Сохраняем новые переменные опыта
                     currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 3);
                     currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 1.4);
                 }
@@ -377,7 +376,6 @@
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
-            // --- ИГРОК ---
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
@@ -386,7 +384,6 @@
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
-                // 🔥 ДОБАВЛЯЕМ НОВУЮ КАРТОЧКУ ОПЫТА
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
                         <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 3}"></div><div style="flex:1"><label>Множитель Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 1.4}"></div></div></div>`;
             }
@@ -517,7 +514,7 @@
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
         
-      function updatePreviews() {
+        function updatePreviews() {
             try {
                 if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
 
@@ -604,8 +601,16 @@
                         }
                         text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
                     }
-                    else if (u.type === "Shield") text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
-                    else if (u.type === "Distance" || u.type === "BushSpeed") text = "<i>Плоские уровни 1-5 (поведение захардкожено в Unity)</i>";
+                    else if (u.type === "Shield") {
+                        text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    }
+                    // 🔥 ИСПРАВЛЕНИЕ: Восстановлен подробный хардкод-превью для Дальности и Кустов
+                    else if (u.type === "Distance") {
+                        text = "<b>Снайпер (Хардкод Unity):</b><br>Lv1: Дальн. x1.1, Разброс x0.8, Крит +5%<br>Lv2: Дальн. x1.2, Разброс x0.6, Крит +10%<br>Lv3: Дальн. x1.3, Разброс x0.4, Крит +15%<br>Lv4: Дальн. x1.4, Разброс x0.2, Крит +20%<br>Lv5: Дальн. x1.5, Без разброса, Крит +30%";
+                    }
+                    else if (u.type === "BushSpeed") {
+                        text = "<b>Лесной Рейнджер (Хардкод Unity):</b><br>Lv1: Кусты не замедляют<br>Lv2: Кусты слегка ускоряют<br>Lv3: Деревья восстанавливаются быстрее<br>Lv4: Сильное ускорение в кустах<br>Lv5: Максимальная скорость и реген леса";
+                    }
                     else {
                         let currentVal = hasTestBase ? tBase : 0; 
                         let steps = [];
