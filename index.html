@@ -383,7 +383,7 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
                         <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 3}"></div><div style="flex:1"><label>Множитель Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 1.4}"></div></div></div>`;
             }
@@ -395,7 +395,7 @@
                 currentData.weapons.forEach((w, i) => {
                     let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
                     wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${w.weaponName}</div></div>
-                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}"></div></div></div>`;
+                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
                 });
             }
             wh += '</div>';
@@ -604,9 +604,37 @@
                     else if (u.type === "Shield") {
                         text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
                     }
-                    // 🔥 ИСПРАВЛЕНИЕ: Восстановлен подробный хардкод-превью для Дальности и Кустов
+                    // 🔥 ИСПРАВЛЕНИЕ: Дальность теперь динамически пересчитывает оружие и крит
                     else if (u.type === "Distance") {
-                        text = "<b>Снайпер (Хардкод Unity):</b><br>Lv1: Дальн. x1.1, Разброс x0.8, Крит +5%<br>Lv2: Дальн. x1.2, Разброс x0.6, Крит +10%<br>Lv3: Дальн. x1.3, Разброс x0.4, Крит +15%<br>Lv4: Дальн. x1.4, Разброс x0.2, Крит +20%<br>Lv5: Дальн. x1.5, Без разброса, Крит +30%";
+                        let critInput = document.getElementById('ps_rHead');
+                        let baseCrit = critInput ? clean(critInput.value) : (currentData.playerStats ? currentData.playerStats.ricochetHeadChance : 15);
+
+                        let distMults = [1.1, 1.2, 1.3, 1.4, 1.5];
+                        let spreadMults = [0.8, 0.6, 0.4, 0.2, 0];
+                        let critBonuses = [5, 10, 15, 20, 30];
+
+                        let textBlocks = [];
+                        let critSteps = [];
+                        for(let lv=0; lv<5; lv++) critSteps.push((baseCrit + critBonuses[lv]).toFixed(1) + "%");
+                        textBlocks.push("<b>Шанс Голова (Крит)</b>:<br>" + critSteps.join(" ➔ "));
+
+                        if (currentData.weapons) {
+                            currentData.weapons.forEach((w, wIdx) => {
+                                let distInput = document.getElementById('w_dist_' + wIdx);
+                                let sprInput = document.getElementById('w_spr_' + wIdx);
+                                let baseDist = clean(distInput ? distInput.value : w.maxDistance);
+                                let baseSpr = clean(sprInput ? sprInput.value : w.spread);
+                                
+                                let distSteps = [];
+                                let sprSteps = [];
+                                for(let lv=0; lv<5; lv++) {
+                                    distSteps.push((baseDist * distMults[lv]).toFixed(1));
+                                    sprSteps.push((baseSpr * spreadMults[lv]).toFixed(1));
+                                }
+                                textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:#ce9178'>Разброс:</span> " + sprSteps.join(" ➔ "));
+                            });
+                        }
+                        text = textBlocks.join("<br><br>");
                     }
                     else if (u.type === "BushSpeed") {
                         text = "<b>Лесной Рейнджер (Хардкод Unity):</b><br>Lv1: Кусты не замедляют<br>Lv2: Кусты слегка ускоряют<br>Lv3: Деревья восстанавливаются быстрее<br>Lv4: Сильное ускорение в кустах<br>Lv5: Максимальная скорость и реген леса";
