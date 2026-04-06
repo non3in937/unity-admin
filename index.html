@@ -604,7 +604,6 @@
                     else if (u.type === "Shield") {
                         text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
                     }
-                    // 🔥 ИСПРАВЛЕНИЕ: Дальность теперь динамически пересчитывает оружие и крит
                     else if (u.type === "Distance") {
                         let critInput = document.getElementById('ps_rHead');
                         let baseCrit = critInput ? clean(critInput.value) : (currentData.playerStats ? currentData.playerStats.ricochetHeadChance : 15);
@@ -636,8 +635,27 @@
                         }
                         text = textBlocks.join("<br><br>");
                     }
+                    // 🔥 ИСПРАВЛЕНИЕ: Дальность теперь динамически пересчитывает скорость в кустах и штраф деревьев
                     else if (u.type === "BushSpeed") {
-                        text = "<b>Лесной Рейнджер (Хардкод Unity):</b><br>Lv1: Кусты не замедляют<br>Lv2: Кусты слегка ускоряют<br>Lv3: Деревья восстанавливаются быстрее<br>Lv4: Сильное ускорение в кустах<br>Lv5: Максимальная скорость и реген леса";
+                        let baseBush = 6.0; 
+                        let baseStumble = 1.0; 
+                        
+                        let bushSteps = [];
+                        let treeSteps = [];
+                        let currentBush = baseBush;
+                        let currentStumble = baseStumble;
+
+                        for(let lv=0; lv<5; lv++) {
+                            currentBush += levels[lv];
+                            bushSteps.push(currentBush.toFixed(1));
+                            
+                            currentStumble -= 0.2;
+                            if (currentStumble <= 0.05) currentStumble = 0;
+                            treeSteps.push((currentStumble === 0) ? "0 (Игнор)" : "x" + currentStumble.toFixed(1));
+                        }
+
+                        text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") + 
+                               "<br><br><b>Штраф от деревьев</b>:<br>" + treeSteps.join(" ➔ ");
                     }
                     else {
                         let currentVal = hasTestBase ? tBase : 0; 
