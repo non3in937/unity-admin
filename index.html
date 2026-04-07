@@ -268,6 +268,12 @@
                     let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
                     currentData.playerStats.forwardSpeed = getVal('ps_fSpeed', currentData.playerStats.forwardSpeed);
                     currentData.playerStats.strafeSpeed = getVal('ps_sSpeed', currentData.playerStats.strafeSpeed);
+                    
+                    // 🔥 НОВЫЕ ПАРАМЕТРЫ ДВИЖЕНИЯ
+                    currentData.playerStats.bodyTurnSpeed = getVal('ps_bTurn', currentData.playerStats.bodyTurnSpeed || 10);
+                    currentData.playerStats.maxBodyTurnAngle = getVal('ps_mAng', currentData.playerStats.maxBodyTurnAngle || 45);
+                    currentData.playerStats.maxTurnStrafeBonus = getVal('ps_mTSB', currentData.playerStats.maxTurnStrafeBonus || 10);
+
                     currentData.playerStats.maxHealth = parseInt(getVal('ps_mHealth', currentData.playerStats.maxHealth));
                     currentData.playerStats.maxShields = parseInt(getVal('ps_mShields', currentData.playerStats.maxShields));
                     currentData.playerStats.shieldRegenTime = getVal('ps_sRegen', currentData.playerStats.shieldRegenTime);
@@ -378,8 +384,12 @@
 
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
+                // 🔥 ВЫНЕСЛИ ПАРАМЕТРЫ УПРАВЛЕНИЯ
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div></div>`;
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
+                        <div class="row"><div style="flex:1"><label>Бонус стрейфа при повороте</label><input type="number" step="0.1" id="ps_mTSB" value="${currentData.playerStats.maxTurnStrafeBonus || 10}"></div></div>
+                    </div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
@@ -656,7 +666,6 @@
                         text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") + 
                                "<br><br><b>Штраф от деревьев</b>:<br>" + treeSteps.join(" ➔ ");
                     }
-                    // 🔥 ИСПРАВЛЕНИЕ: Новая линейная математика для XpBoost
                     else if (u.type === "XpBoost") {
                         let bXpInput = document.getElementById('ps_bXP');
                         let gFactorInput = document.getElementById('ps_gFactor');
