@@ -272,7 +272,6 @@
                     // 🔥 НОВЫЕ ПАРАМЕТРЫ ДВИЖЕНИЯ
                     currentData.playerStats.bodyTurnSpeed = getVal('ps_bTurn', currentData.playerStats.bodyTurnSpeed || 10);
                     currentData.playerStats.maxBodyTurnAngle = getVal('ps_mAng', currentData.playerStats.maxBodyTurnAngle || 45);
-                    currentData.playerStats.maxTurnStrafeBonus = getVal('ps_mTSB', currentData.playerStats.maxTurnStrafeBonus || 10);
 
                     currentData.playerStats.maxHealth = parseInt(getVal('ps_mHealth', currentData.playerStats.maxHealth));
                     currentData.playerStats.maxShields = parseInt(getVal('ps_mShields', currentData.playerStats.maxShields));
@@ -388,7 +387,6 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
-                        <div class="row"><div style="flex:1"><label>Бонус стрейфа при повороте</label><input type="number" step="0.1" id="ps_mTSB" value="${currentData.playerStats.maxTurnStrafeBonus || 10}"></div></div>
                     </div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
