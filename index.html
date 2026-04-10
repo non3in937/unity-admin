@@ -383,7 +383,7 @@
             if(currentData.playerStats) {
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
                     </div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
@@ -409,7 +409,7 @@
             let uh = '<div class="cards-grid">';
             if (currentData.upgrades) {
                 currentData.upgrades.forEach((u, i) => {
-                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost");
+                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed");
                     uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header"><div class="card-title">' + icon + ' ' + u.type + '</div><label style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:#888;">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label></div>';
                     if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
                     uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
@@ -589,6 +589,7 @@
                         text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
                     }
                     else if (u.type === "Speed") {
+                        // 🔥 НОВАЯ МАТЕМАТИКА ДЛЯ СКОРОСТИ 🔥
                         let spdInput = document.getElementById('ps_sSpeed');
                         let baseSpdValue = 20;
                         if (spdInput) {
@@ -597,14 +598,30 @@
                             baseSpdValue = currentData.playerStats.strafeSpeed;
                         }
 
-                        let baseSpd = hasTestBase ? tBase : baseSpdValue;
-                        let currentVal = baseSpd;
-                        let steps = [];
-                        for(let lv=0; lv<5; lv++) {
-                            currentVal *= (1 + levels[lv]);
-                            steps.push(currentVal.toFixed(1));
+                        let turnInput = document.getElementById('ps_bTurn');
+                        let baseTurnValue = 10;
+                        if (turnInput) {
+                            baseTurnValue = clean(turnInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.bodyTurnSpeed) {
+                            baseTurnValue = currentData.playerStats.bodyTurnSpeed;
                         }
-                        text = "<b>Скор. Стрейфа" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ");
+
+                        let currentStrafe = baseSpdValue;
+                        let currentTurn = baseTurnValue;
+                        
+                        let strafeSteps = [];
+                        let turnSteps = [];
+                        
+                        for(let lv=0; lv<5; lv++) {
+                            currentStrafe *= (1 + levels[lv]);
+                            currentTurn *= (1 + (levels[lv] * 0.5)); // 50% от прокачки стрейфа
+                            
+                            strafeSteps.push(currentStrafe.toFixed(1));
+                            turnSteps.push(currentTurn.toFixed(1));
+                        }
+                        
+                        text = "<b><span style='color:#72ebd1'>Скор. Стрейфа</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
+                               "<br><br><b><span style='color:#ce9178'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
                     }
                     else if (u.type === "Shield") {
                         text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
