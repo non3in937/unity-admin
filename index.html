@@ -64,6 +64,11 @@
         .folder-container { transition: all 0.3s ease; }
         .folder-container.disabled-folder { opacity: 0.5; }
         .folder-content { min-height: 20px; }
+
+        /* 🔥 СТИЛИ ДЛЯ ВЛАДКИ БОССОВ 🔥 */
+        .boss-card { border-color: #f48771; }
+        .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -79,6 +84,7 @@
             <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карты</button>
             <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')" style="color:#c586c0;">🧬 EVO</button>
+            <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')" style="color:#f48771;">👹 Боссы</button>
             <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')" style="color:#ce9178;">🛡️ Бэкапы</button>
         </div>
 
@@ -92,6 +98,7 @@
         <div id="tab-weapons" class="tab-content"></div>
         <div id="tab-upgrades" class="tab-content"></div>
         <div id="tab-evos" class="tab-content"></div>
+        <div id="tab-bosses" class="tab-content"></div>
         
         <div id="tab-backups" class="tab-content">
             <div class="panel">
@@ -118,6 +125,9 @@
             "Enemy_Tank_Explotion", "Enemy_Tank_Toxic", "Enemy_Drone", 
             "Helth", "Weapon"
         ];
+        
+        // 🔥 СПИСОК АТАК ДЛЯ БОССОВ
+        const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde"];
 
         let currentData = null;
         let token = localStorage.getItem('gh_token');
@@ -233,7 +243,44 @@
 
         function syncData() {
             if(!currentData) return;
+            if(!currentData.bosses) currentData.bosses = []; // Защита для боссов
             
+            // 🔥 СИНХРОНИЗАЦИЯ БОССОВ
+            try {
+                if(document.getElementById('bosses-container')) {
+                    let newBosses = [];
+                    document.querySelectorAll('.boss-panel').forEach(bEl => {
+                        let boss = {
+                            bossID: bEl.querySelector('.b-id').value,
+                            spawnTime: clean(bEl.querySelector('.b-time').value),
+                            phases: []
+                        };
+                        
+                        bEl.querySelectorAll('.phase-panel').forEach(pEl => {
+                            let phase = {
+                                phaseName: pEl.querySelector('.p-name').value,
+                                startAtHpPercent: clean(pEl.querySelector('.p-hp').value),
+                                timeBetweenAttacks: clean(pEl.querySelector('.p-delay').value),
+                                attackSequence: []
+                            };
+                            
+                            pEl.querySelectorAll('.attack-panel').forEach(aEl => {
+                                let aType = aEl.querySelector('.a-type').value;
+                                let attack = { attackType: aType };
+                                
+                                aEl.querySelectorAll('.a-param').forEach(paramEl => {
+                                    attack[paramEl.dataset.key] = clean(paramEl.value);
+                                });
+                                phase.attackSequence.push(attack);
+                            });
+                            boss.phases.push(phase);
+                        });
+                        newBosses.push(boss);
+                    });
+                    currentData.bosses = newBosses;
+                }
+            } catch(e) { console.error("Ошибка синхронизации Боссов:", e); }
+
             try {
                 if(document.querySelector('#waves-list .folder-container')) {
                     let newPhases = [];
@@ -332,6 +379,50 @@
         function render() {
             if(!currentData) return;
             ensureEvoData();
+            if (!currentData.bosses) currentData.bosses = []; // Защита для боссов
+
+            // 🔥 РЕНДЕР ВЛАДКИ БОССОВ 🔥
+            if (document.getElementById('tab-bosses').classList.contains('active')) {
+                let bh = '<div id="bosses-container">';
+                if (currentData.bosses) {
+                    currentData.bosses.forEach((boss, bIdx) => {
+                        bh += `<div class="panel boss-panel boss-card">
+                            <div class="header-row">
+                                <span style="font-size: 20px;">👹</span>
+                                <input type="text" class="b-id" value="${boss.bossID}" placeholder="ID (напр. Boss_Eye)" style="flex:2; font-weight:bold; color:#f48771;">
+                                <label style="margin:0 10px;">Сек:</label>
+                                <input type="number" class="b-time" value="${boss.spawnTime}" style="flex:1;">
+                                <button class="btn-remove" onclick="this.closest('.boss-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
+                            </div>
+                            <div class="phases-container" style="margin-left:20px; border-left:1px solid #555; padding-left:15px;">
+                                <h4 style="color:#c586c0; margin:5px 0;">Фазы Боя:</h4>
+                                <div class="phases-list">`;
+                        
+                        boss.phases.forEach((phase, pIdx) => {
+                            bh += `<div class="phase-card phase-panel">
+                                <div class="row">
+                                    <input type="text" class="p-name" value="${phase.phaseName}" placeholder="Имя фазы" style="flex:2; color:#c586c0;">
+                                    <label>HP %:</label><input type="number" class="p-hp" value="${phase.startAtHpPercent}" style="flex:1;">
+                                    <label>Пауза Атак:</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="flex:1;">
+                                    <button class="btn-remove" onclick="this.closest('.phase-panel').remove(); syncData(); render();">✖</button>
+                                </div>
+                                <div class="attacks-list" style="margin-top:10px;">`;
+                            
+                            phase.attackSequence.forEach((attack, aIdx) => {
+                                bh += generateAttackHtml(attack);
+                            });
+                            
+                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Атака</button>
+                            </div>`;
+                        });
+                        
+                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Фаза</button>
+                            </div></div>`;
+                    });
+                }
+                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА</button>`;
+                document.getElementById('tab-bosses').innerHTML = bh;
+            }
             
             let h = '';
             let folders = {};
@@ -482,6 +573,68 @@
             return h;
         }
 
+        // 🔥 ДОБАВЛЕННЫЕ ФУНКЦИИ ДЛЯ БОССОВ
+        function generateAttackHtml(attack) {
+            let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
+            
+            let paramsHtml = '';
+            if (attack.attackType === 'Laser') {
+                paramsHtml = `<div class="row" style="margin-top:5px;">
+                    <div style="flex:1"><label>Скор. Вращения</label><input type="number" class="a-param" data-key="laserRotationSpeed" value="${attack.laserRotationSpeed || 45}"></div>
+                    <div style="flex:1"><label>Кол-во Лучей</label><input type="number" class="a-param" data-key="laserBeamCount" value="${attack.laserBeamCount || 1}"></div>
+                </div>`;
+            } else if (attack.attackType === 'Rift') {
+                paramsHtml = `<div class="row" style="margin-top:5px;">
+                    <div style="flex:1"><label>Ширина Линии</label><input type="number" step="0.1" class="a-param" data-key="riftPathWidth" value="${attack.riftPathWidth || 4.0}"></div>
+                    <div style="flex:1"><label>Кол-во Линий</label><input type="number" class="a-param" data-key="riftPathCount" value="${attack.riftPathCount || 3}"></div>
+                </div>`;
+            } else if (attack.attackType === 'EarthThrow') {
+                paramsHtml = `<div class="row" style="margin-top:5px;">
+                    <div style="flex:1"><label>Кол-во Камней</label><input type="number" class="a-param" data-key="stonesCount" value="${attack.stonesCount || 3}"></div>
+                    <div style="flex:1"><label>Упреждение (Lead)</label><input type="number" step="0.1" class="a-param" data-key="stonesLeadStrength" value="${attack.stonesLeadStrength || 1.2}"></div>
+                </div>`;
+            } else if (attack.attackType === 'Rockets') {
+                paramsHtml = `<div class="row" style="margin-top:5px;">
+                    <div style="flex:1"><label>Кол-во Ракет</label><input type="number" class="a-param" data-key="rocketsLaunchCount" value="${attack.rocketsLaunchCount || 5}"></div>
+                    <div style="flex:1"><label>Радиус Взрыва</label><input type="number" step="0.1" class="a-param" data-key="rocketsExplosionRadius" value="${attack.rocketsExplosionRadius || 6.0}"></div>
+                </div>`;
+            } else if (attack.attackType === 'SummonHorde') {
+                paramsHtml = `<div class="row" style="margin-top:5px;">
+                    <div style="flex:1"><label>Кол-во Врагов</label><input type="number" class="a-param" data-key="hordeEnemyCount" value="${attack.hordeEnemyCount || 4}"></div>
+                    <div style="flex:1"><label>Время Вылезания</label><input type="number" step="0.1" class="a-param" data-key="hordeEmergeTime" value="${attack.hordeEmergeTime || 1.5}"></div>
+                </div>`;
+            }
+
+            return `<div class="attack-card attack-panel">
+                <div class="row">
+                    <span style="color:#569cd6; font-size:18px;">⚔️</span>
+                    <select class="a-type" style="flex:1; margin:0;" onchange="syncData(); render();">${opts}</select>
+                    <button class="btn-remove" onclick="this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
+                </div>
+                ${paramsHtml}
+            </div>`;
+        }
+
+        function addBoss() {
+            if (!currentData.bosses) currentData.bosses = [];
+            currentData.bosses.push({ bossID: "New_Boss", spawnTime: 300, phases: [{ phaseName: "Фаза 1", startAtHpPercent: 100, timeBetweenAttacks: 3, attackSequence: [] }] });
+            render();
+        }
+        function addPhase(btn) {
+            let bossPanel = btn.closest('.boss-panel');
+            let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
+            currentData.bosses[bIdx].phases.push({ phaseName: "Новая Фаза", startAtHpPercent: 50, timeBetweenAttacks: 2, attackSequence: [] });
+            render();
+        }
+        function addAttack(btn) {
+            let phasePanel = btn.closest('.phase-panel');
+            let bossPanel = phasePanel.closest('.boss-panel');
+            let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
+            let pIdx = Array.from(phasePanel.parentNode.children).indexOf(phasePanel);
+            currentData.bosses[bIdx].phases[pIdx].attackSequence.push({ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 });
+            render();
+        }
+
         function addFolder() {
             let h = `<div class="folder-container panel" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
                     <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
@@ -589,7 +742,6 @@
                         text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
                     }
                     else if (u.type === "Speed") {
-                        // 🔥 НОВАЯ МАТЕМАТИКА ДЛЯ СКОРОСТИ 🔥
                         let spdInput = document.getElementById('ps_sSpeed');
                         let baseSpdValue = 20;
                         if (spdInput) {
@@ -614,7 +766,7 @@
                         
                         for(let lv=0; lv<5; lv++) {
                             currentStrafe *= (1 + levels[lv]);
-                            currentTurn *= (1 + (levels[lv] * 0.5)); // 50% от прокачки стрейфа
+                            currentTurn *= (1 + (levels[lv] * 0.5)); 
                             
                             strafeSteps.push(currentStrafe.toFixed(1));
                             turnSteps.push(currentTurn.toFixed(1));
