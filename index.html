@@ -11,8 +11,8 @@
         .drag-handle { cursor: grab; padding: 10px; color: #569cd6; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #3e3e42; border-radius: 4px; margin-right: 15px;}
         h2 { color: #569cd6; text-align: center; margin-bottom: 10px; }
         h3 { color: #4ec9b0; margin: 0; }
-        label { display: block; margin-bottom: 5px; font-size: 12px; color: #9cdcfe; }
-        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 14px;}
+        label { display: block; margin-bottom: 5px; font-size: 11px; color: #9cdcfe; }
+        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 13px;}
         select { cursor: pointer; appearance: none; }
         
         .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
@@ -259,7 +259,8 @@
                         bEl.querySelectorAll('.phase-panel').forEach(pEl => {
                             let phase = {
                                 phaseName: pEl.querySelector('.p-name').value,
-                                startAtHpPercent: clean(pEl.querySelector('.p-hp').value),
+                                startAtHpPercent: clean(pEl.querySelector('.p-start-hp').value), // Новое
+                                endAtHpPercent: clean(pEl.querySelector('.p-end-hp').value),     // Новое
                                 timeBetweenAttacks: clean(pEl.querySelector('.p-delay').value),
                                 attackSequence: []
                             };
@@ -269,7 +270,11 @@
                                 let attack = { attackType: aType };
                                 
                                 aEl.querySelectorAll('.a-param').forEach(paramEl => {
-                                    attack[paramEl.dataset.key] = clean(paramEl.value);
+                                    if(paramEl.type === 'checkbox') {
+                                        attack[paramEl.dataset.key] = paramEl.checked;
+                                    } else {
+                                        attack[paramEl.dataset.key] = clean(paramEl.value);
+                                    }
                                 });
                                 phase.attackSequence.push(attack);
                             });
@@ -379,7 +384,7 @@
         function render() {
             if(!currentData) return;
             ensureEvoData();
-            if (!currentData.bosses) currentData.bosses = []; // Защита для боссов
+            if (!currentData.bosses) currentData.bosses = [];
 
             // 🔥 РЕНДЕР ВЛАДКИ БОССОВ 🔥
             if (document.getElementById('tab-bosses').classList.contains('active')) {
@@ -400,11 +405,21 @@
                         
                         boss.phases.forEach((phase, pIdx) => {
                             bh += `<div class="phase-card phase-panel">
-                                <div class="row">
-                                    <input type="text" class="p-name" value="${phase.phaseName}" placeholder="Имя фазы" style="flex:2; color:#c586c0;">
-                                    <label>HP %:</label><input type="number" class="p-hp" value="${phase.startAtHpPercent}" style="flex:1;">
-                                    <label>Пауза Атак:</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="flex:1;">
-                                    <button class="btn-remove" onclick="this.closest('.phase-panel').remove(); syncData(); render();">✖</button>
+                                <div class="row" style="align-items: center;">
+                                    <input type="text" class="p-name" value="${phase.phaseName}" placeholder="Имя фазы" style="flex:2; color:#c586c0; margin:0;">
+                                    <div style="flex:1; display:flex; flex-direction:column;">
+                                        <label style="margin:0;">Start HP %</label>
+                                        <input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;">
+                                    </div>
+                                    <div style="flex:1; display:flex; flex-direction:column;">
+                                        <label style="margin:0;">End HP %</label>
+                                        <input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;">
+                                    </div>
+                                    <div style="flex:1; display:flex; flex-direction:column;">
+                                        <label style="margin:0;">Пауза Атак</label>
+                                        <input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;">
+                                    </div>
+                                    <button class="btn-remove" onclick="this.closest('.phase-panel').remove(); syncData(); render();" style="margin-top:15px;">✖</button>
                                 </div>
                                 <div class="attacks-list" style="margin-top:10px;">`;
                             
@@ -412,11 +427,11 @@
                                 bh += generateAttackHtml(attack);
                             });
                             
-                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Атака</button>
+                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Добавить Атаку в Фазу</button>
                             </div>`;
                         });
                         
-                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Фаза</button>
+                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Добавить Фазу</button>
                             </div></div>`;
                     });
                 }
@@ -573,36 +588,73 @@
             return h;
         }
 
-        // 🔥 ДОБАВЛЕННЫЕ ФУНКЦИИ ДЛЯ БОССОВ
+        // 🔥 ПОЛНЫЙ ВЫВОД ВСЕХ ПАРАМЕТРОВ АТАК 🔥
         function generateAttackHtml(attack) {
             let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
-            
             let paramsHtml = '';
+            
             if (attack.attackType === 'Laser') {
-                paramsHtml = `<div class="row" style="margin-top:5px;">
-                    <div style="flex:1"><label>Скор. Вращения</label><input type="number" class="a-param" data-key="laserRotationSpeed" value="${attack.laserRotationSpeed || 45}"></div>
-                    <div style="flex:1"><label>Кол-во Лучей</label><input type="number" class="a-param" data-key="laserBeamCount" value="${attack.laserBeamCount || 1}"></div>
-                </div>`;
-            } else if (attack.attackType === 'Rift') {
-                paramsHtml = `<div class="row" style="margin-top:5px;">
-                    <div style="flex:1"><label>Ширина Линии</label><input type="number" step="0.1" class="a-param" data-key="riftPathWidth" value="${attack.riftPathWidth || 4.0}"></div>
-                    <div style="flex:1"><label>Кол-во Линий</label><input type="number" class="a-param" data-key="riftPathCount" value="${attack.riftPathCount || 3}"></div>
-                </div>`;
-            } else if (attack.attackType === 'EarthThrow') {
-                paramsHtml = `<div class="row" style="margin-top:5px;">
-                    <div style="flex:1"><label>Кол-во Камней</label><input type="number" class="a-param" data-key="stonesCount" value="${attack.stonesCount || 3}"></div>
-                    <div style="flex:1"><label>Упреждение (Lead)</label><input type="number" step="0.1" class="a-param" data-key="stonesLeadStrength" value="${attack.stonesLeadStrength || 1.2}"></div>
-                </div>`;
-            } else if (attack.attackType === 'Rockets') {
-                paramsHtml = `<div class="row" style="margin-top:5px;">
-                    <div style="flex:1"><label>Кол-во Ракет</label><input type="number" class="a-param" data-key="rocketsLaunchCount" value="${attack.rocketsLaunchCount || 5}"></div>
-                    <div style="flex:1"><label>Радиус Взрыва</label><input type="number" step="0.1" class="a-param" data-key="rocketsExplosionRadius" value="${attack.rocketsExplosionRadius || 6.0}"></div>
-                </div>`;
-            } else if (attack.attackType === 'SummonHorde') {
-                paramsHtml = `<div class="row" style="margin-top:5px;">
-                    <div style="flex:1"><label>Кол-во Врагов</label><input type="number" class="a-param" data-key="hordeEnemyCount" value="${attack.hordeEnemyCount || 4}"></div>
-                    <div style="flex:1"><label>Время Вылезания</label><input type="number" step="0.1" class="a-param" data-key="hordeEmergeTime" value="${attack.hordeEmergeTime || 1.5}"></div>
-                </div>`;
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Prep Time</label><input type="number" step="0.1" class="a-param" data-key="laserPreparationTime" value="${attack.laserPreparationTime ?? 1.5}"></div>
+                <div style="flex:1"><label>Duration</label><input type="number" step="0.1" class="a-param" data-key="laserDuration" value="${attack.laserDuration ?? 5.0}"></div>
+                <div style="flex:1"><label>Rot. Speed</label><input type="number" step="0.1" class="a-param" data-key="laserRotationSpeed" value="${attack.laserRotationSpeed ?? 45}"></div></div>
+                <div class="row"><div style="flex:1"><label>Beam Width</label><input type="number" step="0.1" class="a-param" data-key="laserBeamWidth" value="${attack.laserBeamWidth ?? 3.0}"></div>
+                <div style="flex:1"><label>Beam Length</label><input type="number" step="0.1" class="a-param" data-key="laserBeamLength" value="${attack.laserBeamLength ?? 40.0}"></div>
+                <div style="flex:1"><label>Beam Count</label><input type="number" class="a-param" data-key="laserBeamCount" value="${attack.laserBeamCount ?? 1}"></div></div>
+                <div class="row"><div style="flex:1"><label>Dmg Per Tick</label><input type="number" class="a-param" data-key="laserDamagePerTick" value="${attack.laserDamagePerTick ?? 1}"></div>
+                <div style="flex:1"><label>Tick Rate</label><input type="number" step="0.1" class="a-param" data-key="laserTickRate" value="${attack.laserTickRate ?? 0.5}"></div>
+                <div style="flex:1"></div></div>`;
+            } 
+            else if (attack.attackType === 'Rift') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Prep Time</label><input type="number" step="0.1" class="a-param" data-key="riftPreparationTime" value="${attack.riftPreparationTime ?? 2.0}"></div>
+                <div style="flex:1"><label>Path Width</label><input type="number" step="0.1" class="a-param" data-key="riftPathWidth" value="${attack.riftPathWidth ?? 4.0}"></div>
+                <div style="flex:1"><label>Path Count</label><input type="number" class="a-param" data-key="riftPathCount" value="${attack.riftPathCount ?? 3}"></div></div>
+                <div class="row"><div style="flex:1"><label>Angle Offset</label><input type="number" step="0.1" class="a-param" data-key="riftAngleBetweenPaths" value="${attack.riftAngleBetweenPaths ?? 45}"></div>
+                <div style="flex:1"><label>Max Distance</label><input type="number" step="0.1" class="a-param" data-key="riftMaxDistance" value="${attack.riftMaxDistance ?? 30.0}"></div>
+                <div style="flex:1"><label>Spike Speed</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeSpeed" value="${attack.riftSpikeSpeed ?? 20.0}"></div></div>
+                <div class="row"><div style="flex:1"><label>Lifetime</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeLifetime" value="${attack.riftSpikeLifetime ?? 4.0}"></div>
+                <div style="flex:1"><label>Spacing</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeSpacing" value="${attack.riftSpikeSpacing ?? 1.5}"></div>
+                <div style="flex:1"><label>Spikes Per Row</label><input type="number" class="a-param" data-key="riftSpikesPerRow" value="${attack.riftSpikesPerRow ?? 3}"></div></div>
+                <div class="row"><div style="flex:1"><label>Scatter</label><input type="number" step="0.1" class="a-param" data-key="riftRandomScatter" value="${attack.riftRandomScatter ?? 0.5}"></div>
+                <div style="flex:2"></div></div>`;
+            } 
+            else if (attack.attackType === 'EarthThrow') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Stone Count</label><input type="number" class="a-param" data-key="stonesCount" value="${attack.stonesCount ?? 3}"></div>
+                <div style="flex:1"><label>Delay Between</label><input type="number" step="0.1" class="a-param" data-key="stonesDelayBetween" value="${attack.stonesDelayBetween ?? 2.0}"></div>
+                <div style="flex:1"><label>Tracking (sec)</label><input type="number" step="0.1" class="a-param" data-key="stonesTrackingDuration" value="${attack.stonesTrackingDuration ?? 1.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Lead Strength</label><input type="number" step="0.1" class="a-param" data-key="stonesLeadStrength" value="${attack.stonesLeadStrength ?? 1.2}"></div>
+                <div style="flex:1"><label>Indicator Size</label><input type="number" step="0.1" class="a-param" data-key="stonesIndicatorSize" value="${attack.stonesIndicatorSize ?? 3.0}"></div>
+                <div style="flex:1"><label>Fly Speed</label><input type="number" step="0.1" class="a-param" data-key="stonesSpeed" value="${attack.stonesSpeed ?? 25.0}"></div></div>
+                <div class="row"><div style="flex:1"><label>Damage</label><input type="number" class="a-param" data-key="stonesDamage" value="${attack.stonesDamage ?? 2}"></div>
+                <div style="flex:2"></div></div>`;
+            } 
+            else if (attack.attackType === 'Rockets') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Launch Count</label><input type="number" class="a-param" data-key="rocketsLaunchCount" value="${attack.rocketsLaunchCount ?? 5}"></div>
+                <div style="flex:1"><label>Launch Speed</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchSpeed" value="${attack.rocketsLaunchSpeed ?? 30.0}"></div>
+                <div style="flex:1"><label>Launch Delay</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchDelay" value="${attack.rocketsLaunchDelay ?? 0.2}"></div></div>
+                <div class="row"><div style="flex:1"><label>Scatter</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchScatter" value="${attack.rocketsLaunchScatter ?? 20.0}"></div>
+                <div style="flex:1"><label>Warn Count</label><input type="number" class="a-param" data-key="rocketsWarningCount" value="${attack.rocketsWarningCount ?? 5}"></div>
+                <div style="flex:1"><label>Warn Duration</label><input type="number" step="0.1" class="a-param" data-key="rocketsWarningDuration" value="${attack.rocketsWarningDuration ?? 2.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Expl. Radius</label><input type="number" step="0.1" class="a-param" data-key="rocketsExplosionRadius" value="${attack.rocketsExplosionRadius ?? 6.0}"></div>
+                <div style="flex:1"><label>Fall Speed</label><input type="number" step="0.1" class="a-param" data-key="rocketsFallSpeed" value="${attack.rocketsFallSpeed ?? 50.0}"></div>
+                <div style="flex:1"><label>Fall Delay</label><input type="number" step="0.1" class="a-param" data-key="rocketsFallDelay" value="${attack.rocketsFallDelay ?? 0.2}"></div></div>
+                <div class="row"><div style="flex:1"><label>Damage</label><input type="number" class="a-param" data-key="rocketsDamage" value="${attack.rocketsDamage ?? 2}"></div>
+                <div style="flex:2; display:flex; align-items:center; margin-top:15px;"><input type="checkbox" class="a-param" data-key="rocketsShowDebug" ${attack.rocketsShowDebug !== false ? 'checked' : ''} style="width:auto; margin:0 5px 0 0;"> <label style="margin:0;">Show Debug Sphere</label></div></div>`;
+            } 
+            else if (attack.attackType === 'SummonHorde') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Enemy Count</label><input type="number" class="a-param" data-key="hordeEnemyCount" value="${attack.hordeEnemyCount ?? 4}"></div>
+                <div style="flex:1"><label>Lifetime</label><input type="number" step="0.1" class="a-param" data-key="hordeEnemyLifetime" value="${attack.hordeEnemyLifetime ?? 12.0}"></div>
+                <div style="flex:1"><label>Delay Btw</label><input type="number" step="0.1" class="a-param" data-key="hordeDelayBetweenSpawns" value="${attack.hordeDelayBetweenSpawns ?? 0.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Emerge Time</label><input type="number" step="0.1" class="a-param" data-key="hordeEmergeTime" value="${attack.hordeEmergeTime ?? 1.5}"></div>
+                <div style="flex:1"><label>Ambush Chance</label><input type="number" step="0.1" class="a-param" data-key="hordeAmbushChance" value="${attack.hordeAmbushChance ?? 0.6}"></div>
+                <div style="flex:1"><label>Main Shake Int.</label><input type="number" step="0.1" class="a-param" data-key="hordeShakeIntensity" value="${attack.hordeShakeIntensity ?? 0.15}"></div></div>
+                <div class="row"><div style="flex:1"><label>Main Shake Dur.</label><input type="number" step="0.1" class="a-param" data-key="hordeShakeDuration" value="${attack.hordeShakeDuration ?? 0.4}"></div>
+                <div style="flex:1"><label>Micro Shake Int.</label><input type="number" step="0.1" class="a-param" data-key="hordeMicroShakeIntensity" value="${attack.hordeMicroShakeIntensity ?? 0.05}"></div>
+                <div style="flex:1"><label>Micro Shake Dur.</label><input type="number" step="0.1" class="a-param" data-key="hordeMicroShakeDuration" value="${attack.hordeMicroShakeDuration ?? 0.1}"></div></div>`;
             }
 
             return `<div class="attack-card attack-panel">
@@ -617,13 +669,15 @@
 
         function addBoss() {
             if (!currentData.bosses) currentData.bosses = [];
-            currentData.bosses.push({ bossID: "New_Boss", spawnTime: 300, phases: [{ phaseName: "Фаза 1", startAtHpPercent: 100, timeBetweenAttacks: 3, attackSequence: [] }] });
+            currentData.bosses.push({ bossID: "Boss_New", spawnTime: 300, phases: [{ phaseName: "Фаза 1", startAtHpPercent: 100, endAtHpPercent: 50, timeBetweenAttacks: 3, attackSequence: [] }] });
             render();
         }
         function addPhase(btn) {
             let bossPanel = btn.closest('.boss-panel');
             let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
-            currentData.bosses[bIdx].phases.push({ phaseName: "Новая Фаза", startAtHpPercent: 50, timeBetweenAttacks: 2, attackSequence: [] });
+            let prevPhase = currentData.bosses[bIdx].phases[currentData.bosses[bIdx].phases.length - 1];
+            let newStart = prevPhase ? prevPhase.endAtHpPercent : 50;
+            currentData.bosses[bIdx].phases.push({ phaseName: "Новая Фаза", startAtHpPercent: newStart, endAtHpPercent: newStart / 2, timeBetweenAttacks: 2, attackSequence: [] });
             render();
         }
         function addAttack(btn) {
