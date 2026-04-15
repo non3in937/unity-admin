@@ -1,1 +1,913 @@
-<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Unity Config Admin PRO</title><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script><style>body{background:#1e1e1e;color:#d4d4d4;font-family:'Segoe UI',Tahoma,sans-serif;padding:10px} .container{max-width:800px;margin:auto} .panel{background:#2d2d30;padding:15px;border-radius:8px;margin-bottom:15px;border:1px solid #3e3e42} h2{color:#569cd6;text-align:center;margin-bottom:10px} label{display:block;margin-bottom:5px;font-size:11px;color:#9cdcfe;white-space:nowrap} input,select{background:#3e3e42;border:1px solid #555;color:#fff;padding:8px;border-radius:4px;width:100%;box-sizing:border-box;margin-bottom:10px;font-size:13px} .btn-main{background:#238636;color:#fff;width:100%;padding:15px;font-weight:700;border-radius:4px;border:none;cursor:pointer;font-size:16px;margin-bottom:15px} .btn-undo{background:#c586c0;color:#fff;width:100%;padding:12px;font-weight:700;border-radius:6px;border:none;cursor:pointer;font-size:15px;margin-bottom:15px;display:none} .tabs{display:flex;gap:5px;margin-bottom:20px;flex-wrap:wrap} .tab-btn{flex:1;padding:12px;background:#2d2d30;color:#888;border:none;cursor:pointer;border-radius:4px 4px 0 0;min-width:80px} .tab-btn.active{background:#1e1e1e;color:#fff;border-bottom:3px solid #4ec9b0;font-weight:700} .tab-content{display:none} .tab-content.active{display:block} .row{display:flex;gap:10px;align-items:flex-start} .header-row{display:flex;align-items:center;margin-bottom:15px;border-bottom:1px solid #3e3e42;padding-bottom:10px} .btn-add{background:#1f6b35;color:#fff;width:100%;padding:10px;border:none;border-radius:4px;cursor:pointer;margin-top:10px;font-weight:700} .btn-remove{background:#8a2a2a;color:#fff;padding:8px;border:none;border-radius:4px;cursor:pointer} .status{text-align:center;font-weight:700;margin-bottom:15px} .backup-btn{background:#0e639c;color:#fff;width:100%;padding:15px;font-weight:700;border-radius:4px;border:none;cursor:pointer;font-size:16px;margin-bottom:20px} .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px} .upgrade-card{background:#252526;border:2px solid #3e3e42;border-radius:12px;padding:15px;display:flex;flex-direction:column} .card-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3e3e42;padding-bottom:10px;margin-bottom:15px} .card-title{font-size:16px;font-weight:700;color:#4ec9b0;margin:0} .card-levels{display:grid;grid-template-columns:1fr 1fr;gap:10px} .preview-box{background:#1e1e1e;border-radius:4px;padding:10px;margin-top:10px;font-size:12px;color:#888;border-left:3px solid #4ec9b0} .boss-card{border-color:#f48771} .phase-card{background:#1e1e1e;border-left:3px solid #c586c0;margin-top:10px;padding:10px;border-radius:4px;border:1px solid #333} .attack-card{background:#252526;border:1px dashed #569cd6;margin-top:10px;padding:10px;border-radius:4px} .folder-container{transition:all .3s} .disabled-folder{opacity:.5} .drag-handle{cursor:grab;padding:10px;color:#569cd6;font-size:20px;background:#3e3e42;border-radius:4px;margin-right:15px} .ttip{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#3e3e42;border:1px solid #555;border-radius:4px;color:#569cd6;font-size:16px;width:32px;height:32px;flex-shrink:0;outline:none} .ttip:active .ttiptext,.ttip:focus .ttiptext,.ttip:hover .ttiptext{visibility:visible;opacity:1} .ttiptext{visibility:hidden;width:220px;background-color:#1e1e1e;color:#dcdcaa;text-align:center;border-radius:6px;padding:10px;position:absolute;z-index:100;bottom:120%;left:50%;transform:translateX(-50%);border:1px solid #569cd6;opacity:0;transition:opacity .2s;font-size:12px;white-space:normal;line-height:1.4;box-shadow:0 4px 10px rgba(0,0,0,.5);pointer-events:none;font-weight:normal} .ttiptext::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border-width:5px;border-style:solid;border-color:#569cd6 transparent transparent transparent} .prm-wrap{flex:1;min-width:45%;margin-bottom:5px;display:flex;flex-direction:column}</style></head><body><div class="container"><h2>⚙️ Remote Admin PRO</h2><button class="btn-main" onclick="sv()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button><div id="status" class="status"></div><div class="tabs"><button class="tab-btn active" id="btn-waves" onclick="st('waves')">🌊 Волны</button><button class="tab-btn" id="btn-player" onclick="st('player')">🏃 Игрок</button><button class="tab-btn" id="btn-weapons" onclick="st('weapons')">🔫 Оружие</button><button class="tab-btn" id="btn-upgrades" onclick="st('upgrades')">🃏 Карты</button><button class="tab-btn" id="btn-evos" onclick="st('evos')" style="color:#c586c0">🧬 EVO</button><button class="tab-btn" id="btn-bosses" onclick="st('bosses')" style="color:#f48771">👹 Боссы</button><button class="tab-btn" id="btn-backups" onclick="st('backups')" style="color:#ce9178">🛡️ Бэкапы</button></div><div id="tab-waves" class="tab-content active"><button class="btn-undo" id="btn-undo" onclick="un()">↩️ ОТМЕНИТЬ</button><div id="waves-list"></div><button class="btn-add" onclick="af()" style="background:#0e639c;margin-top:20px">📁 Добавить Папку</button></div><div id="tab-player" class="tab-content"></div><div id="tab-weapons" class="tab-content"></div><div id="tab-upgrades" class="tab-content"></div><div id="tab-evos" class="tab-content"></div><div id="tab-bosses" class="tab-content"></div><div id="tab-backups" class="tab-content"><div class="panel"><h3 style="color:#569cd6;text-align:center">📦 Бэкапы</h3><button class="backup-btn" onclick="eb()">📥 СКАЧАТЬ БЭКАП</button><div class="file-input-wrapper"><input type="file" accept=".json" onchange="ib(event)"></div></div></div></div><script>const G='4b5faafac858635664755b821b757d35',F='config.json',E=["Enemy_Standard","Enemy_Runner","Enemy_armor","Enemy_Tank_Explotion","Enemy_Tank_Toxic","Enemy_Drone","Helth","Weapon"],A=["Rift","Laser","EarthThrow","Rockets","SummonHorde"];let D=null,T=localStorage.getItem('gh_token'),U=[];function st(t){try{sy()}catch(e){}document.querySelectorAll('.tab-btn, .tab-content').forEach(e=>e.classList.remove('active'));document.getElementById('btn-'+t)?.classList.add('active');document.getElementById('tab-'+t)?.classList.add('active');try{rn()}catch(e){}try{up()}catch(e){}}function cl(v){let p=parseFloat(String(v).replace(',','.'));return isNaN(p)?0:p}function ft(s){let m=Math.floor(s/60),x=Math.floor(s%60);return(m<10?"0"+m:m)+":"+(x<10?"0"+x:x)}function ut(e){let p=e.closest('.phase-panel');if(p){p.querySelector('.phase-time').innerText=ft(cl(p.querySelector('.p-start').value))+" - "+ft(cl(p.querySelector('.p-end').value))}}function su(){try{sy()}catch(e){}U.push(JSON.stringify(D.phases));document.getElementById('btn-undo').style.display='block'}function un(){if(U.length===0)return;D.phases=JSON.parse(U.pop());rn();if(U.length===0)document.getElementById('btn-undo').style.display='none'}function rf(b,e){e.stopPropagation();su();b.closest('.folder-container').remove();sy()}function rp(b){su();b.closest('.phase-panel').remove();sy()}function tpd(h,k){let c=h.nextElementSibling,i=h.querySelector('.fold-icon'),d=h.dataset.foldid,l=JSON.parse(localStorage.getItem(k)||'[]');if(c.style.display==='none'){c.style.display='block';i.innerText='▼';l=l.filter(n=>n!==d)}else{c.style.display='none';i.innerText='▶';if(!l.includes(d))l.push(d)}localStorage.setItem(k,JSON.stringify(l))}function tfe(c,e){e.stopPropagation();c.closest('.folder-container').classList.toggle('disabled-folder',!c.checked)}function ee(){if(!D.evos)D.evos={absoluteControl:{evoRegeneration:5,evoStunDuration:3},hurricaneStrafe:{evoStrafeSpeed:35,pistolFireRate:.1,autoFireRate:.05,shotgunFireRate:.2},leadDrill:{infinitePiercingValue:100,evoBushSpeed:12},homing:{evoRicochetCount:15,evoRicochetRadius:40,evoBonusHeadChance:50,evoSpreadMultiplier:0,pistolDistance:150,autoDistance:100,shotgunDistance:60},tank:{explosionDamage:75,explosionRadius:3.5,explosionShakeMagnitude:0,explosionShakeDuration:0}}}function sy(){if(!D)return;if(!D.bosses)D.bosses=[];try{if(document.getElementById('bosses-container')){let nb=[];document.querySelectorAll('.boss-panel').forEach(b=>{let bs={bossID:b.querySelector('.b-id').value,spawnTime:cl(b.querySelector('.b-time').value),phases:[]};b.querySelectorAll('.phase-panel').forEach(p=>{let ph={phaseName:p.querySelector('.p-name').value,startAtHpPercent:cl(p.querySelector('.p-start-hp').value),endAtHpPercent:cl(p.querySelector('.p-end-hp').value),timeBetweenAttacks:cl(p.querySelector('.p-delay').value),attackSequence:[]};p.querySelectorAll('.attack-panel').forEach(a=>{let at={attackType:a.querySelector('.a-type').value};a.querySelectorAll('.a-param').forEach(pm=>{at[pm.dataset.key]=pm.type==='checkbox'?pm.checked:cl(pm.value)});ph.attackSequence.push(at)});bs.phases.push(ph)});nb.push(bs)});D.bosses=nb}}catch(e){}try{if(document.querySelector('#waves-list .folder-container')){let np=[];document.querySelectorAll('.folder-container').forEach(f=>{let fn=f.querySelector('.f-name').value,fe=f.querySelector('.f-enabled').checked;f.querySelectorAll('.phase-panel').forEach(p=>{let ph={phaseName:p.querySelector('.p-name').value,startTime:cl(p.querySelector('.p-start').value),endTime:cl(p.querySelector('.p-end').value),spawnInterval:cl(p.querySelector('.p-int').value),enemiesPerBatch:parseInt(p.querySelector('.p-batch').value)||1,enemies:[],folder:fn,isEnabled:fe};p.querySelectorAll('.enemy-row').forEach(r=>{ph.enemies.push({enemyID:r.querySelector('.e-id').value,weight:cl(r.querySelector('.e-w').value)})});np.push(ph)})});D.phases=np}}catch(e){}try{let g=(i,fb)=>{let e=document.getElementById(i);return e?cl(e.value):fb};if(document.getElementById('ps_fSpeed')){if(!D.playerStats)D.playerStats={};let s=D.playerStats;s.forwardSpeed=g('ps_fSpeed',s.forwardSpeed);s.strafeSpeed=g('ps_sSpeed',s.strafeSpeed);s.bodyTurnSpeed=g('ps_bTurn',s.bodyTurnSpeed||10);s.maxBodyTurnAngle=g('ps_mAng',s.maxBodyTurnAngle||45);s.maxHealth=parseInt(g('ps_mHealth',s.maxHealth));s.maxShields=parseInt(g('ps_mShields',s.maxShields));s.shieldRegenTime=g('ps_sRegen',s.shieldRegenTime);s.ricochetRadius=g('ps_rRadius',s.ricochetRadius);s.radiusBonusPerUpgrade=g('ps_rBonus',s.radiusBonusPerUpgrade);s.ricochetHeadChance=g('ps_rHead',s.ricochetHeadChance);s.ricochetLegChance=g('ps_rLeg',s.ricochetLegChance);s.baseXP=g('ps_bXP',s.baseXP||5);s.growthFactor=g('ps_gFactor',s.growthFactor||10)}}catch(e){}try{if(document.querySelector('.w-dmg')&&D.weapons)D.weapons.forEach((w,i)=>{let e=document.getElementById('w_dmg_'+i);if(e){w.damage=cl(e.value);w.fireRate=cl(document.getElementById('w_fr_'+i).value);w.maxDistance=cl(document.getElementById('w_dist_'+i).value);w.spread=cl(document.getElementById('w_spr_'+i).value)}})}catch(e){}try{if(document.getElementById('u_en_0')&&D.upgrades)D.upgrades.forEach((u,i)=>{let e=document.getElementById('u_en_'+i);if(e){u.isEnabled=e.checked;let l=[];for(let j=0;j<5;j++){let v=document.getElementById('u_lv_'+i+'_'+j);l.push(v?cl(v.value):0)}u.levelValues=l}})}catch(e){}try{if(document.getElementById('evo_ac_regen')){ee();let g=(i,fb)=>{let e=document.getElementById(i);return e?cl(e.value):fb};let v=D.evos;v.absoluteControl.evoRegeneration=g('evo_ac_regen',5);v.absoluteControl.evoStunDuration=g('evo_ac_stun',3);v.hurricaneStrafe.evoStrafeSpeed=g('evo_hs_strafe',35);v.hurricaneStrafe.pistolFireRate=g('evo_hs_p_fr',.1);v.hurricaneStrafe.autoFireRate=g('evo_hs_a_fr',.05);v.hurricaneStrafe.shotgunFireRate=g('evo_hs_s_fr',.2);v.leadDrill.infinitePiercingValue=parseInt(g('evo_ld_pierce',100));v.leadDrill.evoBushSpeed=g('evo_ld_bush',12);v.homing.evoRicochetCount=parseInt(g('evo_hm_rico',15));v.homing.evoRicochetRadius=g('evo_hm_rad',40);v.homing.evoBonusHeadChance=g('evo_hm_crit',50);v.homing.evoSpreadMultiplier=g('evo_hm_spr',0);v.homing.pistolDistance=g('evo_hm_p_dist',150);v.homing.autoDistance=g('evo_hm_a_dist',100);v.homing.shotgunDistance=g('evo_hm_s_dist',60);v.tank.explosionDamage=parseInt(g('evo_tk_dmg',75));v.tank.explosionRadius=g('evo_tk_rad',3.5);v.tank.explosionShakeMagnitude=g('evo_tk_shake_mag',0);v.tank.explosionShakeDuration=g('evo_tk_shake_dur',0)}}catch(e){}}function prm(l,k,v,h,c=false){let i=c?`<input type="checkbox" class="a-param" data-key="${k}" ${v!==false?'checked':''} style="width:24px;height:24px;margin:0;">`:`<input type="number" step="0.1" class="a-param" data-key="${k}" value="${v}" style="flex:1;min-width:0;margin:0;height:32px;">`;return `<div class="prm-wrap"><label style="margin-bottom:2px;font-size:11px;color:#9cdcfe;overflow:hidden;text-overflow:ellipsis;">${l}</label><div style="display:flex;gap:4px;align-items:center;">${i}<div class="ttip" tabindex="0">❔<span class="ttiptext">${h}</span></div></div></div>`}function ga(a){let o=A.map(t=>`<option value="${t}" ${t===a.attackType?'selected':''}>${t}</option>`).join(''),p='';if(a.attackType==='Laser'){p+=prm('Prep Time','laserPreparationTime',a.laserPreparationTime??1.5,'Секунды до выстрела (красная линия).');p+=prm('Duration','laserDuration',a.laserDuration??5.0,'Длительность лазера.');p+=prm('Rot. Speed','laserRotationSpeed',a.laserRotationSpeed??45,'Скорость вращения.');p+=prm('Beam Width','laserBeamWidth',a.laserBeamWidth??3.0,'Толщина луча.');p+=prm('Beam Length','laserBeamLength',a.laserBeamLength??40.0,'Длина луча.');p+=prm('Beam Count','laserBeamCount',a.laserBeamCount??1,'Кол-во лучей (1=линия, 4=крест).');p+=prm('Dmg/Tick','laserDamagePerTick',a.laserDamagePerTick??1,'Урон за касание.');p+=prm('Tick Rate','laserTickRate',a.laserTickRate??0.5,'Задержка между получением урона.')}else if(a.attackType==='Rift'){p+=prm('Prep Time','riftPreparationTime',a.riftPreparationTime??2.0,'Задержка перед шипами.');p+=prm('Path Width','riftPathWidth',a.riftPathWidth??4.0,'Ширина пути.');p+=prm('Path Count','riftPathCount',a.riftPathCount??3,'Кол-во путей.');p+=prm('Angle','riftAngleBetweenPaths',a.riftAngleBetweenPaths??45,'Угол между путями.');p+=prm('Max Dist','riftMaxDistance',a.riftMaxDistance??30.0,'Дальность.');p+=prm('Spike Spd','riftSpikeSpeed',a.riftSpikeSpeed??20.0,'Скорость шипов.');p+=prm('Lifetime','riftSpikeLifetime',a.riftSpikeLifetime??4.0,'Время жизни шипа.');p+=prm('Spacing','riftSpikeSpacing',a.riftSpikeSpacing??1.5,'Дистанция между рядами.');p+=prm('Per Row','riftSpikesPerRow',a.riftSpikesPerRow??3,'Шипов в ширину.');p+=prm('Scatter','riftRandomScatter',a.riftRandomScatter??0.5,'Кривизна линии.')}else if(a.attackType==='EarthThrow'){p+=prm('Count','stonesCount',a.stonesCount??3,'Кол-во камней.');p+=prm('Delay','stonesDelayBetween',a.stonesDelayBetween??2.0,'Задержка броска.');p+=prm('Track Dur','stonesTrackingDuration',a.stonesTrackingDuration??1.5,'Время прицеливания.');p+=prm('Lead Str','stonesLeadStrength',a.stonesLeadStrength??1.2,'Упреждение цели.');p+=prm('Radius','stonesIndicatorSize',a.stonesIndicatorSize??3.0,'Радиус взрыва.');p+=prm('Fly Spd','stonesSpeed',a.stonesSpeed??25.0,'Скорость полета.');p+=prm('Damage','stonesDamage',a.stonesDamage??2,'Урон.')}else if(a.attackType==='Rockets'){p+=prm('Count','rocketsLaunchCount',a.rocketsLaunchCount??5,'Кол-во ракет.');p+=prm('Launch Spd','rocketsLaunchSpeed',a.rocketsLaunchSpeed??30.0,'Скорость вылета.');p+=prm('Delay','rocketsLaunchDelay',a.rocketsLaunchDelay??0.2,'Задержка пуска.');p+=prm('Scatter','rocketsLaunchScatter',a.rocketsLaunchScatter??20.0,'Разброс.');p+=prm('Warn Cnt','rocketsWarningCount',a.rocketsWarningCount??5,'Кол-во зон.');p+=prm('Warn Dur','rocketsWarningDuration',a.rocketsWarningDuration??2.5,'Время мигания.');p+=prm('Radius','rocketsExplosionRadius',a.rocketsExplosionRadius??6.0,'Радиус взрыва.');p+=prm('Fall Spd','rocketsFallSpeed',a.rocketsFallSpeed??50.0,'Скорость падения.');p+=prm('Fall Delay','rocketsFallDelay',a.rocketsFallDelay??0.2,'Ковровая задержка.');p+=prm('Damage','rocketsDamage',a.rocketsDamage??2,'Урон.');p+=prm('Show Zns','rocketsShowDebug',a.rocketsShowDebug, 'Показать зоны падения.',true)}else if(a.attackType==='SummonHorde'){p+=prm('Count','hordeEnemyCount',a.hordeEnemyCount??4,'Кол-во врагов.');p+=prm('Lifetime','hordeEnemyLifetime',a.hordeEnemyLifetime??12.0,'Через сколько умрут.');p+=prm('Delay Btw','hordeDelayBetweenSpawns',a.hordeDelayBetweenSpawns??0.5,'Пауза призыва.');p+=prm('Emerge','hordeEmergeTime',a.hordeEmergeTime??1.5,'Скорость вылезания.');p+=prm('Ambush %','hordeAmbushChance',a.hordeAmbushChance??0.6,'Шанс засады перед игроком.');p+=prm('Main Shake','hordeShakeIntensity',a.hordeShakeIntensity??0.15,'Сила главной тряски.');p+=prm('Main Dur','hordeShakeDuration',a.hordeShakeDuration??0.4,'Время главной тряски.');p+=prm('Mic. Shake','hordeMicroShakeIntensity',a.hordeMicroShakeIntensity??0.05,'Микротряска (сила).');p+=prm('Mic. Dur','hordeMicroShakeDuration',a.hordeMicroShakeDuration??0.1,'Микротряска (время).')}return `<div class="attack-card attack-panel"><div class="row" style="margin-bottom:10px;"><span style="color:#569cd6;font-size:18px;">⚔️</span><select class="a-type" style="flex:1;margin:0;" onchange="sy();rn();">${o}</select><button class="btn-remove" onclick="this.closest('.attack-panel').remove();sy();rn();">✖</button></div><div style="display:flex;flex-wrap:wrap;gap:8px;">${p}</div></div>`}function rn(){if(!D)return;ee();if(!D.bosses)D.bosses=[];if(document.getElementById('tab-bosses').classList.contains('active')){let bh='<div id="bosses-container">',cb=JSON.parse(localStorage.getItem('cb')||'[]'),cp=JSON.parse(localStorage.getItem('cp')||'[]');D.bosses.forEach((b,i)=>{let bid="b_"+i,bc=cb.includes(bid),bd=bc?'none':'block',bi=bc?'▶':'▼';bh+=`<div class="panel boss-panel boss-card" style="padding-bottom:5px;"><div class="header-row" data-foldid="${bid}" style="cursor:pointer;border-bottom:none;margin-bottom:0;" onclick="tpd(this,'cb')"><span class="fold-icon" style="color:#f48771;margin-right:10px;font-size:14px;">${bi}</span><span style="font-size:20px;margin-right:5px;">👹</span><input type="text" class="b-id" value="${b.bossID}" onclick="event.stopPropagation()" style="flex:2;font-weight:700;color:#f48771;margin:0;"><label style="margin:0 10px;" onclick="event.stopPropagation()">Сек:</label><input type="number" class="b-time" value="${b.spawnTime}" onclick="event.stopPropagation()" style="flex:1;margin:0;"><button class="btn-remove" onclick="event.stopPropagation();this.closest('.boss-panel').remove();sy();rn();" style="margin-left:10px;">✖</button></div><div class="boss-content" style="display:${bd};margin-top:15px;border-top:1px solid #3e3e42;padding-top:15px;"><div class="phases-list">`;b.phases.forEach((p,j)=>{let pid="p_"+i+"_"+j,pc=cp.includes(pid),pd=pc?'none':'block',pi=pc?'▶':'▼';bh+=`<div class="phase-card phase-panel" style="padding-bottom:5px;"><div class="row" data-foldid="${pid}" style="align-items:center;cursor:pointer;" onclick="tpd(this,'cp')"><span class="fold-icon" style="color:#c586c0;margin-right:10px;font-size:12px;">${pi}</span><input type="text" class="p-name" value="${p.phaseName}" onclick="event.stopPropagation()" style="flex:2;color:#c586c0;margin:0;font-weight:700;background:transparent;border-color:#c586c0;"><div style="flex:1;display:flex;flex-direction:column;" onclick="event.stopPropagation()"><label style="margin:0;">Start HP %</label><input type="number" class="p-start-hp" value="${p.startAtHpPercent!==undefined?p.startAtHpPercent:100}" style="margin:0;border-color:#2ea043;"></div><div style="flex:1;display:flex;flex-direction:column;" onclick="event.stopPropagation()"><label style="margin:0;">End HP %</label><input type="number" class="p-end-hp" value="${p.endAtHpPercent!==undefined?p.endAtHpPercent:50}" style="margin:0;border-color:#8a2a2a;"></div><div style="flex:1;display:flex;flex-direction:column;" onclick="event.stopPropagation()"><label style="margin:0;">Пауза Атак</label><input type="number" step="0.1" class="p-delay" value="${p.timeBetweenAttacks}" style="margin:0;"></div><button class="btn-remove" onclick="event.stopPropagation();this.closest('.phase-panel').remove();sy();rn();" style="margin-top:15px;">✖</button></div><div class="phase-content" style="display:${pd};margin-top:10px;border-top:1px dashed #555;padding-top:10px;"><div class="attacks-list">`;p.attackSequence.forEach(a=>{bh+=ga(a)});bh+=`</div><button class="btn-add" onclick="aa(this)" style="background:#0e639c;padding:5px;font-size:12px;margin-top:10px;">+ Атака</button></div></div>`});bh+=`</div><button class="btn-add" onclick="ap(this)" style="background:#569cd6;margin-top:10px;">+ Фаза</button></div></div>`});bh+=`</div><button class="btn-main" onclick="ab()">➕ ДОБАВИТЬ БОССА</button>`;document.getElementById('tab-bosses').innerHTML=bh}let h='',f={};if(D.phases&&D.phases.length>0){D.phases.forEach(p=>{let n=p.folder||"Main";if(!f[n])f[n]={isEnabled:p.isEnabled!==false,phases:[]};f[n].phases.push(p)})}else{f["Main"]={isEnabled:true,phases:[]}}let cf=JSON.parse(localStorage.getItem('cf')||'[]');for(let n in f){let d=f[n],dc=d.isEnabled?'':'disabled-folder',ic=cf.includes(n),ds=ic?'none':'block',it=ic?'▶':'▼';h+=`<div class="folder-container panel ${dc}" style="background:#252526;border-left:4px solid #c586c0;padding:10px;"><div class="header-row" style="cursor:pointer;border-bottom:none;margin-bottom:0;padding-bottom:0;" onclick="tpd(this,'cf')"><div class="drag-handle folder-drag" style="color:#c586c0;">☰</div><span class="fold-icon" data-foldid="${n}" style="color:#c586c0;margin-right:10px;font-size:12px;">${it}</span><input type="text" class="f-name" value="${n}" onclick="event.stopPropagation()" style="margin:0;font-weight:700;flex:1;border-color:#c586c0;color:#c586c0;background:transparent;"><label style="margin:0 15px;display:flex;align-items:center;cursor:pointer;" onclick="event.stopPropagation()"><input type="checkbox" class="f-enabled" ${d.isEnabled?'checked':''} onchange="tfe(this,event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ</label><button class="btn-remove" onclick="rf(this,event)">✖</button></div><div class="folder-content sortable-list" style="display:${ds};margin-top:15px;min-height:10px;padding-left:15px;border-left:2px solid #3e3e42;">`;d.phases.forEach(p=>{h+=gph(p)});h+=`</div><button class="btn-add folder-add-btn" onclick="aptf(this)" style="display:${ds};background:#1f6b35;">➕ Добавить Волну</button></div>`}document.getElementById('waves-list').innerHTML=h;document.querySelectorAll('.p-start').forEach(e=>ut(e));is();let ph='<div class="cards-grid">';if(D.playerStats){let s=D.playerStats;ph+=`<div class="upgrade-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${s.forwardSpeed}" oninput="up()"></div><div style="flex:1"><label>Стрейф</label><input type="number" step="0.1" id="ps_sSpeed" value="${s.strafeSpeed}" oninput="up()"></div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Поворот</label><input type="number" step="0.1" id="ps_bTurn" value="${s.bodyTurnSpeed||10}" oninput="up()"></div><div style="flex:1"><label>Угол</label><input type="number" step="0.1" id="ps_mAng" value="${s.maxBodyTurnAngle||45}"></div></div></div><div class="upgrade-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Здоровье</label><input type="number" id="ps_mHealth" value="${s.maxHealth}" oninput="up()"></div><div style="flex:1"><label>Щиты</label><input type="number" id="ps_mShields" value="${s.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${s.shieldRegenTime}"></div></div></div><div class="upgrade-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Баз. Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${s.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус</label><input type="number" step="0.1" id="ps_rBonus" value="${s.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова</label><input type="number" step="0.1" id="ps_rHead" value="${s.ricochetHeadChance}" oninput="up()"></div><div style="flex:1"><label>Шанс Нога</label><input type="number" step="0.1" id="ps_rLeg" value="${s.ricochetLegChance}"></div></div></div><div class="upgrade-card"><div class="card-header"><div class="card-title">🧠 Опыт</div></div><div class="row"><div style="flex:1"><label>База XP</label><input type="number" step="0.1" id="ps_bXP" value="${s.baseXP||5}" oninput="up()"></div><div style="flex:1"><label>Шаг Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${s.growthFactor||10}" oninput="up()"></div></div></div>`}ph+='</div>';document.getElementById('tab-player').innerHTML=ph;let wh='<div class="cards-grid">';if(D.weapons){D.weapons.forEach((w,i)=>{wh+=`<div class="upgrade-card"><div class="card-header"><div class="card-title">🔫 ${w.weaponName}</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="up()"></div><div style="flex:1"><label>Задержка</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="up()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="up()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="up()"></div></div></div>`})}wh+='</div>';document.getElementById('tab-weapons').innerHTML=wh;let uh='<div class="cards-grid">';if(D.upgrades){D.upgrades.forEach((u,i)=>{let dc=u.isEnabled?'':'disabled';uh+=`<div class="upgrade-card ${dc}" id="card_${i}"><div class="card-header"><div class="card-title">🃏 ${u.type}</div><label style="display:flex;align-items:center;cursor:pointer;"><span style="margin-right:8px;font-size:11px;color:#888;">${u.isEnabled?'ВКЛ':'ВЫКЛ'}</span><input type="checkbox" id="u_en_${i}" ${u.isEnabled?'checked':''} style="width:16px;height:16px;margin:0;" onchange="tcv(${i},this)"></label></div><div class="card-levels">`;if(u.levelValues)u.levelValues.forEach((v,l)=>{uh+=`<div class="${l===4?'full-width':''}"><label>Lv ${l+1}</label><input type="number" step="0.01" id="u_lv_${i}_${l}" value="${v}" oninput="up()"></div>`});uh+=`</div><div class="preview-box" id="preview_u_${i}">⏳</div></div>`})}uh+='</div>';document.getElementById('tab-upgrades').innerHTML=uh;let eh='<div class="cards-grid">',v=D.evos;if(v){eh+=`<div class="upgrade-card"><div class="card-title">🧊 Abs. Control</div><div class="row"><div style="flex:1"><label>Реген HP</label><input type="number" step="0.1" id="evo_ac_regen" value="${v.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение</label><input type="number" step="0.1" id="evo_ac_stun" value="${v.absoluteControl.evoStunDuration}"></div></div></div><div class="upgrade-card"><div class="card-title">🌪 Hurricane</div><div class="row"><div style="flex:1"><label>Стрейф</label><input type="number" step="0.1" id="evo_hs_strafe" value="${v.hurricaneStrafe.evoStrafeSpeed}"></div><div style="flex:1"><label>Pistol FR</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${v.hurricaneStrafe.pistolFireRate}"></div></div></div><div class="upgrade-card"><div class="card-title">🔩 Lead Drill</div><div class="row"><div style="flex:1"><label>Пробитие</label><input type="number" id="evo_ld_pierce" value="${v.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${v.leadDrill.evoBushSpeed}"></div></div></div><div class="upgrade-card"><div class="card-title">🎯 Homing</div><div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${v.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${v.homing.evoRicochetRadius}"></div></div><div class="row"><div style="flex:1"><label>Крит %</label><input type="number" step="0.1" id="evo_hm_crit" value="${v.homing.evoBonusHeadChance}"></div></div></div><div class="upgrade-card"><div class="card-title">💥 Tank</div><div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${v.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${v.tank.explosionRadius}"></div></div></div>`}eh+='</div>';document.getElementById('tab-evos').innerHTML=eh;try{up()}catch(e){}}function gph(p){let s=p.startTime||0,e=p.endTime||0,h=`<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1;display:flex;flex-direction:column;"><span class="phase-time" style="font-size:11px;color:#dcdcaa;margin-bottom:3px;font-weight:700;">00:00 - 00:00</span><input type="text" class="p-name" value="${p.phaseName}" style="margin:0;font-weight:700;"></div><button class="btn-remove" onclick="rp(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start</label><input type="number" step="0.1" class="p-start" value="${s}" oninput="ut(this)"></div><div style="flex:1"><label>End</label><input type="number" step="0.1" class="p-end" value="${e}" oninput="ut(this)"></div><div style="flex:1"><label>Int</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div><div style="flex:1"><label>Bat</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;if(p.enemies){p.enemies.forEach(x=>{let o=E.map(i=>`<option value="${i}" ${i===x.enemyID?'selected':''}>${i}</option>`).join('');if(!E.includes(x.enemyID))o+=`<option value="${x.enemyID}" selected>${x.enemyID}</option>`;h+=`<div class="row enemy-row"><select class="e-id" style="flex:2">${o}</select><input type="number" step="0.1" class="e-w" value="${x.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`})}h+=`</div><button class="btn-add" onclick="ae(this)" style="font-size:12px;background:#1e1e1e;border:1px solid #3e3e42;">+ Враг</button></div>`;return h}function ab(){if(!D.bosses)D.bosses=[];D.bosses.push({bossID:"Boss_New",spawnTime:300,phases:[{phaseName:"Фаза 1",startAtHpPercent:100,endAtHpPercent:50,timeBetweenAttacks:3,attackSequence:[]}]});rn()}function ap(b){let p=b.closest('.boss-panel'),i=Array.from(p.parentNode.children).indexOf(p),v=D.bosses[i].phases[D.bosses[i].phases.length-1],s=v?v.endAtHpPercent:50;D.bosses[i].phases.push({phaseName:"Новая Фаза",startAtHpPercent:s,endAtHpPercent:s/2,timeBetweenAttacks:2,attackSequence:[]});rn()}function aa(b){let p=b.closest('.phase-panel'),bp=p.closest('.boss-panel'),i=Array.from(bp.parentNode.children).indexOf(bp),j=Array.from(p.parentNode.children).indexOf(p)-1;D.bosses[i].phases[j].attackSequence.push({attackType:"Laser",laserRotationSpeed:45,laserBeamCount:1});rn()}function af(){let h=`<div class="folder-container panel" style="background:#252526;border-left:4px solid #c586c0;padding:10px;"><div class="header-row" style="cursor:pointer;border-bottom:none;margin-bottom:0;padding-bottom:0;" onclick="tpd(this,'cf')"><div class="drag-handle folder-drag" style="color:#c586c0;">☰</div><span class="fold-icon" style="color:#c586c0;margin-right:10px;font-size:12px;">▼</span><input type="text" class="f-name" value="New" onclick="event.stopPropagation()" style="margin:0;font-weight:700;flex:1;border-color:#c586c0;color:#c586c0;background:transparent;"><label style="margin:0 15px;display:flex;align-items:center;cursor:pointer;" onclick="event.stopPropagation()"><input type="checkbox" class="f-enabled" checked onchange="tfe(this,event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ</label><button class="btn-remove" onclick="rf(this,event)">✖</button></div><div class="folder-content sortable-list" style="margin-top:15px;min-height:10px;padding-left:15px;border-left:2px solid #3e3e42;"></div><button class="btn-add folder-add-btn" onclick="aptf(this)" style="background:#1f6b35;">➕ Добавить Волну</button></div>`;document.getElementById('waves-list').insertAdjacentHTML('beforeend',h);is()}function aptf(b){let c=b.previousElementSibling;c.insertAdjacentHTML('beforeend',gph({phaseName:"Wave",startTime:0,endTime:60,spawnInterval:1,enemiesPerBatch:1,enemies:[{enemyID:"Enemy_Standard",weight:100}]}));ut(c.lastElementChild.querySelector('.p-start'))}function ae(b){let r=document.createElement('div');r.className='row enemy-row';r.innerHTML='<select class="e-id" style="flex:2">'+E.map(i=>'<option value="'+i+'">'+i+'</option>').join('')+'</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>';b.previousElementSibling.appendChild(r)}function is(){let w=document.getElementById('waves-list');if(w)new Sortable(w,{handle:'.folder-drag',animation:150});document.querySelectorAll('.folder-content').forEach(e=>{new Sortable(e,{group:'waves',handle:'.drag-handle',animation:150})})}function tcv(i,c){let d=document.getElementById('card_'+i),s=c.previousElementSibling;if(c.checked){d.classList.remove('disabled');s.innerText='ВКЛ'}else{d.classList.add('disabled');s.innerText='ВЫКЛ'}}function up(){try{if(!D||!D.upgrades||!document.getElementById('preview_u_0'))return;D.upgrades.forEach((u,i)=>{let p=document.getElementById('preview_u_'+i);if(!p)return;let l=[];for(let j=0;j<5;j++){let v=document.getElementById('u_lv_'+i+'_'+j);l.push(v?cl(v.value):0)}p.innerHTML="<b>Уровни:</b> "+l.join(" ➔ ")})}catch(e){}}function eb(){try{sy();if(!D)return;let a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(D,null,2));a.download="Backup.json";document.body.appendChild(a);a.click();a.remove()}catch(e){}}function ib(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=function(x){try{D=JSON.parse(x.target.result);rn();document.getElementById('status').innerText="✅ Бэкап загружен!";document.getElementById('status').style.color="#4ec9b0";e.target.value=''}catch(e){alert("Ошибка файла!")}};r.readAsText(f)}async function ld(){if(!T){T=prompt("Token:");if(T)localStorage.setItem('gh_token',T)}if(!T)return;document.getElementById('status').innerText="🔄 Загрузка...";try{let r=await fetch(`https://api.github.com/gists/${G}`,{headers:{Authorization:'token '+T}});let g=await r.json();D=JSON.parse(g.files[F].content);rn();document.getElementById('status').innerText="✅ Готово!";setTimeout(()=>document.getElementById('status').innerText="",2000)}catch(e){document.getElementById('status').innerText="❌ Ошибка"}}async function sv(){sy();document.getElementById('status').innerText="⏳ Сохранение...";try{await fetch(`https://api.github.com/gists/${G}`,{method:'PATCH',headers:{Authorization:'token '+T},body:JSON.stringify({files:{[F]:{content:JSON.stringify(D,null,2)}}})});document.getElementById('status').innerText="✅ СОХРАНЕНО!";U=[];document.getElementById('btn-undo').style.display='none'}catch(e){document.getElementById('status').innerText="❌ ОШИБКА"}}ld()</script></body></html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Unity Config Admin PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; position: relative; }
+        .drag-handle { cursor: grab; padding: 10px; color: #569cd6; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #3e3e42; border-radius: 4px; margin-right: 15px;}
+        h2 { color: #569cd6; text-align: center; margin-bottom: 10px; }
+        h3 { color: #4ec9b0; margin: 0; }
+        label { display: block; margin-bottom: 5px; font-size: 11px; color: #9cdcfe; white-space: nowrap; }
+        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 13px;}
+        select { cursor: pointer; appearance: none; }
+        
+        .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
+        .btn-main:hover { background: #2ea043; }
+
+        .btn-undo { background: #c586c0; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 15px; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(197, 134, 192, 0.3); display: none; transition: transform 0.1s;}
+        .btn-undo:active { transform: scale(0.98); }
+
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; min-width: 80px;}
+        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .row { display: flex; gap: 10px; align-items: flex-start; }
+        .header-row { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; }
+        .btn-add { background: #1f6b35; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold;}
+        .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
+        .status { text-align: center; font-weight: bold; margin-bottom: 15px; }
+        
+        .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
+        .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
+
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+        .upgrade-card { background: #252526; border: 2px solid #3e3e42; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; }
+        .upgrade-card:hover { transform: translateY(-3px); }
+        .upgrade-card.disabled { opacity: 0.6; border-color: #555 !important; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; }
+        .card-title { font-size: 16px; font-weight: bold; color: #4ec9b0; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .card-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card-levels .full-width { grid-column: span 2; }
+        .card-levels label { color: #dcdcaa; }
+
+        .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
+        .preview-box b { color: #dcdcaa; }
+        .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; margin-bottom: 15px !important;}
+        
+        .player-card { border-color: #4ec9b0; } .player-card:hover { border-color: #72ebd1; }
+        .weapon-card { border-color: #ce9178; } .weapon-card .card-title { color: #ce9178; } .weapon-card:hover { border-color: #e5a489; }
+        .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card) { border-color: #569cd6; } .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card):hover { border-color: #7abaff; }
+        
+        .evo-card { background: #201a23; }
+        .recipe-badge { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 11px; color: #9cdcfe; }
+        .evo-ac { border-color: #4fc1ff; } .evo-ac .card-title { color: #4fc1ff; } .evo-ac:hover { border-color: #8ce1ff; }
+        .evo-hs { border-color: #dcdcaa; } .evo-hs .card-title { color: #dcdcaa; } .evo-hs:hover { border-color: #f5f5c3; } 
+        .evo-ld { border-color: #b5cea8; } .evo-ld .card-title { color: #b5cea8; } .evo-ld:hover { border-color: #d2ecc5; } 
+        .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } 
+        .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } 
+
+        .folder-container { transition: all 0.3s ease; }
+        .folder-container.disabled-folder { opacity: 0.5; }
+        .folder-content { min-height: 20px; }
+
+        /* 🔥 СТИЛИ БОССОВ 🔥 */
+        .boss-card { border-color: #f48771; }
+        .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;}
+        .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
+        
+        /* 🔥 СТИЛИ ПОДСКАЗОК (Tooltips) 🔥 */
+        .ttip { position: relative; display: inline-block; cursor: help; margin-left: 4px; color: #569cd6; font-size: 11px; vertical-align: super;}
+        .ttip .ttiptext { visibility: hidden; width: 200px; background-color: #1e1e1e; color: #dcdcaa; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 100; bottom: 130%; left: 50%; margin-left: -100px; border: 1px solid #569cd6; opacity: 0; transition: opacity 0.2s; font-weight: normal; font-size: 12px; white-space: normal; line-height: 1.4; box-shadow: 0px 4px 10px rgba(0,0,0,0.5);}
+        .ttip .ttiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #569cd6 transparent transparent transparent; }
+        .ttip:hover .ttiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>⚙️ Remote Admin PRO</h2>
+        
+        <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
+        <div id="status" class="status"></div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны</button>
+            <button class="tab-btn" id="btn-player" onclick="switchTab('player')">🏃 Игрок</button>
+            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
+            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карты</button>
+            <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')" style="color:#c586c0;">🧬 EVO</button>
+            <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')" style="color:#f48771;">👹 Боссы</button>
+            <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')" style="color:#ce9178;">🛡️ Бэкапы</button>
+        </div>
+
+        <div id="tab-waves" class="tab-content active">
+            <button class="btn-undo" id="btn-undo" onclick="undo()">↩️ ОТМЕНИТЬ СЛУЧАЙНОЕ УДАЛЕНИЕ</button>
+            <div id="waves-list"></div>
+            <button class="btn-add" onclick="addFolder()" style="background:#0e639c; margin-top:20px; font-size:16px;">📁 Добавить Новую Папку</button>
+        </div>
+        <div id="tab-player" class="tab-content"></div>
+        <div id="tab-weapons" class="tab-content"></div>
+        <div id="tab-upgrades" class="tab-content"></div>
+        <div id="tab-evos" class="tab-content"></div>
+        <div id="tab-bosses" class="tab-content"></div>
+        
+        <div id="tab-backups" class="tab-content">
+            <div class="panel">
+                <h3 style="color:#569cd6; margin-bottom:10px; text-align:center;">📦 Сохранение и Восстановление</h3>
+                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
+                <button class="backup-btn" onclick="exportBackup()">📥 СКАЧАТЬ БЭКАП (.json)</button>
+                <hr style="border: 0; border-top: 1px solid #3e3e42; margin-bottom: 20px;">
+                <h4 style="color:#ce9178; text-align:center; margin-bottom:5px;">Восстановить из файла:</h4>
+                <div class="file-input-wrapper">
+                    <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:#4ec9b0;" onchange="importBackup(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GIST_ID = '4b5faafac858635664755b821b757d35';
+        const FILE_NAME = 'config.json';
+        const ENEMY_IDS = ["Enemy_Standard", "Enemy_Runner", "Enemy_armor", "Enemy_Tank_Explotion", "Enemy_Tank_Toxic", "Enemy_Drone", "Helth", "Weapon"];
+        const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde"];
+
+        let currentData = null;
+        let token = localStorage.getItem('gh_token');
+        let undoStack = []; 
+
+        function switchTab(t) {
+            try { syncData(); } catch(e) { console.error("Sync error:", e); }
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            let btn = document.getElementById('btn-' + t);
+            let tab = document.getElementById('tab-' + t);
+            if(btn) btn.classList.add('active');
+            if(tab) tab.classList.add('active');
+            try { render(); } catch(e) { console.error("Render error:", e); }
+            try { updatePreviews(); } catch(e) { console.error("Preview error:", e); }
+        }
+
+        function clean(val) { let parsed = parseFloat(String(val).replace(',', '.')); return isNaN(parsed) ? 0 : parsed; }
+
+        function formatTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = Math.floor(seconds % 60);
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
+
+        function updatePhaseTime(inputEl) {
+            let panel = inputEl.closest('.phase-panel');
+            if (!panel) return;
+            let start = parseFloat(panel.querySelector('.p-start').value) || 0;
+            let end = parseFloat(panel.querySelector('.p-end').value) || 0;
+            panel.querySelector('.phase-time').innerText = formatTime(start) + " - " + formatTime(end);
+        }
+
+        function saveStateForUndo() {
+            try { syncData(); } catch(e){}
+            undoStack.push(JSON.stringify(currentData.phases));
+            document.getElementById('btn-undo').style.display = 'block';
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            let restoredPhases = undoStack.pop();
+            currentData.phases = JSON.parse(restoredPhases);
+            render();
+            if (undoStack.length === 0) document.getElementById('btn-undo').style.display = 'none';
+            let status = document.getElementById('status');
+            status.innerText = "✅ Удаление успешно отменено!";
+            status.style.color = "#c586c0";
+            setTimeout(() => status.innerText = "", 2000);
+        }
+
+        function removeFolder(btn, event) { event.stopPropagation(); saveStateForUndo(); btn.closest('.folder-container').remove(); syncData(); }
+        function removePhase(btn) { saveStateForUndo(); btn.closest('.phase-panel').remove(); syncData(); }
+
+        // ФУНКЦИИ СВОРАЧИВАНИЯ БОССОВ
+        function togglePanelDisplay(headerEl, storageKey) {
+            let content = headerEl.nextElementSibling;
+            let icon = headerEl.querySelector('.fold-icon');
+            let id = headerEl.dataset.foldid;
+            let collapsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block'; icon.innerText = '▼';
+                collapsed = collapsed.filter(n => n !== id); 
+            } else {
+                content.style.display = 'none'; icon.innerText = '▶';
+                if (!collapsed.includes(id)) collapsed.push(id); 
+            }
+            localStorage.setItem(storageKey, JSON.stringify(collapsed));
+        }
+
+        function toggleFolder(header) {
+            let content = header.nextElementSibling;
+            let btnAdd = content.nextElementSibling;
+            let icon = header.querySelector('.fold-icon');
+            let fName = header.querySelector('.f-name').value;
+            let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
+            if (content.style.display === 'none') {
+                content.style.display = 'block'; if(btnAdd) btnAdd.style.display = 'block'; icon.innerText = '▼';
+                collapsed = collapsed.filter(n => n !== fName); 
+            } else {
+                content.style.display = 'none'; if(btnAdd) btnAdd.style.display = 'none'; icon.innerText = '▶';
+                if (!collapsed.includes(fName)) collapsed.push(fName); 
+            }
+            localStorage.setItem('collapsedFolders', JSON.stringify(collapsed));
+        }
+
+        function toggleFolderEnabled(checkbox, event) {
+            event.stopPropagation();
+            let container = checkbox.closest('.folder-container');
+            if (checkbox.checked) container.classList.remove('disabled-folder');
+            else container.classList.add('disabled-folder');
+        }
+
+        function getIconForType(type) {
+            const icons = { 'Speed': '⚡', 'Damage': '⚔️', 'Health': '❤️', 'Distance': '🔭', 'BushSpeed': '🍃', 'FireRate': '🔥', 'CrystalRadius': '💎', 'XpBoost': '📈', 'StunDuration': '💫', 'Piercing': '🏹', 'Ricochet': '🪃', 'Regeneration': '🩸', 'Shield': '🛡️', 'UltimateUpgrade': '💥' };
+            return icons[type] || '🃏';
+        }
+
+        function ensureEvoData() {
+            if (!currentData.evos) {
+                currentData.evos = {
+                    absoluteControl: { evoRegeneration: 5, evoStunDuration: 3 },
+                    hurricaneStrafe: { evoStrafeSpeed: 35, pistolFireRate: 0.1, autoFireRate: 0.05, shotgunFireRate: 0.2 },
+                    leadDrill: { infinitePiercingValue: 100, evoBushSpeed: 12 },
+                    homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50, evoSpreadMultiplier: 0, pistolDistance: 150, autoDistance: 100, shotgunDistance: 60 },
+                    tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 }
+                };
+            }
+        }
+
+        function syncData() {
+            if(!currentData) return;
+            if(!currentData.bosses) currentData.bosses = [];
+            
+            try {
+                if(document.getElementById('bosses-container')) {
+                    let newBosses = [];
+                    document.querySelectorAll('.boss-panel').forEach(bEl => {
+                        let boss = {
+                            bossID: bEl.querySelector('.b-id').value,
+                            spawnTime: clean(bEl.querySelector('.b-time').value),
+                            phases: []
+                        };
+                        
+                        bEl.querySelectorAll('.phase-panel').forEach(pEl => {
+                            let phase = {
+                                phaseName: pEl.querySelector('.p-name').value,
+                                startAtHpPercent: clean(pEl.querySelector('.p-start-hp').value),
+                                endAtHpPercent: clean(pEl.querySelector('.p-end-hp').value),
+                                timeBetweenAttacks: clean(pEl.querySelector('.p-delay').value),
+                                attackSequence: []
+                            };
+                            
+                            pEl.querySelectorAll('.attack-panel').forEach(aEl => {
+                                let aType = aEl.querySelector('.a-type').value;
+                                let attack = { attackType: aType };
+                                aEl.querySelectorAll('.a-param').forEach(paramEl => {
+                                    if(paramEl.type === 'checkbox') attack[paramEl.dataset.key] = paramEl.checked;
+                                    else attack[paramEl.dataset.key] = clean(paramEl.value);
+                                });
+                                phase.attackSequence.push(attack);
+                            });
+                            boss.phases.push(phase);
+                        });
+                        newBosses.push(boss);
+                    });
+                    currentData.bosses = newBosses;
+                }
+            } catch(e) { console.error("Ошибка синхронизации Боссов:", e); }
+
+            try {
+                if(document.querySelector('#waves-list .folder-container')) {
+                    let newPhases = [];
+                    document.querySelectorAll('.folder-container').forEach(folderEl => {
+                        let folderName = folderEl.querySelector('.f-name').value;
+                        let folderEnabled = folderEl.querySelector('.f-enabled').checked;
+                        folderEl.querySelectorAll('.phase-panel').forEach(panel => {
+                            let phase = { phaseName: panel.querySelector('.p-name').value, startTime: clean(panel.querySelector('.p-start').value), endTime: clean(panel.querySelector('.p-end').value), spawnInterval: clean(panel.querySelector('.p-int').value), enemiesPerBatch: parseInt(panel.querySelector('.p-batch').value) || 1, enemies: [], folder: folderName, isEnabled: folderEnabled };
+                            panel.querySelectorAll('.enemy-row').forEach(row => { phase.enemies.push({ enemyID: row.querySelector('.e-id').value, weight: clean(row.querySelector('.e-w').value) }); });
+                            newPhases.push(phase);
+                        });
+                    });
+                    currentData.phases = newPhases;
+                }
+            } catch(e) {}
+            
+            try {
+                if(document.getElementById('ps_fSpeed')) {
+                    if (!currentData.playerStats) currentData.playerStats = {};
+                    let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
+                    currentData.playerStats.forwardSpeed = getVal('ps_fSpeed', currentData.playerStats.forwardSpeed);
+                    currentData.playerStats.strafeSpeed = getVal('ps_sSpeed', currentData.playerStats.strafeSpeed);
+                    currentData.playerStats.bodyTurnSpeed = getVal('ps_bTurn', currentData.playerStats.bodyTurnSpeed || 10);
+                    currentData.playerStats.maxBodyTurnAngle = getVal('ps_mAng', currentData.playerStats.maxBodyTurnAngle || 45);
+                    currentData.playerStats.maxHealth = parseInt(getVal('ps_mHealth', currentData.playerStats.maxHealth));
+                    currentData.playerStats.maxShields = parseInt(getVal('ps_mShields', currentData.playerStats.maxShields));
+                    currentData.playerStats.shieldRegenTime = getVal('ps_sRegen', currentData.playerStats.shieldRegenTime);
+                    currentData.playerStats.ricochetRadius = getVal('ps_rRadius', currentData.playerStats.ricochetRadius);
+                    currentData.playerStats.radiusBonusPerUpgrade = getVal('ps_rBonus', currentData.playerStats.radiusBonusPerUpgrade);
+                    currentData.playerStats.ricochetHeadChance = getVal('ps_rHead', currentData.playerStats.ricochetHeadChance);
+                    currentData.playerStats.ricochetLegChance = getVal('ps_rLeg', currentData.playerStats.ricochetLegChance);
+                    currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 5);
+                    currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 10);
+                }
+            } catch(e) {}
+
+            try {
+                if(document.querySelector('.w-dmg') && currentData.weapons) {
+                    currentData.weapons.forEach((w, i) => {
+                        let dmgEl = document.getElementById('w_dmg_' + i);
+                        if(dmgEl) { w.damage = clean(dmgEl.value); w.fireRate = clean(document.getElementById('w_fr_' + i).value); w.maxDistance = clean(document.getElementById('w_dist_' + i).value); w.spread = clean(document.getElementById('w_spr_' + i).value); }
+                    });
+                }
+            } catch(e) {}
+
+            try {
+                if(document.getElementById('u_en_0') && currentData.upgrades) {
+                    currentData.upgrades.forEach((u, i) => {
+                        let enEl = document.getElementById('u_en_' + i);
+                        if(enEl) { u.isEnabled = enEl.checked; let levelsArr = []; for(let lv=0; lv<5; lv++) { let lvEl = document.getElementById('u_lv_' + i + '_' + lv); levelsArr.push(lvEl ? clean(lvEl.value) : 0); } u.levelValues = levelsArr; }
+                    });
+                }
+            } catch(e) {}
+
+            try {
+                if(document.getElementById('evo_ac_regen')) {
+                    ensureEvoData();
+                    let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
+                    currentData.evos.absoluteControl.evoRegeneration = getVal('evo_ac_regen', 5);
+                    currentData.evos.absoluteControl.evoStunDuration = getVal('evo_ac_stun', 3);
+                    currentData.evos.hurricaneStrafe.evoStrafeSpeed = getVal('evo_hs_strafe', 35);
+                    currentData.evos.hurricaneStrafe.pistolFireRate = getVal('evo_hs_p_fr', 0.1);
+                    currentData.evos.hurricaneStrafe.autoFireRate = getVal('evo_hs_a_fr', 0.05);
+                    currentData.evos.hurricaneStrafe.shotgunFireRate = getVal('evo_hs_s_fr', 0.2);
+                    currentData.evos.leadDrill.infinitePiercingValue = parseInt(getVal('evo_ld_pierce', 100));
+                    currentData.evos.leadDrill.evoBushSpeed = getVal('evo_ld_bush', 12);
+                    currentData.evos.homing.evoRicochetCount = parseInt(getVal('evo_hm_rico', 15));
+                    currentData.evos.homing.evoRicochetRadius = getVal('evo_hm_rad', 40);
+                    currentData.evos.homing.evoBonusHeadChance = getVal('evo_hm_crit', 50);
+                    currentData.evos.homing.evoSpreadMultiplier = getVal('evo_hm_spr', 0);
+                    currentData.evos.homing.pistolDistance = getVal('evo_hm_p_dist', 150);
+                    currentData.evos.homing.autoDistance = getVal('evo_hm_a_dist', 100);
+                    currentData.evos.homing.shotgunDistance = getVal('evo_hm_s_dist', 60);
+                    currentData.evos.tank.explosionDamage = parseInt(getVal('evo_tk_dmg', 75));
+                    currentData.evos.tank.explosionRadius = getVal('evo_tk_rad', 3.5);
+                    currentData.evos.tank.explosionShakeMagnitude = getVal('evo_tk_shake_mag', 0);
+                    currentData.evos.tank.explosionShakeDuration = getVal('evo_tk_shake_dur', 0);
+                }
+            } catch(e) {}
+        }
+
+        // 🔥 ФУНКЦИЯ ДЛЯ ВЫВОДА КРАСИВЫХ ПОДСКАЗОК 🔥
+        function hint(text) {
+            return `<span class="ttip">❔<span class="ttiptext">${text}</span></span>`;
+        }
+
+        function render() {
+            if(!currentData) return;
+            ensureEvoData();
+            if (!currentData.bosses) currentData.bosses = [];
+
+            // 🔥 РЕНДЕР БОССОВ (СВОРАЧИВАНИЕ + TOOLTIPS) 🔥
+            if (document.getElementById('tab-bosses').classList.contains('active')) {
+                let bh = '<div id="bosses-container">';
+                let colB = JSON.parse(localStorage.getItem('colBoss') || '[]');
+                let colP = JSON.parse(localStorage.getItem('colPhase') || '[]');
+
+                if (currentData.bosses) {
+                    currentData.bosses.forEach((boss, bIdx) => {
+                        let bIdStr = "boss_" + bIdx;
+                        let bIsCollapsed = colB.includes(bIdStr);
+                        let bDisp = bIsCollapsed ? 'none' : 'block';
+                        let bIcon = bIsCollapsed ? '▶' : '▼';
+
+                        bh += `<div class="panel boss-panel boss-card" style="padding-bottom:5px;">
+                            <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0;" onclick="togglePanelDisplay(this, 'colBoss')">
+                                <span class="fold-icon" style="color:#f48771; margin-right:10px; font-size:14px;">${bIcon}</span>
+                                <span style="font-size: 20px; margin-right:5px;">👹</span>
+                                <input type="text" class="b-id" value="${boss.bossID}" onclick="event.stopPropagation()" placeholder="ID (напр. Boss_Eye)" style="flex:2; font-weight:bold; color:#f48771; margin:0;">
+                                <label style="margin:0 10px;" onclick="event.stopPropagation()">Сек:</label>
+                                <input type="number" class="b-time" value="${boss.spawnTime}" onclick="event.stopPropagation()" style="flex:1; margin:0;">
+                                <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
+                            </div>
+                            
+                            <div class="boss-content" style="display:${bDisp}; margin-top:15px; border-top: 1px solid #3e3e42; padding-top:15px;">
+                                <div class="phases-list">`;
+                        
+                        boss.phases.forEach((phase, pIdx) => {
+                            let pIdStr = "phase_" + bIdx + "_" + pIdx;
+                            let pIsCollapsed = colP.includes(pIdStr);
+                            let pDisp = pIsCollapsed ? 'none' : 'block';
+                            let pIcon = pIsCollapsed ? '▶' : '▼';
+
+                            bh += `<div class="phase-card phase-panel" style="padding-bottom:5px;">
+                                <div class="row" data-foldid="${pIdStr}" style="align-items: center; cursor:pointer;" onclick="togglePanelDisplay(this, 'colPhase')">
+                                    <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${pIcon}</span>
+                                    <input type="text" class="p-name" value="${phase.phaseName}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:2; color:#c586c0; margin:0; font-weight:bold; background:transparent; border-color:#c586c0;">
+                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
+                                        <label style="margin:0;">Start HP %</label>
+                                        <input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;">
+                                    </div>
+                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
+                                        <label style="margin:0;">End HP %</label>
+                                        <input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;">
+                                    </div>
+                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
+                                        <label style="margin:0;">Пауза Атак</label>
+                                        <input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;">
+                                    </div>
+                                    <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.phase-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
+                                </div>
+                                
+                                <div class="phase-content" style="display:${pDisp}; margin-top:10px; border-top: 1px dashed #555; padding-top:10px;">
+                                    <div class="attacks-list">`;
+                            
+                            phase.attackSequence.forEach((attack, aIdx) => {
+                                bh += generateAttackHtml(attack);
+                            });
+                            
+                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Добавить Атаку</button>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Добавить Фазу</button>
+                            </div></div>`;
+                    });
+                }
+                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>`;
+                document.getElementById('tab-bosses').innerHTML = bh;
+            }
+            
+            // РЕНДЕР ВОЛН
+            let h = '';
+            let folders = {};
+            if (currentData.phases && currentData.phases.length > 0) {
+                currentData.phases.forEach((p) => { let fName = p.folder || "Основная папка"; if (!folders[fName]) folders[fName] = { isEnabled: p.isEnabled !== false, phases: [] }; folders[fName].phases.push(p); });
+            } else { folders["Основная папка"] = { isEnabled: true, phases: [] }; }
+
+            let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
+            for (let fName in folders) {
+                let fData = folders[fName]; let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
+                let isCollapsed = collapsed.includes(fName); let displayStyle = isCollapsed ? 'none' : 'block'; let iconText = isCollapsed ? '▶' : '▼';
+                
+                h += `<div class="folder-container panel ${disabledClass}" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
+                    <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${iconText}</span>
+                        <input type="text" class="f-name" value="${fName}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
+                        <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()"><input type="checkbox" class="f-enabled" ${fData.isEnabled ? 'checked' : ''} onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ</label>
+                        <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
+                    </div>
+                    <div class="folder-content sortable-list" style="display:${displayStyle}; margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
+
+                fData.phases.forEach(p => { h += generatePhaseHtml(p); });
+                h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle}; background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
+            }
+            document.getElementById('waves-list').innerHTML = h;
+            
+            document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
+            initSortable();
+
+            // РЕНДЕР ИГРОКА И ПУШЕК
+            let ph = '<div class="cards-grid">';
+            if(currentData.playerStats) {
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Угол</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div><div class="row"><div style="flex:1"><label>Базовый Опыт</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
+            }
+            ph += '</div>';
+            document.getElementById('tab-player').innerHTML = ph;
+
+            let wh = '<div class="cards-grid">';
+            if (currentData.weapons) {
+                currentData.weapons.forEach((w, i) => {
+                    let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
+                    wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${w.weaponName}</div></div><div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
+                });
+            }
+            wh += '</div>';
+            document.getElementById('tab-weapons').innerHTML = wh;
+
+            let uh = '<div class="cards-grid">';
+            if (currentData.upgrades) {
+                currentData.upgrades.forEach((u, i) => {
+                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed");
+                    uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header"><div class="card-title">' + icon + ' ' + u.type + '</div><label style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:#888;">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label></div>';
+                    if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
+                    uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
+                    if (u.levelValues) { u.levelValues.forEach((v, lv) => { uh += '<div class="' + (lv === 4 ? 'full-width' : '') + '"><label>Lv ' + (lv+1) + '</label><input type="number" step="0.01" id="u_lv_' + i + '_' + lv + '" value="' + v + '" oninput="updatePreviews()"></div>'; }); }
+                    uh += '</div><div class="preview-box" id="preview_u_' + i + '">⏳ Считаем...</div></div>';
+                });
+            }
+            uh += '</div>';
+            document.getElementById('tab-upgrades').innerHTML = uh;
+            
+            let evoHtml = '<div class="cards-grid">';
+            const eData = currentData.evos;
+            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div><div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div><div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div><div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div><div class="row"><div style="flex:1"><label>Скор. Стрейфа (EVO)</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div></div><h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела</h4><div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div><div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div><div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div><div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div><div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div><div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div><h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Дальность пушек</h4><div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div><div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div><div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div><div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div>`;
+            evoHtml += '</div>';
+            document.getElementById('tab-evos').innerHTML = evoHtml;
+
+            try { updatePreviews(); } catch(e) {} 
+        }
+
+        function generatePhaseHtml(p) {
+            let start = p.startTime || 0; let end = p.endTime || 0;
+            let h = `<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span><input type="text" class="p-name" value="${p.phaseName}" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end" value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
+            if (p.enemies) { p.enemies.forEach(e => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; }); if (!isKnown) optionsHtml += `<option value="${e.enemyID}" selected>${e.enemyID} (Неизвестный)</option>`; h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`; }); }
+            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px; background:#1e1e1e; border: 1px solid #3e3e42;">+ Враг</button></div>`;
+            return h;
+        }
+
+        // 🔥 ПОЛНЫЙ ВЫВОД АТАК С ПОДСКАЗКАМИ 🔥
+        function generateAttackHtml(attack) {
+            let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
+            let paramsHtml = '';
+            
+            if (attack.attackType === 'Laser') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Prep Time ${hint('Сколько секунд показывается красная линия до выстрела.')}</label><input type="number" step="0.1" class="a-param" data-key="laserPreparationTime" value="${attack.laserPreparationTime ?? 1.5}"></div>
+                <div style="flex:1"><label>Duration ${hint('Как долго лазер сжигает арену (в секундах).')}</label><input type="number" step="0.1" class="a-param" data-key="laserDuration" value="${attack.laserDuration ?? 5.0}"></div>
+                <div style="flex:1"><label>Rot. Speed ${hint('Скорость поворота луча (в градусах за секунду).')}</label><input type="number" step="0.1" class="a-param" data-key="laserRotationSpeed" value="${attack.laserRotationSpeed ?? 45}"></div></div>
+                <div class="row"><div style="flex:1"><label>Beam Width ${hint('Толщина лазерного луча.')}</label><input type="number" step="0.1" class="a-param" data-key="laserBeamWidth" value="${attack.laserBeamWidth ?? 3.0}"></div>
+                <div style="flex:1"><label>Beam Length ${hint('Длина луча (обычно хватает 40 чтобы достать до края арены).')}</label><input type="number" step="0.1" class="a-param" data-key="laserBeamLength" value="${attack.laserBeamLength ?? 40.0}"></div>
+                <div style="flex:1"><label>Beam Count ${hint('Сколько лучей крутится (1 = линия, 2 = пропеллер, 4 = крест).')}</label><input type="number" class="a-param" data-key="laserBeamCount" value="${attack.laserBeamCount ?? 1}"></div></div>
+                <div class="row"><div style="flex:1"><label>Dmg / Tick ${hint('Сколько урона наносит одно касание лазера.')}</label><input type="number" class="a-param" data-key="laserDamagePerTick" value="${attack.laserDamagePerTick ?? 1}"></div>
+                <div style="flex:1"><label>Tick Rate ${hint('Если игрок стоит в лазере, как часто (в сек.) он получает урон.')}</label><input type="number" step="0.1" class="a-param" data-key="laserTickRate" value="${attack.laserTickRate ?? 0.5}"></div>
+                <div style="flex:1"></div></div>`;
+            } 
+            else if (attack.attackType === 'Rift') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Prep Time ${hint('Задержка перед появлением шипов.')}</label><input type="number" step="0.1" class="a-param" data-key="riftPreparationTime" value="${attack.riftPreparationTime ?? 2.0}"></div>
+                <div style="flex:1"><label>Path Width ${hint('Ширина опасной зоны (красной линии).')}</label><input type="number" step="0.1" class="a-param" data-key="riftPathWidth" value="${attack.riftPathWidth ?? 4.0}"></div>
+                <div style="flex:1"><label>Path Count ${hint('Количество направлений, куда ударят шипы.')}</label><input type="number" class="a-param" data-key="riftPathCount" value="${attack.riftPathCount ?? 3}"></div></div>
+                <div class="row"><div style="flex:1"><label>Angle Offset ${hint('Угол между линиями, если Path Count больше 1.')}</label><input type="number" step="0.1" class="a-param" data-key="riftAngleBetweenPaths" value="${attack.riftAngleBetweenPaths ?? 45}"></div>
+                <div style="flex:1"><label>Max Distance ${hint('Как далеко от босса улетят шипы.')}</label><input type="number" step="0.1" class="a-param" data-key="riftMaxDistance" value="${attack.riftMaxDistance ?? 30.0}"></div>
+                <div style="flex:1"><label>Spike Speed ${hint('С какой скоростью шипы ползут вперед.')}</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeSpeed" value="${attack.riftSpikeSpeed ?? 20.0}"></div></div>
+                <div class="row"><div style="flex:1"><label>Lifetime ${hint('Сколько секунд шипы торчат из земли.')}</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeLifetime" value="${attack.riftSpikeLifetime ?? 4.0}"></div>
+                <div style="flex:1"><label>Spacing ${hint('Расстояние между рядами шипов.')}</label><input type="number" step="0.1" class="a-param" data-key="riftSpikeSpacing" value="${attack.riftSpikeSpacing ?? 1.5}"></div>
+                <div style="flex:1"><label>Spikes Per Row ${hint('Сколько шипов в ширину (3 = куст, 1 = узкая тропа).')}</label><input type="number" class="a-param" data-key="riftSpikesPerRow" value="${attack.riftSpikesPerRow ?? 3}"></div></div>
+                <div class="row"><div style="flex:1"><label>Scatter ${hint('Сила случайного хаоса (кривизна линии шипов).')}</label><input type="number" step="0.1" class="a-param" data-key="riftRandomScatter" value="${attack.riftRandomScatter ?? 0.5}"></div>
+                <div style="flex:2"></div></div>`;
+            } 
+            else if (attack.attackType === 'EarthThrow') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Stone Count ${hint('Сколько камней бросит босс.')}</label><input type="number" class="a-param" data-key="stonesCount" value="${attack.stonesCount ?? 3}"></div>
+                <div style="flex:1"><label>Delay Btw ${hint('Задержка между бросками камней.')}</label><input type="number" step="0.1" class="a-param" data-key="stonesDelayBetween" value="${attack.stonesDelayBetween ?? 2.0}"></div>
+                <div style="flex:1"><label>Track Dur. ${hint('Сколько секунд камень держит игрока на прицеле.')}</label><input type="number" step="0.1" class="a-param" data-key="stonesTrackingDuration" value="${attack.stonesTrackingDuration ?? 1.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Lead Strength ${hint('Умное упреждение: насколько далеко вперед по курсу бега кидать камень (1.0 = точно в цель).')}</label><input type="number" step="0.1" class="a-param" data-key="stonesLeadStrength" value="${attack.stonesLeadStrength ?? 1.2}"></div>
+                <div style="flex:1"><label>Expl. Radius ${hint('Радиус красного круга на земле (взрыв камня).')}</label><input type="number" step="0.1" class="a-param" data-key="stonesIndicatorSize" value="${attack.stonesIndicatorSize ?? 3.0}"></div>
+                <div style="flex:1"><label>Fly Speed ${hint('Скорость полета камня к цели.')}</label><input type="number" step="0.1" class="a-param" data-key="stonesSpeed" value="${attack.stonesSpeed ?? 25.0}"></div></div>
+                <div class="row"><div style="flex:1"><label>Damage ${hint('Урон при прямом попадании камня.')}</label><input type="number" class="a-param" data-key="stonesDamage" value="${attack.stonesDamage ?? 2}"></div>
+                <div style="flex:2"></div></div>`;
+            } 
+            else if (attack.attackType === 'Rockets') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Launch Count ${hint('Сколько ракет вылетает за один залп.')}</label><input type="number" class="a-param" data-key="rocketsLaunchCount" value="${attack.rocketsLaunchCount ?? 5}"></div>
+                <div style="flex:1"><label>Launch Speed ${hint('Как быстро ракеты выстреливают вверх.')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchSpeed" value="${attack.rocketsLaunchSpeed ?? 30.0}"></div>
+                <div style="flex:1"><label>Launch Delay ${hint('Задержка между вылетами ракет (эффект пулемета).')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchDelay" value="${attack.rocketsLaunchDelay ?? 0.2}"></div></div>
+                <div class="row"><div style="flex:1"><label>Scatter ${hint('Ширина разброса при запуске вверх (угол).')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsLaunchScatter" value="${attack.rocketsLaunchScatter ?? 20.0}"></div>
+                <div style="flex:1"><label>Warn Count ${hint('Сколько красных кругов бомбардировки появится на земле.')}</label><input type="number" class="a-param" data-key="rocketsWarningCount" value="${attack.rocketsWarningCount ?? 5}"></div>
+                <div style="flex:1"><label>Warn Dur. ${hint('Как долго круг мигает до падения ракеты.')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsWarningDuration" value="${attack.rocketsWarningDuration ?? 2.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Expl. Radius ${hint('Радиус урона (и размера круга) при взрыве.')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsExplosionRadius" value="${attack.rocketsExplosionRadius ?? 6.0}"></div>
+                <div style="flex:1"><label>Fall Speed ${hint('С какой скоростью ракета падает с небес.')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsFallSpeed" value="${attack.rocketsFallSpeed ?? 50.0}"></div>
+                <div style="flex:1"><label>Fall Delay ${hint('Задержка между падением ракет (ковровая бомбардировка).')}</label><input type="number" step="0.1" class="a-param" data-key="rocketsFallDelay" value="${attack.rocketsFallDelay ?? 0.2}"></div></div>
+                <div class="row"><div style="flex:1"><label>Damage ${hint('Урон от взрыва ракеты.')}</label><input type="number" class="a-param" data-key="rocketsDamage" value="${attack.rocketsDamage ?? 2}"></div>
+                <div style="flex:2; display:flex; align-items:center; margin-top:15px;"><input type="checkbox" class="a-param" data-key="rocketsShowDebug" ${attack.rocketsShowDebug !== false ? 'checked' : ''} style="width:auto; margin:0 5px 0 0;"> <label style="margin:0;">Show Sphere ${hint('Показывать полупрозрачную сферу взрыва (полезно для баланса).')}</label></div></div>`;
+            } 
+            else if (attack.attackType === 'SummonHorde') {
+                paramsHtml = `
+                <div class="row"><div style="flex:1"><label>Enemy Count ${hint('Сколько врагов вылезет из-под земли.')}</label><input type="number" class="a-param" data-key="hordeEnemyCount" value="${attack.hordeEnemyCount ?? 4}"></div>
+                <div style="flex:1"><label>Lifetime ${hint('Через сколько секунд призванные враги умрут сами.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeEnemyLifetime" value="${attack.hordeEnemyLifetime ?? 12.0}"></div>
+                <div style="flex:1"><label>Delay Btw ${hint('Пауза между появлением каждого следующего врага.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeDelayBetweenSpawns" value="${attack.hordeDelayBetweenSpawns ?? 0.5}"></div></div>
+                <div class="row"><div style="flex:1"><label>Emerge Time ${hint('Скорость анимации вылезания врага из земли.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeEmergeTime" value="${attack.hordeEmergeTime ?? 1.5}"></div>
+                <div style="flex:1"><label>Ambush Chance ${hint('Шанс (от 0 до 1), что враг вылезет прямо перед лицом бегущего игрока.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeAmbushChance" value="${attack.hordeAmbushChance ?? 0.6}"></div>
+                <div style="flex:1"><label>Main Shake Int. ${hint('Сила сильного землетрясения при начале призыва.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeShakeIntensity" value="${attack.hordeShakeIntensity ?? 0.15}"></div></div>
+                <div class="row"><div style="flex:1"><label>Main Shake Dur. ${hint('Как долго трясет арену (основной толчок).')}</label><input type="number" step="0.1" class="a-param" data-key="hordeShakeDuration" value="${attack.hordeShakeDuration ?? 0.4}"></div>
+                <div style="flex:1"><label>Micro Shake Int. ${hint('Сила слабой тряски, когда вылезает отдельный враг.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeMicroShakeIntensity" value="${attack.hordeMicroShakeIntensity ?? 0.05}"></div>
+                <div style="flex:1"><label>Micro Shake Dur. ${hint('Длительность тряски от вылезания одного врага.')}</label><input type="number" step="0.1" class="a-param" data-key="hordeMicroShakeDuration" value="${attack.hordeMicroShakeDuration ?? 0.1}"></div></div>`;
+            }
+
+            return `<div class="attack-card attack-panel">
+                <div class="row">
+                    <span style="color:#569cd6; font-size:18px;">⚔️</span>
+                    <select class="a-type" style="flex:1; margin:0;" onchange="syncData(); render();">${opts}</select>
+                    <button class="btn-remove" onclick="this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
+                </div>
+                ${paramsHtml}
+            </div>`;
+        }
+
+        function addBoss() {
+            if (!currentData.bosses) currentData.bosses = [];
+            currentData.bosses.push({ bossID: "Boss_New", spawnTime: 300, phases: [{ phaseName: "Фаза 1", startAtHpPercent: 100, endAtHpPercent: 50, timeBetweenAttacks: 3, attackSequence: [] }] });
+            render();
+        }
+        function addPhase(btn) {
+            let bossPanel = btn.closest('.boss-panel');
+            let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
+            let prevPhase = currentData.bosses[bIdx].phases[currentData.bosses[bIdx].phases.length - 1];
+            let newStart = prevPhase ? prevPhase.endAtHpPercent : 50;
+            currentData.bosses[bIdx].phases.push({ phaseName: "Новая Фаза", startAtHpPercent: newStart, endAtHpPercent: newStart / 2, timeBetweenAttacks: 2, attackSequence: [] });
+            render();
+        }
+        function addAttack(btn) {
+            let phasePanel = btn.closest('.phase-panel');
+            let bossPanel = phasePanel.closest('.boss-panel');
+            let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
+            let pIdx = Array.from(phasePanel.parentNode.children).indexOf(phasePanel);
+            currentData.bosses[bIdx].phases[pIdx].attackSequence.push({ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 });
+            render();
+        }
+
+        function addFolder() {
+            let h = `<div class="folder-container panel" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
+                    <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">▼</span>
+                        <input type="text" class="f-name" value="Новая папка" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
+                        <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="f-enabled" checked onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
+                        </label>
+                        <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
+                    </div>
+                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;"></div>
+                    <button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button>
+                </div>`;
+            document.getElementById('waves-list').insertAdjacentHTML('beforeend', h);
+            initSortable();
+        }
+
+        function addPhaseToFolder(btn) {
+            let folderContent = btn.previousElementSibling;
+            let emptyPhase = { phaseName: "Новая волна", startTime: 0, endTime: 60, spawnInterval: 1, enemiesPerBatch: 1, enemies: [{enemyID: "Enemy_Standard", weight: 100}] };
+            folderContent.insertAdjacentHTML('beforeend', generatePhaseHtml(emptyPhase));
+            updatePhaseTime(folderContent.lastElementChild.querySelector('.p-start'));
+        }
+
+        function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
+
+        function initSortable() { 
+            let wl = document.getElementById('waves-list');
+            if(wl) new Sortable(wl, { handle: '.folder-drag', animation: 150 }); 
+            document.querySelectorAll('.folder-content').forEach(el => {
+                new Sortable(el, { group: 'waves', handle: '.drag-handle', animation: 150 });
+            });
+        }
+
+        function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
+        
+        function updatePreviews() {
+            try {
+                if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
+
+                currentData.upgrades.forEach((u, i) => {
+                    let previewDiv = document.getElementById('preview_u_' + i);
+                    if (!previewDiv) return;
+
+                    let tbInput = document.getElementById('u_testbase_' + i);
+                    let hasTestBase = (tbInput && tbInput.value !== "");
+                    let tBase = hasTestBase ? clean(tbInput.value) : 0;
+
+                    let levels = [];
+                    for(let lv=0; lv<5; lv++) {
+                        let lvInput = document.getElementById('u_lv_' + i + '_' + lv);
+                        levels.push(lvInput ? clean(lvInput.value) : 0);
+                    }
+
+                    let text = "";
+                    
+                    if (u.type === "Damage" || u.type === "FireRate") {
+                        if (hasTestBase) {
+                            let currentVal = tBase;
+                            let steps = [];
+                            for(let lv=0; lv<5; lv++) {
+                                currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
+                                steps.push(currentVal.toFixed(1));
+                            }
+                            text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ");
+                        } else {
+                            if (currentData.weapons) {
+                                let weaponTexts = currentData.weapons.map((w, wIdx) => {
+                                    let dmgInput = document.getElementById('w_dmg_' + wIdx);
+                                    let frInput = document.getElementById('w_fr_' + wIdx);
+                                    let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
+                                    let baseFr = clean(frInput ? frInput.value : w.fireRate);
+                                    
+                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr;
+                                    let steps = [];
+                                    for(let lv=0; lv<5; lv++) {
+                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
+                                        steps.push(currentVal.toFixed(1));
+                                    }
+                                    return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
+                                });
+                                text = weaponTexts.join("<br><br>");
+                            }
+                        }
+                    }
+                    else if (u.type === "Health") {
+                        let hpInput = document.getElementById('ps_mHealth');
+                        let baseHpValue = 3;
+                        if (hpInput) {
+                            baseHpValue = clean(hpInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.maxHealth) {
+                            baseHpValue = currentData.playerStats.maxHealth;
+                        }
+                        
+                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
+                        let currentVal = baseHp;
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            let bonus = Math.round(currentVal * levels[lv]);
+                            if (bonus < 1) bonus = 1;
+                            currentVal += bonus;
+                            steps.push(currentVal);
+                        }
+                        text = "<b>HP Игрока" + (hasTestBase ? " (ТЕСТ)" : "") + "</b>:<br>" + steps.join(" ➔ ") + " (сердец)";
+                    }
+                    else if (u.type === "Speed") {
+                        let spdInput = document.getElementById('ps_sSpeed');
+                        let baseSpdValue = 20;
+                        if (spdInput) {
+                            baseSpdValue = clean(spdInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.strafeSpeed) {
+                            baseSpdValue = currentData.playerStats.strafeSpeed;
+                        }
+
+                        let turnInput = document.getElementById('ps_bTurn');
+                        let baseTurnValue = 10;
+                        if (turnInput) {
+                            baseTurnValue = clean(turnInput.value);
+                        } else if (currentData.playerStats && currentData.playerStats.bodyTurnSpeed) {
+                            baseTurnValue = currentData.playerStats.bodyTurnSpeed;
+                        }
+
+                        let currentStrafe = baseSpdValue;
+                        let currentTurn = baseTurnValue;
+                        
+                        let strafeSteps = [];
+                        let turnSteps = [];
+                        
+                        for(let lv=0; lv<5; lv++) {
+                            currentStrafe *= (1 + levels[lv]);
+                            currentTurn *= (1 + (levels[lv] * 0.5)); 
+                            
+                            strafeSteps.push(currentStrafe.toFixed(1));
+                            turnSteps.push(currentTurn.toFixed(1));
+                        }
+                        
+                        text = "<b><span style='color:#72ebd1'>Скор. Стрейфа</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
+                               "<br><br><b><span style='color:#ce9178'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
+                    }
+                    else if (u.type === "Shield") {
+                        text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                    }
+                    else if (u.type === "Distance") {
+                        let critInput = document.getElementById('ps_rHead');
+                        let baseCrit = critInput ? clean(critInput.value) : (currentData.playerStats ? currentData.playerStats.ricochetHeadChance : 15);
+
+                        let distMults = [1.1, 1.2, 1.3, 1.4, 1.5];
+                        let spreadMults = [0.8, 0.6, 0.4, 0.2, 0];
+                        let critBonuses = [5, 10, 15, 20, 30];
+
+                        let textBlocks = [];
+                        let critSteps = [];
+                        for(let lv=0; lv<5; lv++) critSteps.push((baseCrit + critBonuses[lv]).toFixed(1) + "%");
+                        textBlocks.push("<b>Шанс Голова (Крит)</b>:<br>" + critSteps.join(" ➔ "));
+
+                        if (currentData.weapons) {
+                            currentData.weapons.forEach((w, wIdx) => {
+                                let distInput = document.getElementById('w_dist_' + wIdx);
+                                let sprInput = document.getElementById('w_spr_' + wIdx);
+                                let baseDist = clean(distInput ? distInput.value : w.maxDistance);
+                                let baseSpr = clean(sprInput ? sprInput.value : w.spread);
+                                
+                                let distSteps = [];
+                                let sprSteps = [];
+                                for(let lv=0; lv<5; lv++) {
+                                    distSteps.push((baseDist * distMults[lv]).toFixed(1));
+                                    sprSteps.push((baseSpr * spreadMults[lv]).toFixed(1));
+                                }
+                                textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:#ce9178'>Разброс:</span> " + sprSteps.join(" ➔ "));
+                            });
+                        }
+                        text = textBlocks.join("<br><br>");
+                    }
+                    else if (u.type === "BushSpeed") {
+                        let baseBush = 6.0; 
+                        let baseStumble = 1.0; 
+                        
+                        let bushSteps = [];
+                        let treeSteps = [];
+                        let currentBush = baseBush;
+                        let currentStumble = baseStumble;
+
+                        for(let lv=0; lv<5; lv++) {
+                            currentBush += levels[lv];
+                            bushSteps.push(currentBush.toFixed(1));
+                            
+                            currentStumble -= 0.2;
+                            if (currentStumble <= 0.05) currentStumble = 0;
+                            treeSteps.push((currentStumble === 0) ? "0 (Игнор)" : "x" + currentStumble.toFixed(1));
+                        }
+
+                        text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") + 
+                               "<br><br><b>Штраф от деревьев</b>:<br>" + treeSteps.join(" ➔ ");
+                    }
+                    else if (u.type === "XpBoost") {
+                        let bXpInput = document.getElementById('ps_bXP');
+                        let gFactorInput = document.getElementById('ps_gFactor');
+                        let baseXP = bXpInput ? clean(bXpInput.value) : (currentData.playerStats ? currentData.playerStats.baseXP : 5);
+                        let gFactor = gFactorInput ? clean(gFactorInput.value) : (currentData.playerStats ? currentData.playerStats.growthFactor : 10);
+
+                        let multSteps = [];
+                        let lvl2Steps = [];
+                        let lvl10Steps = [];
+                        let lvl20Steps = [];
+                        
+                        let currentMult = 1.0; 
+                        let xpForLvl2 = baseXP;
+                        let xpForLvl10 = baseXP + (gFactor * 8); 
+                        let xpForLvl20 = baseXP + (gFactor * 18); 
+
+                        for(let lv=0; lv<5; lv++) {
+                            currentMult += levels[lv];
+                            multSteps.push("x" + currentMult.toFixed(2));
+                            
+                            lvl2Steps.push(Math.ceil(xpForLvl2 / currentMult));
+                            lvl10Steps.push(Math.ceil(xpForLvl10 / currentMult));
+                            lvl20Steps.push(Math.ceil(xpForLvl20 / currentMult));
+                        }
+
+                        text = "<b>Множитель Опыта от Карточки</b>:<br>" + multSteps.join(" ➔ ") + 
+                               "<br><br><b>Алмазов до 2 Ур. (надо " + xpForLvl2.toFixed(1) + " XP)</b>:<br>" + lvl2Steps.join(" ➔ ") +
+                               "<br><br><b>Алмазов до 10 Ур. (надо " + xpForLvl10.toFixed(1) + " XP)</b>:<br>" + lvl10Steps.join(" ➔ ") +
+                               "<br><br><b>Алмазов до 20 Ур. (надо " + xpForLvl20.toFixed(1) + " XP)</b>:<br>" + lvl20Steps.join(" ➔ ");
+                    }
+                    else {
+                        let currentVal = hasTestBase ? tBase : 0; 
+                        let steps = [];
+                        for(let lv=0; lv<5; lv++) {
+                            currentVal += levels[lv];
+                            let formatted = Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(2);
+                            steps.push(hasTestBase ? formatted : "+" + formatted);
+                        }
+                        text = hasTestBase ? "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ") : "<b>Суммарная прибавка</b>:<br>" + steps.join(" ➔ ");
+                    }
+                    previewDiv.innerHTML = text;
+                });
+            } catch (err) {
+                console.error("Ошибка калькулятора (не ломает логику):", err);
+            }
+        }
+
+        function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
+        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
+
+        async function load() { 
+            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); } 
+            if(!token) return; 
+            document.getElementById('status').innerText = "🔄 Загрузка..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }}); 
+                if(!res.ok) throw new Error("Ошибка доступа"); 
+                const gist = await res.json(); 
+                currentData = JSON.parse(gist.files[FILE_NAME].content); 
+                render(); 
+                document.getElementById('status').innerText = "✅ Данные загружены!"; 
+                document.getElementById('status').style.color = "#4ec9b0"; 
+                setTimeout(() => document.getElementById('status').innerText = "", 2000); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ Ошибка загрузки"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
+        }
+
+        async function saveData() { 
+            syncData(); 
+            document.getElementById('status').innerText = "⏳ Сохранение..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) }); 
+                if(res.ok) { 
+                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
+                    document.getElementById('status').style.color = "#238636"; 
+                    undoStack = [];
+                    document.getElementById('btn-undo').style.display = 'none';
+                } else throw new Error(); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
+        }
+
+        load();
+    </script>
+</body>
+</html>
