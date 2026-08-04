@@ -525,7 +525,7 @@
             let uh = '<div class="cards-grid">';
             if (currentData.upgrades) {
                 currentData.upgrades.forEach((u, i) => {
-                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed");
+                    let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed" && u.type !== "CrystalRadius" && u.type !== "StunDuration");
                     uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header"><div class="card-title">' + icon + ' ' + escapeHtml(u.type) + '</div><label style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:#888;">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label></div>';
                     if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
                     uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
@@ -835,7 +835,21 @@
                                "<br><br><b><span style='color:#ce9178'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
                     }
                     else if (u.type === "Shield") {
-                        text = "<b>Щиты (Хардкод Unity):</b><br>Lv1: 1 (30s) ➔ Lv2: 1 (20s) ➔ Lv3: 2 (20s) ➔ Lv4: 2 (15s) ➔ Lv5: 3 (15s)";
+                        // ФИКС: раньше был статичный текст с ОШИБКОЙ (Lv5 показывал 15с, а в
+                        // PlayerHealth.UpgradeShield реально 10с). Плюс сама игра вызывает
+                        // UpgradeShield( (int)levelValues[i] ) — то есть "уровень" щита это
+                        // ЦЕЛАЯ ЧАСТЬ введённого здесь числа, а НЕ номер карточки по счёту 1-5!
+                        // Если тут не стоит ровно 1,2,3,4,5 — реальный прогресс в игре будет
+                        // прыгать/повторяться. Показываем то, что ДЕЙСТВИТЕЛЬНО получится
+                        // с текущими значениями, а не выдуманную идеальную таблицу.
+                        const shieldTable = { 1: [1, 30], 2: [1, 20], 3: [2, 20], 4: [2, 15], 5: [3, 10] };
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            let castLevel = Math.trunc(levels[lv]);
+                            let entry = shieldTable[castLevel];
+                            steps.push(entry ? (entry[0] + "щ/" + entry[1] + "с") : ("⚠️" + levels[lv] + "→" + castLevel + " (нет эффекта, нужно 1-5)"));
+                        }
+                        text = "<b>Щиты — реальный расчёт игры</b> (по int() от введённых значений выше, не хардкод):<br>" + steps.join(" ➔ ");
                     }
                     else if (u.type === "Distance") {
                         let critInput = document.getElementById('ps_rHead');
@@ -919,8 +933,84 @@
                                "<br><br><b>Алмазов до 10 Ур. (надо " + xpForLvl10.toFixed(1) + " XP)</b>:<br>" + lvl10Steps.join(" ➔ ") +
                                "<br><br><b>Алмазов до 20 Ур. (надо " + xpForLvl20.toFixed(1) + " XP)</b>:<br>" + lvl20Steps.join(" ➔ ");
                     }
+                    else if (u.type === "Piercing") {
+                        // ФИКС: раньше показывался только счётчик пробития. У Piercing есть
+                        // ВТОРОЙ, скрытый эффект в коде игры (PlayerRicochet.UpgradePiercing):
+                        // он же увеличивает радиус рикошета на (levelValue * radiusBonusPerUpgrade) —
+                        // это нигде не отображалось.
+                        let bonusInput = document.getElementById('ps_rBonus');
+                        let radiusInput = document.getElementById('ps_rRadius');
+                        let bonusPerUpgrade = bonusInput ? clean(bonusInput.value) : (currentData.playerStats ? currentData.playerStats.radiusBonusPerUpgrade : 0);
+                        let baseRadius = radiusInput ? clean(radiusInput.value) : (currentData.playerStats ? currentData.playerStats.ricochetRadius : 0);
+
+                        let currentPierce = hasTestBase ? tBase : 0;
+                        let currentRadius = baseRadius;
+                        let pierceSteps = [];
+                        let radiusSteps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentPierce += levels[lv];
+                            currentRadius += levels[lv] * bonusPerUpgrade;
+                            pierceSteps.push((hasTestBase ? "" : "+") + currentPierce);
+                            radiusSteps.push(currentRadius.toFixed(1));
+                        }
+                        text = "<b>Пробитие (целей)</b>" + (hasTestBase ? " (ТЕСТ, база " + tBase + ")" : "") + ":<br>" + pierceSteps.join(" ➔ ") +
+                               "<br><br><b>⚠️ Побочный эффект — радиус рикошета</b> (база " + baseRadius.toFixed(1) + "):<br>" + radiusSteps.join(" ➔ ");
+                    }
+                    else if (u.type === "Ricochet") {
+                        let currentVal = hasTestBase ? tBase : 0;
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentVal += levels[lv];
+                            steps.push((hasTestBase ? "" : "+") + currentVal);
+                        }
+                        text = "<b>Рикошетов (доп. целей)</b>" + (hasTestBase ? " (ТЕСТ, база " + tBase + ")" : "") + ":<br>" + steps.join(" ➔ ");
+                    }
+                    else if (u.type === "Regeneration") {
+                        let currentVal = hasTestBase ? tBase : 0;
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentVal += levels[lv];
+                            steps.push((hasTestBase ? "" : "+") + currentVal.toFixed(2));
+                        }
+                        text = "<b>Реген HP / сек</b>" + (hasTestBase ? " (ТЕСТ, база " + tBase + ")" : "") + ":<br>" + steps.join(" ➔ ");
+                    }
+                    else if (u.type === "CrystalRadius") {
+                        // База 6 — Crystal.baseAttractDistance, хардкод в префабе, отсюда не настраивается.
+                        let baseRadius = hasTestBase ? tBase : 6;
+                        let currentVal = baseRadius;
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentVal += levels[lv];
+                            steps.push(currentVal.toFixed(1));
+                        }
+                        text = "<b>Радиус сбора кристаллов</b>" + (hasTestBase ? " (ТЕСТ)" : " (база 6 — хардкод Crystal.cs)") + ":<br>" + steps.join(" ➔ ");
+                    }
+                    else if (u.type === "StunDuration") {
+                        // База 0.15 — EnemyHealth.hitStunDuration, хардкод на враге, отсюда не настраивается.
+                        let baseStun = hasTestBase ? tBase : 0.15;
+                        let currentVal = baseStun;
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentVal += levels[lv];
+                            steps.push(currentVal.toFixed(2));
+                        }
+                        text = "<b>Стан врагов (сек)</b>" + (hasTestBase ? " (ТЕСТ)" : " (база 0.15 — хардкод EnemyHealth.cs)") + ":<br>" + steps.join(" ➔ ");
+                    }
+                    else if (u.type === "UltimateUpgrade") {
+                        // Формула из PlayerUltimate.ApplyUltimateUpgrade: cooldownMultiplier -= value,
+                        // с ограничением снизу — кулдаун не может уйти ниже x0.1 от базового.
+                        let currentMult = 1.0;
+                        let steps = [];
+                        for (let lv = 0; lv < 5; lv++) {
+                            currentMult -= levels[lv];
+                            if (currentMult < 0.1) currentMult = 0.1;
+                            steps.push("x" + currentMult.toFixed(2));
+                        }
+                        text = "<b>Множитель кулдауна Ульты</b> (не ниже x0.1):<br>" + steps.join(" ➔ ") +
+                               "<br><br><i>+2.5м к радиусу ульты за каждый уровень — захардкожено в коде, отсюда не меняется.</i>";
+                    }
                     else {
-                        let currentVal = hasTestBase ? tBase : 0; 
+                        let currentVal = hasTestBase ? tBase : 0;
                         let steps = [];
                         for(let lv=0; lv<5; lv++) {
                             currentVal += levels[lv];
