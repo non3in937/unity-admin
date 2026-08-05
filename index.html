@@ -130,10 +130,26 @@
         .backup-btn { background: var(--accent); color: #04211d; width: 100%; padding: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 15px; margin-bottom: 18px; }
         .file-input-wrapper { background: var(--surface-2); border: 1px dashed var(--border-soft); padding: 18px; text-align: center; border-radius: var(--radius); margin-top: 8px; }
 
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-        @media (max-width: 480px) { .cards-grid { grid-template-columns: 1fr; } }
+        /* ФИКС: раньше была CSS-grid с одинаковой шириной колонки на все карточки —
+           свёрнутая карточка всё равно занимала целую колонку (230px+), поэтому
+           даже после сворачивания видно было максимум 1-2 штуки за раз. Теперь это
+           flex-обёртка: свёрнутые карточки получают свою маленькую ширину и плотно
+           пакуются друг с другом, а развёрнутые ведут себя как раньше. */
+        .cards-grid { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
 
-        .upgrade-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: border-color 0.15s; display: flex; flex-direction: column; }
+        .upgrade-card { flex: 1 1 230px; min-width: 0; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: border-color 0.15s, flex-basis 0.15s, padding 0.15s; display: flex; flex-direction: column; }
+        @media (max-width: 480px) { .upgrade-card:not(.collapsed) { flex-basis: 100%; } }
+
+        /* Свёрнутая карточка = квадратик-иконка, чтобы разом видеть весь список
+           (Игрок/Оружие/Карты/EVO) вместо одной развёрнутой карточки на экран. */
+        .upgrade-card.collapsed { flex: 0 0 60px; width: 60px; height: 60px; padding: 0; box-shadow: none; border-radius: 14px; align-items: center; justify-content: center; }
+        .upgrade-card.collapsed .card-header { border: none; margin: 0; padding: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+        .upgrade-card.collapsed .card-label,
+        .upgrade-card.collapsed .card-header label,
+        .upgrade-card.collapsed .fold-icon { display: none; }
+        .upgrade-card.collapsed .card-icon { font-size: 26px; }
+        .card-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
+        .card-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .upgrade-card.disabled { opacity: 0.55; border-color: var(--border) !important; }
         .card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px; cursor: pointer; user-select: none; }
         .card-header .fold-icon { font-size: 13px; color: var(--text-dim); flex-shrink: 0; }
@@ -309,10 +325,18 @@
         // отдельным ключом в localStorage. Обёртка нужна, чтобы не возиться с
         // экранированием кавычек внутри onclick-атрибута (там сама разметка карточек
         // местами собирается через одинарные кавычки).
-        function toggleCardFold(headerEl) { togglePanelDisplay(headerEl, 'collapsedCards'); }
+        function toggleCardFold(headerEl) {
+            togglePanelDisplay(headerEl, 'collapsedCards');
+            // ФИКС: togglePanelDisplay сам по себе только прячет .card-body и меняет
+            // иконку — этого хватало для волн/боссов, но карточкам ещё нужен класс
+            // "collapsed" на корне, чтобы CSS схлопнул их в маленький квадратик-иконку
+            // (см. .upgrade-card.collapsed), а не просто скрыл содержимое во всю ширину.
+            let card = headerEl.closest('.upgrade-card');
+            if (card) card.classList.toggle('collapsed', headerEl.nextElementSibling.style.display === 'none');
+        }
         function cardFold(collapsedList, id) {
             let isCollapsed = collapsedList.includes(id);
-            return { d: isCollapsed ? 'none' : 'block', i: isCollapsed ? '▶' : '▼' };
+            return { d: isCollapsed ? 'none' : 'block', i: isCollapsed ? '▶' : '▼', c: isCollapsed ? ' collapsed' : '' };
         }
 
         function toggleFolder(header) {
@@ -601,18 +625,18 @@
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
                 let f1 = cardFold(collapsedCards, 'player_move');
-                ph += `<div class="upgrade-card player-card"><div class="card-header" data-foldid="player_move" onclick="toggleCardFold(this)"><div class="card-title">🏃 Движение</div><span class="fold-icon">${f1.i}</span></div><div class="card-body" style="display:${f1.d}">
+                ph += `<div class="upgrade-card player-card${f1.c}"><div class="card-header" data-foldid="player_move" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🏃</span><span class="card-label">Движение</span></div><span class="fold-icon">${f1.i}</span></div><div class="card-body" style="display:${f1.d}">
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
                     </div></div>`;
                 let f2 = cardFold(collapsedCards, 'player_hp');
-                ph += `<div class="upgrade-card player-card"><div class="card-header" data-foldid="player_hp" onclick="toggleCardFold(this)"><div class="card-title">❤️ Выживаемость</div><span class="fold-icon">${f2.i}</span></div><div class="card-body" style="display:${f2.d}">
+                ph += `<div class="upgrade-card player-card${f2.c}"><div class="card-header" data-foldid="player_hp" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">❤️</span><span class="card-label">Выживаемость</span></div><span class="fold-icon">${f2.i}</span></div><div class="card-body" style="display:${f2.d}">
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div></div>`;
                 let f3 = cardFold(collapsedCards, 'player_ricochet');
-                ph += `<div class="upgrade-card player-card"><div class="card-header" data-foldid="player_ricochet" onclick="toggleCardFold(this)"><div class="card-title">🎯 Рикошет</div><span class="fold-icon">${f3.i}</span></div><div class="card-body" style="display:${f3.d}">
+                ph += `<div class="upgrade-card player-card${f3.c}"><div class="card-header" data-foldid="player_ricochet" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🎯</span><span class="card-label">Рикошет</span></div><span class="fold-icon">${f3.i}</span></div><div class="card-body" style="display:${f3.d}">
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div></div>`;
                 let f4 = cardFold(collapsedCards, 'player_xp');
-                ph += `<div class="upgrade-card player-card"><div class="card-header" data-foldid="player_xp" onclick="toggleCardFold(this)"><div class="card-title">🧠 Опыт и Уровни</div><span class="fold-icon">${f4.i}</span></div><div class="card-body" style="display:${f4.d}">
+                ph += `<div class="upgrade-card player-card${f4.c}"><div class="card-header" data-foldid="player_xp" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🧠</span><span class="card-label">Опыт и Уровни</span></div><span class="fold-icon">${f4.i}</span></div><div class="card-body" style="display:${f4.d}">
                         <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div></div>`;
             }
             ph += '</div>';
@@ -623,7 +647,7 @@
                 currentData.weapons.forEach((w, i) => {
                     let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
                     let f = cardFold(collapsedCards, 'weapon_' + i);
-                    wh += `<div class="upgrade-card weapon-card"><div class="card-header" data-foldid="weapon_${i}" onclick="toggleCardFold(this)"><div class="card-title">${wIcon} ${escapeHtml(w.weaponName)}</div><span class="fold-icon">${f.i}</span></div><div class="card-body" style="display:${f.d}">
+                    wh += `<div class="upgrade-card weapon-card${f.c}"><div class="card-header" data-foldid="weapon_${i}" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">${wIcon}</span><span class="card-label">${escapeHtml(w.weaponName)}</span></div><span class="fold-icon">${f.i}</span></div><div class="card-body" style="display:${f.d}">
                             <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div></div>`;
                 });
             }
@@ -635,7 +659,7 @@
                 currentData.upgrades.forEach((u, i) => {
                     let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed" && u.type !== "CrystalRadius" && u.type !== "StunDuration");
                     let f = cardFold(collapsedCards, 'upgrade_' + i);
-                    uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header" data-foldid="upgrade_' + i + '" onclick="toggleCardFold(this)"><div class="card-title">' + icon + ' ' + escapeHtml(u.type) + '</div><label onclick="event.stopPropagation()" style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:var(--text-dim);">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label><span class="fold-icon">' + f.i + '</span></div><div class="card-body" style="display:' + f.d + '">';
+                    uh += '<div class="upgrade-card ' + disabledClass + f.c + '" id="card_' + i + '"><div class="card-header" data-foldid="upgrade_' + i + '" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">' + icon + '</span><span class="card-label">' + escapeHtml(u.type) + '</span></div><label onclick="event.stopPropagation()" style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:var(--text-dim);">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label><span class="fold-icon">' + f.i + '</span></div><div class="card-body" style="display:' + f.d + '">';
                     if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:var(--warn); font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
                     uh += '<h4 style="margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
                     if (u.levelValues) { u.levelValues.forEach((v, lv) => { uh += '<div class="' + (lv === 4 ? 'full-width' : '') + '"><label>Lv ' + (lv+1) + '</label><input type="number" step="0.01" id="u_lv_' + i + '_' + lv + '" value="' + v + '" oninput="updatePreviews()"></div>'; }); }
@@ -649,28 +673,28 @@
             const eData = currentData.evos;
 
             let fAc = cardFold(collapsedCards, 'evo_ac');
-            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" data-foldid="evo_ac" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div><span class="fold-icon">${fAc.i}</span></div><div class="card-body" style="display:${fAc.d}">
+            evoHtml += `<div class="upgrade-card evo-card evo-ac${fAc.c}"><div class="card-header" data-foldid="evo_ac" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🧊</span><span class="card-label">Absolute Control</span></div><span class="fold-icon">${fAc.i}</span></div><div class="card-body" style="display:${fAc.d}">
                 <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
                 <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div></div>`;
             let fHs = cardFold(collapsedCards, 'evo_hs');
-            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" data-foldid="evo_hs" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div><span class="fold-icon">${fHs.i}</span></div><div class="card-body" style="display:${fHs.d}">
+            evoHtml += `<div class="upgrade-card evo-card evo-hs${fHs.c}"><div class="card-header" data-foldid="evo_hs" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🌪</span><span class="card-label">Hurricane Strafe</span></div><span class="fold-icon">${fHs.i}</span></div><div class="card-body" style="display:${fHs.d}">
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
                 <div class="row"><div style="flex:1"><label>Скор. Стрейфа (EVO)</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div></div>
                 <h4 style="margin:10px 0 5px;">Задержка выстрела</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div></div>`;
             let fLd = cardFold(collapsedCards, 'evo_ld');
-            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" data-foldid="evo_ld" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div><span class="fold-icon">${fLd.i}</span></div><div class="card-body" style="display:${fLd.d}">
+            evoHtml += `<div class="upgrade-card evo-card evo-ld${fLd.c}"><div class="card-header" data-foldid="evo_ld" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🔩</span><span class="card-label">Lead Drill</span></div><span class="fold-icon">${fLd.i}</span></div><div class="card-body" style="display:${fLd.d}">
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
                 <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div></div>`;
             let fHm = cardFold(collapsedCards, 'evo_hm');
-            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" data-foldid="evo_hm" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div><span class="fold-icon">${fHm.i}</span></div><div class="card-body" style="display:${fHm.d}">
+            evoHtml += `<div class="upgrade-card evo-card evo-hm${fHm.c}"><div class="card-header" data-foldid="evo_hm" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🎯</span><span class="card-label">Homing</span></div><span class="fold-icon">${fHm.i}</span></div><div class="card-body" style="display:${fHm.d}">
                 <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div>
                 <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div>
                 <h4 style="margin:10px 0 5px;">Дальность пушек</h4>
                 <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div></div>`;
             let fTk = cardFold(collapsedCards, 'evo_tk');
-            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" data-foldid="evo_tk" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div><span class="fold-icon">${fTk.i}</span></div><div class="card-body" style="display:${fTk.d}">
+            evoHtml += `<div class="upgrade-card evo-card evo-tk${fTk.c}"><div class="card-header" data-foldid="evo_tk" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">💥</span><span class="card-label">Tank Breakthrough</span></div><span class="fold-icon">${fTk.i}</span></div><div class="card-body" style="display:${fTk.d}">
                 <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div></div>`;
