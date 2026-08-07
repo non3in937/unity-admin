@@ -2,235 +2,129 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0e1016">
     <title>Unity Config Admin PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        :root {
-            --bg: #0e1016; --surface: #171a23; --surface-2: #1e222e; --surface-3: #262b39;
-            --border: #2b3040; --border-soft: #3a4156;
-            --text: #eaecf3; --text-dim: #98a0b8; --text-faint: #5b637c;
-            --accent: #3ecfc0; --success: #34b366; --danger: #e0605c; --warn: #dba13e;
-            --c-player: #e0b84d; --c-weapon: #e08a52; --c-card: #6d93e8; --c-group: #9081e0; --c-boss: #d94860;
-            --c-evo-ac: #4fc3e8; --c-evo-hs: #e0c951; --c-evo-ld: #8ec766; --c-evo-hm: #c467d6; --c-evo-tk: #e35f52;
-            --radius: 12px; --radius-sm: 8px;
-            --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg: #f4f5fa; --surface: #ffffff; --surface-2: #eef0f6; --surface-3: #e3e6f0;
-                --border: #d7dbe6; --border-soft: #c2c8d6;
-                --text: #1a1d27; --text-dim: #5b6178; --text-faint: #8891a6;
-                --accent: #0f9082; --success: #1f9350; --danger: #c9433f; --warn: #b87a1f;
-                --c-player: #9c7414; --c-weapon: #b8551f; --c-card: #3f5fc4; --c-group: #5c4bc7; --c-boss: #a8203a;
-                --c-evo-ac: #197fa3; --c-evo-hs: #93760a; --c-evo-ld: #4d7a34; --c-evo-hm: #953aa8; --c-evo-tk: #b8402f;
-            }
-        }
-        :root[data-theme="dark"] {
-            --bg: #0e1016; --surface: #171a23; --surface-2: #1e222e; --surface-3: #262b39;
-            --border: #2b3040; --border-soft: #3a4156;
-            --text: #eaecf3; --text-dim: #98a0b8; --text-faint: #5b637c;
-            --accent: #3ecfc0; --success: #34b366; --danger: #e0605c; --warn: #dba13e;
-            --c-player: #e0b84d; --c-weapon: #e08a52; --c-card: #6d93e8; --c-group: #9081e0; --c-boss: #d94860;
-            --c-evo-ac: #4fc3e8; --c-evo-hs: #e0c951; --c-evo-ld: #8ec766; --c-evo-hm: #c467d6; --c-evo-tk: #e35f52;
-        }
-        :root[data-theme="light"] {
-            --bg: #f4f5fa; --surface: #ffffff; --surface-2: #eef0f6; --surface-3: #e3e6f0;
-            --border: #d7dbe6; --border-soft: #c2c8d6;
-            --text: #1a1d27; --text-dim: #5b6178; --text-faint: #8891a6;
-            --accent: #0f9082; --success: #1f9350; --danger: #c9433f; --warn: #b87a1f;
-            --c-player: #9c7414; --c-weapon: #b8551f; --c-card: #3f5fc4; --c-group: #5c4bc7; --c-boss: #a8203a;
-            --c-evo-ac: #197fa3; --c-evo-hs: #93760a; --c-evo-ld: #4d7a34; --c-evo-hm: #953aa8; --c-evo-tk: #b8402f;
-        }
-
-        * { box-sizing: border-box; }
-        html { -webkit-text-size-adjust: 100%; }
-        body {
-            background: var(--bg); color: var(--text); font-family: var(--font-ui);
-            margin: 0; padding: 0; padding-bottom: calc(70px + env(safe-area-inset-bottom));
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .container { max-width: 720px; margin: 0 auto; padding: 12px 12px 24px; }
-
-        /* ---- Верхняя липкая панель ---- */
-        .topbar {
-            position: sticky; top: 0; z-index: 20;
-            padding: calc(10px + env(safe-area-inset-top)) 14px 8px;
-            background: color-mix(in srgb, var(--bg) 90%, transparent);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-        }
-        .topbar-row { display: flex; align-items: center; gap: 10px; }
-        .topbar h1 {
-            font-size: 15px; font-weight: 700; margin: 0; flex: 1;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .status { margin: 4px 0 0; font-size: 11px; font-weight: 600; text-align: center; min-height: 14px; }
-
-        h3 { color: var(--accent); margin: 0; font-size: 15px; }
-        h4 { margin: 0; font-size: 12px; color: var(--text-dim); }
-        label { display: block; margin-bottom: 5px; font-size: 11px; color: var(--text-dim); white-space: nowrap; font-weight: 600; }
-
-        input, select {
-            background: var(--surface-3); border: 1px solid var(--border-soft); color: var(--text);
-            padding: 10px; border-radius: var(--radius-sm); width: 100%; box-sizing: border-box;
-            margin-bottom: 10px; font-size: 14px; font-variant-numeric: tabular-nums; min-height: 40px;
-        }
-        input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .panel { background: #2d2d30; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3e3e42; position: relative; }
+        .drag-handle { cursor: grab; padding: 10px; color: #569cd6; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #3e3e42; border-radius: 4px; margin-right: 15px;}
+        h2 { color: #569cd6; text-align: center; margin-bottom: 10px; }
+        h3 { color: #4ec9b0; margin: 0; }
+        label { display: block; margin-bottom: 5px; font-size: 11px; color: #9cdcfe; white-space: nowrap; }
+        input, select { background: #3e3e42; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 13px;}
         select { cursor: pointer; appearance: none; }
-        input[type="checkbox"] { min-height: auto; width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
-        input[type="file"] { min-height: auto; }
+        
+        .btn-main { background: #238636; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background 0.2s;}
+        .btn-main:hover { background: #2ea043; }
 
-        .btn-main {
-            background: var(--success); color: #06170d; font-weight: 700;
-            padding: 11px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer;
-            font-size: 14px; white-space: nowrap; transition: filter 0.15s, transform 0.1s;
-        }
-        .btn-main:hover { filter: brightness(1.08); }
-        .btn-main:active { transform: scale(0.97); }
-
-        .btn-undo {
-            background: var(--warn); color: #241a04; width: 100%; padding: 12px; font-weight: 700;
-            border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 14px;
-            margin-bottom: 12px; display: none; transition: transform 0.1s;
-        }
+        .btn-undo { background: #c586c0; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 15px; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(197, 134, 192, 0.3); display: none; transition: transform 0.1s;}
         .btn-undo:active { transform: scale(0.98); }
 
-        /* ---- Нижняя навигация ---- */
-        .tabs {
-            position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-            display: flex; gap: 2px;
-            padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-            background: color-mix(in srgb, var(--surface) 92%, transparent);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
-            overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;
-        }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn {
-            flex: 1 0 auto; min-width: 60px; display: flex; flex-direction: column; align-items: center; gap: 2px;
-            padding: 6px 4px; background: transparent; color: var(--text-faint); border: none; cursor: pointer;
-            border-radius: var(--radius-sm); font-size: 10px; font-weight: 600; line-height: 1.3;
-            transition: color 0.15s, background 0.15s;
-        }
-        .tab-btn .tab-icon { font-size: 19px; line-height: 1; }
-        .tab-btn.active { color: var(--text); background: var(--surface-2); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; padding: 12px; background: #2d2d30; color: #888; border: none; cursor: pointer; border-radius: 4px 4px 0 0; min-width: 80px;}
+        .tab-btn.active { background: #1e1e1e; color: #fff; border-bottom: 3px solid #4ec9b0; font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .row { display: flex; gap: 10px; align-items: flex-start; }
+        .header-row { display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; }
+        .btn-add { background: #1f6b35; color: white; width: 100%; padding: 10px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold;}
+        .btn-remove { background: #8a2a2a; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; }
+        .status { text-align: center; font-weight: bold; margin-bottom: 15px; }
+        
+        .backup-btn { background: #0e639c; color: white; width: 100%; padding: 15px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; font-size: 16px; margin-bottom: 20px;}
+        .file-input-wrapper { background: #1e1e1e; border: 1px dashed #ce9178; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px;}
 
-        .row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-        .row > div, .row > select, .row > input { flex: 1 1 130px; min-width: 0; }
-        .header-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-
-        .btn-add { background: var(--success); color: #06170d; width: 100%; padding: 11px; border: none; border-radius: var(--radius-sm); cursor: pointer; margin-top: 10px; font-weight: 700; font-size: 13px; }
-        .btn-remove { background: var(--danger); color: #200404; width: 40px; height: 40px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; flex: 0 0 auto; }
-
-        .backup-btn { background: var(--accent); color: #04211d; width: 100%; padding: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 15px; margin-bottom: 18px; }
-        .file-input-wrapper { background: var(--surface-2); border: 1px dashed var(--border-soft); padding: 18px; text-align: center; border-radius: var(--radius); margin-top: 8px; }
-
-        /* ФИКС: раньше была CSS-grid с одинаковой шириной колонки на все карточки —
-           свёрнутая карточка всё равно занимала целую колонку (230px+), поэтому
-           даже после сворачивания видно было максимум 1-2 штуки за раз. Теперь это
-           flex-обёртка: свёрнутые карточки получают свою маленькую ширину и плотно
-           пакуются друг с другом, а развёрнутые ведут себя как раньше. */
-        .cards-grid { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
-
-        .upgrade-card { flex: 1 1 230px; min-width: 0; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); transition: border-color 0.15s, flex-basis 0.15s, padding 0.15s; display: flex; flex-direction: column; }
-        @media (max-width: 480px) { .upgrade-card:not(.collapsed) { flex-basis: 100%; } }
-
-        /* Свёрнутая карточка = квадратик-иконка, чтобы разом видеть весь список
-           (Игрок/Оружие/Карты/EVO) вместо одной развёрнутой карточки на экран. */
-        .upgrade-card.collapsed { flex: 0 0 60px; width: 60px; height: 60px; padding: 0; box-shadow: none; border-radius: 14px; align-items: center; justify-content: center; }
-        .upgrade-card.collapsed .card-header { border: none; margin: 0; padding: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
-        .upgrade-card.collapsed .card-label,
-        .upgrade-card.collapsed .card-header label,
-        .upgrade-card.collapsed .fold-icon { display: none; }
-        .upgrade-card.collapsed .card-icon { font-size: 26px; }
-        .card-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
-        .card-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .upgrade-card.disabled { opacity: 0.55; border-color: var(--border) !important; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px; cursor: pointer; user-select: none; }
-        .card-header .fold-icon { font-size: 13px; color: var(--text-dim); flex-shrink: 0; }
-        .card-title { font-size: 15px; font-weight: 700; color: var(--c-card); margin: 0; display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-        .card-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+        .upgrade-card { background: #252526; border: 2px solid #3e3e42; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; }
+        .upgrade-card:hover { transform: translateY(-3px); }
+        .upgrade-card.disabled { opacity: 0.6; border-color: #555 !important; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3e3e42; padding-bottom: 10px; margin-bottom: 15px; }
+        .card-title { font-size: 16px; font-weight: bold; color: #4ec9b0; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .card-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-levels .full-width { grid-column: span 2; }
-        .card-levels label { color: var(--warn); }
+        .card-levels label { color: #dcdcaa; }
 
-        .preview-box { background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px; margin-top: 8px; font-size: 12px; color: var(--text-dim); line-height: 1.55; border-left: 3px solid var(--c-card); font-variant-numeric: tabular-nums; }
-        .preview-box b { color: var(--text); }
-        .test-base-input { border: 1px dashed var(--warn) !important; background: var(--surface-2) !important; margin-bottom: 12px !important; }
+        .preview-box { background: #1e1e1e; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 12px; color: #888; line-height: 1.5; border-left: 3px solid #4ec9b0; }
+        .preview-box b { color: #dcdcaa; }
+        .test-base-input { border: 1px dashed #dcdcaa !important; background: #252526 !important; margin-bottom: 15px !important;}
+        
+        .player-card { border-color: #4ec9b0; } .player-card:hover { border-color: #72ebd1; }
+        .weapon-card { border-color: #ce9178; } .weapon-card .card-title { color: #ce9178; } .weapon-card:hover { border-color: #e5a489; }
+        .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card) { border-color: #569cd6; } .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card):hover { border-color: #7abaff; }
+        
+        .evo-card { background: #201a23; }
+        .recipe-badge { background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-bottom: 10px; text-align: center; font-size: 11px; color: #9cdcfe; }
+        .evo-ac { border-color: #4fc1ff; } .evo-ac .card-title { color: #4fc1ff; } .evo-ac:hover { border-color: #8ce1ff; }
+        .evo-hs { border-color: #dcdcaa; } .evo-hs .card-title { color: #dcdcaa; } .evo-hs:hover { border-color: #f5f5c3; } 
+        .evo-ld { border-color: #b5cea8; } .evo-ld .card-title { color: #b5cea8; } .evo-ld:hover { border-color: #d2ecc5; } 
+        .evo-hm { border-color: #c586c0; } .evo-hm .card-title { color: #c586c0; } .evo-hm:hover { border-color: #e7a1e1; } 
+        .evo-tk { border-color: #f48771; } .evo-tk .card-title { color: #f48771; } .evo-tk:hover { border-color: #ffaa96; } 
 
-        .player-card { border-color: var(--c-player); } .player-card .card-title { color: var(--c-player); } .player-card:hover { border-color: color-mix(in srgb, var(--c-player) 70%, white); }
-        .weapon-card { border-color: var(--c-weapon); } .weapon-card .card-title { color: var(--c-weapon); } .weapon-card:hover { border-color: color-mix(in srgb, var(--c-weapon) 70%, white); }
-        .upgrade-card:not(.player-card):not(.weapon-card):not(.evo-card):hover { border-color: color-mix(in srgb, var(--c-card) 70%, white); }
-
-        .evo-card { background: color-mix(in srgb, var(--surface) 85%, black 8%); }
-        .recipe-badge { background: var(--surface-3); padding: 6px; border-radius: var(--radius-sm); margin-bottom: 10px; text-align: center; font-size: 11px; color: var(--text-dim); }
-        .evo-ac { border-color: var(--c-evo-ac); } .evo-ac .card-title { color: var(--c-evo-ac); } .evo-ac:hover { border-color: color-mix(in srgb, var(--c-evo-ac) 70%, white); }
-        .evo-hs { border-color: var(--c-evo-hs); } .evo-hs .card-title { color: var(--c-evo-hs); } .evo-hs:hover { border-color: color-mix(in srgb, var(--c-evo-hs) 70%, white); }
-        .evo-ld { border-color: var(--c-evo-ld); } .evo-ld .card-title { color: var(--c-evo-ld); } .evo-ld:hover { border-color: color-mix(in srgb, var(--c-evo-ld) 70%, white); }
-        .evo-hm { border-color: var(--c-evo-hm); } .evo-hm .card-title { color: var(--c-evo-hm); } .evo-hm:hover { border-color: color-mix(in srgb, var(--c-evo-hm) 70%, white); }
-        .evo-tk { border-color: var(--c-evo-tk); } .evo-tk .card-title { color: var(--c-evo-tk); } .evo-tk:hover { border-color: color-mix(in srgb, var(--c-evo-tk) 70%, white); }
-
-        .folder-container { transition: opacity 0.2s ease; }
+        .folder-container { transition: all 0.3s ease; }
         .folder-container.disabled-folder { opacity: 0.5; }
-        .folder-content { min-height: 16px; }
+        .folder-content { min-height: 20px; }
 
-        .boss-card { border-color: var(--c-boss); }
-        .phase-card { background: var(--surface-2); border-left: 3px solid var(--c-group); margin-top: 10px; padding: 10px; border-radius: var(--radius-sm); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-        .attack-card { background: var(--surface-2); border: 1px dashed var(--accent); margin-top: 10px; padding: 10px; border-radius: var(--radius-sm); }
-
-        .hint-text { background-color: var(--surface); border-left: 3px solid var(--accent); color: var(--text-dim); padding: 8px; margin-top: 2px; font-size: 11px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 1.35; white-space: normal; }
-
-        @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+        /* 🔥 СТИЛИ БОССОВ 🔥 */
+        .boss-card { border-color: #f48771; }
+        .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;}
+        .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
+        
+        /* 🔥 НОВЫЕ СТИЛИ ПОДСКАЗОК ДЛЯ МОБИЛЬНЫХ 🔥 */
+        .hint-text { 
+            background-color: #1e1e1e; 
+            border-left: 3px solid #569cd6; 
+            color: #dcdcaa; 
+            padding: 8px; 
+            margin-top: 2px; 
+            font-size: 11px; 
+            border-radius: 0 4px 4px 0; 
+            line-height: 1.3; 
+            white-space: normal;
+        }
     </style>
 </head>
 <body>
-    <header class="topbar">
-        <div class="topbar-row">
-            <h1>⚙️ Admin PRO</h1>
-            <button class="btn-main" onclick="saveData()">💾 Сохранить</button>
-        </div>
-        <div id="status" class="status"></div>
-    </header>
-
     <div class="container">
+        <h2>⚙️ Remote Admin PRO</h2>
+        
+        <button class="btn-main" onclick="saveData()">💾 СОХРАНИТЬ ВСЁ В GITHUB</button>
+        <div id="status" class="status"></div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны</button>
+            <button class="tab-btn" id="btn-player" onclick="switchTab('player')">🏃 Игрок</button>
+            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
+            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карты</button>
+            <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')" style="color:#c586c0;">🧬 EVO</button>
+            <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')" style="color:#f48771;">👹 Боссы</button>
+            <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')" style="color:#ce9178;">🛡️ Бэкапы</button>
+        </div>
+
         <div id="tab-waves" class="tab-content active">
-            <button class="btn-undo" id="btn-undo" onclick="undo()">↩️ Отменить случайное удаление</button>
+            <button class="btn-undo" id="btn-undo" onclick="undo()">↩️ ОТМЕНИТЬ СЛУЧАЙНОЕ УДАЛЕНИЕ</button>
             <div id="waves-list"></div>
-            <button class="btn-add" onclick="addFolder()" style="margin-top:16px; font-size:15px;">📁 Добавить новую папку</button>
+            <button class="btn-add" onclick="addFolder()" style="background:#0e639c; margin-top:20px; font-size:16px;">📁 Добавить Новую Папку</button>
         </div>
         <div id="tab-player" class="tab-content"></div>
         <div id="tab-weapons" class="tab-content"></div>
         <div id="tab-upgrades" class="tab-content"></div>
         <div id="tab-evos" class="tab-content"></div>
         <div id="tab-bosses" class="tab-content"></div>
-
+        
         <div id="tab-backups" class="tab-content">
             <div class="panel">
-                <h3 style="text-align:center; margin-bottom:10px;">📦 Сохранение и восстановление</h3>
-                <p style="color:var(--text-dim); font-size:13px; text-align:center; margin-bottom:18px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
-                <button class="backup-btn" onclick="exportBackup()">📥 Скачать бэкап (.json)</button>
-                <hr style="border:0; border-top:1px solid var(--border); margin-bottom:18px;">
-                <h4 style="color:var(--accent); font-size:13px; text-align:center; margin-bottom:8px;">Восстановить из файла:</h4>
+                <h3 style="color:#569cd6; margin-bottom:10px; text-align:center;">📦 Сохранение и Восстановление</h3>
+                <p style="color:#888; font-size:13px; text-align:center; margin-bottom:20px;">Скачайте файл с балансом на устройство. Если что-то сломается, вы сможете загрузить его обратно.</p>
+                <button class="backup-btn" onclick="exportBackup()">📥 СКАЧАТЬ БЭКАП (.json)</button>
+                <hr style="border: 0; border-top: 1px solid #3e3e42; margin-bottom: 20px;">
+                <h4 style="color:#ce9178; text-align:center; margin-bottom:5px;">Восстановить из файла:</h4>
                 <div class="file-input-wrapper">
-                    <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:var(--accent);" onchange="importBackup(event)">
+                    <input type="file" id="importFile" accept=".json" style="background:transparent; border:none; color:#4ec9b0;" onchange="importBackup(event)">
                 </div>
             </div>
         </div>
     </div>
-
-    <nav class="tabs">
-        <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')"><span class="tab-icon">🌊</span><span>Волны</span></button>
-        <button class="tab-btn" id="btn-player" onclick="switchTab('player')"><span class="tab-icon">🏃</span><span>Игрок</span></button>
-        <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')"><span class="tab-icon">🔫</span><span>Оружие</span></button>
-        <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="tab-icon">🃏</span><span>Карты</span></button>
-        <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')"><span class="tab-icon">🧬</span><span>EVO</span></button>
-        <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')"><span class="tab-icon">👹</span><span>Боссы</span></button>
-        <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')"><span class="tab-icon">🛡️</span><span>Бэкапы</span></button>
-    </nav>
 
     <script>
         const GIST_ID = '4b5faafac858635664755b821b757d35';
@@ -240,7 +134,7 @@
 
         let currentData = null;
         let token = localStorage.getItem('gh_token');
-        let undoStack = [];
+        let undoStack = []; 
 
         function switchTab(t) {
             try { syncData(); } catch(e) { console.error("Sync error:", e); }
@@ -293,7 +187,7 @@
             if (undoStack.length === 0) document.getElementById('btn-undo').style.display = 'none';
             let status = document.getElementById('status');
             status.innerText = "✅ Удаление успешно отменено!";
-            status.style.color = "var(--warn)";
+            status.style.color = "#c586c0";
             setTimeout(() => status.innerText = "", 2000);
         }
 
@@ -308,35 +202,15 @@
             let collapsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
 
             if (content.style.display === 'none') {
-                content.style.display = 'block';
+                content.style.display = 'block'; 
                 icon.innerText = '▼';
-                collapsed = collapsed.filter(n => n !== id);
+                collapsed = collapsed.filter(n => n !== id); 
             } else {
-                content.style.display = 'none';
+                content.style.display = 'none'; 
                 icon.innerText = '▶';
-                if (!collapsed.includes(id)) collapsed.push(id);
+                if (!collapsed.includes(id)) collapsed.push(id); 
             }
             localStorage.setItem(storageKey, JSON.stringify(collapsed));
-        }
-
-        // Сворачивание карточек в Игроке/Оружии/Картах/EVO — список длинный, целиком
-        // на экране не помещается, тяжело охватить взглядом что где. Переиспользует
-        // тот же togglePanelDisplay, что уже работает для волн/боссов, просто с
-        // отдельным ключом в localStorage. Обёртка нужна, чтобы не возиться с
-        // экранированием кавычек внутри onclick-атрибута (там сама разметка карточек
-        // местами собирается через одинарные кавычки).
-        function toggleCardFold(headerEl) {
-            togglePanelDisplay(headerEl, 'collapsedCards');
-            // ФИКС: togglePanelDisplay сам по себе только прячет .card-body и меняет
-            // иконку — этого хватало для волн/боссов, но карточкам ещё нужен класс
-            // "collapsed" на корне, чтобы CSS схлопнул их в маленький квадратик-иконку
-            // (см. .upgrade-card.collapsed), а не просто скрыл содержимое во всю ширину.
-            let card = headerEl.closest('.upgrade-card');
-            if (card) card.classList.toggle('collapsed', headerEl.nextElementSibling.style.display === 'none');
-        }
-        function cardFold(collapsedList, id) {
-            let isCollapsed = collapsedList.includes(id);
-            return { d: isCollapsed ? 'none' : 'block', i: isCollapsed ? '▶' : '▼', c: isCollapsed ? ' collapsed' : '' };
         }
 
         function toggleFolder(header) {
@@ -347,10 +221,10 @@
             let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
             if (content.style.display === 'none') {
                 content.style.display = 'block'; if(btnAdd) btnAdd.style.display = 'block'; icon.innerText = '▼';
-                collapsed = collapsed.filter(n => n !== fName);
+                collapsed = collapsed.filter(n => n !== fName); 
             } else {
                 content.style.display = 'none'; if(btnAdd) btnAdd.style.display = 'none'; icon.innerText = '▶';
-                if (!collapsed.includes(fName)) collapsed.push(fName);
+                if (!collapsed.includes(fName)) collapsed.push(fName); 
             }
             localStorage.setItem('collapsedFolders', JSON.stringify(collapsed));
         }
@@ -382,7 +256,7 @@
         function syncData() {
             if(!currentData) return;
             if(!currentData.bosses) currentData.bosses = [];
-
+            
             try {
                 if(document.getElementById('bosses-container')) {
                     let newBosses = [];
@@ -392,7 +266,7 @@
                             spawnTime: clean(bEl.querySelector('.b-time').value),
                             phases: []
                         };
-
+                        
                         bEl.querySelectorAll('.phase-panel').forEach(pEl => {
                             let phase = {
                                 phaseName: pEl.querySelector('.p-name').value,
@@ -401,7 +275,7 @@
                                 timeBetweenAttacks: clean(pEl.querySelector('.p-delay').value),
                                 attackSequence: []
                             };
-
+                            
                             pEl.querySelectorAll('.attack-panel').forEach(aEl => {
                                 let aType = aEl.querySelector('.a-type').value;
                                 let attack = { attackType: aType };
@@ -434,7 +308,7 @@
                     currentData.phases = newPhases;
                 }
             } catch(e) {}
-
+            
             try {
                 if(document.getElementById('ps_fSpeed')) {
                     if (!currentData.playerStats) currentData.playerStats = {};
@@ -504,7 +378,6 @@
             if(!currentData) return;
             ensureEvoData();
             if (!currentData.bosses) currentData.bosses = [];
-            let collapsedCards = JSON.parse(localStorage.getItem('collapsedCards') || '[]');
 
             if (document.getElementById('tab-bosses').classList.contains('active')) {
                 let bh = '<div id="bosses-container">';
@@ -520,17 +393,17 @@
 
                         bh += `<div class="panel boss-panel boss-card" style="padding-bottom:5px;">
                             <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0;" onclick="togglePanelDisplay(this, 'colBoss')">
-                                <span class="fold-icon" style="color:var(--c-boss); margin-right:10px; font-size:14px;">${bIcon}</span>
+                                <span class="fold-icon" style="color:#f48771; margin-right:10px; font-size:14px;">${bIcon}</span>
                                 <span style="font-size: 20px; margin-right:5px;">👹</span>
-                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID (напр. Boss_Eye)" style="flex:2; font-weight:bold; color:var(--c-boss); margin:0;">
+                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID (напр. Boss_Eye)" style="flex:2; font-weight:bold; color:#f48771; margin:0;">
                                 <label style="margin:0 10px;" onclick="event.stopPropagation()">Сек:</label>
                                 <input type="number" class="b-time" value="${boss.spawnTime}" onclick="event.stopPropagation()" style="flex:1; margin:0;">
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
                             </div>
-
-                            <div class="boss-content" style="display:${bDisp}; margin-top:15px; border-top: 1px solid var(--border); padding-top:15px;">
+                            
+                            <div class="boss-content" style="display:${bDisp}; margin-top:15px; border-top: 1px solid #3e3e42; padding-top:15px;">
                                 <div class="phases-list">`;
-
+                        
                         boss.phases.forEach((phase, pIdx) => {
                             let pIdStr = "phase_" + bIdx + "_" + pIdx;
                             let pIsCollapsed = colP.includes(pIdStr);
@@ -539,15 +412,15 @@
 
                             bh += `<div class="phase-card phase-panel" style="padding-bottom:5px;">
                                 <div class="row" data-foldid="${pIdStr}" style="align-items: center; cursor:pointer;" onclick="togglePanelDisplay(this, 'colPhase')">
-                                    <span class="fold-icon" style="color:var(--c-group); margin-right:10px; font-size:12px;">${pIcon}</span>
-                                    <input type="text" class="p-name" value="${escapeHtml(phase.phaseName)}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:2; color:var(--c-group); margin:0; font-weight:bold; background:transparent; border-color:var(--c-group);">
+                                    <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${pIcon}</span>
+                                    <input type="text" class="p-name" value="${escapeHtml(phase.phaseName)}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:2; color:#c586c0; margin:0; font-weight:bold; background:transparent; border-color:#c586c0;">
                                     <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
                                         <label style="margin:0;">Start HP %</label>
-                                        <input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:var(--success);">
+                                        <input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;">
                                     </div>
                                     <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
                                         <label style="margin:0;">End HP %</label>
-                                        <input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:var(--danger);">
+                                        <input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;">
                                     </div>
                                     <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
                                         <label style="margin:0;">Пауза Атак</label>
@@ -555,30 +428,30 @@
                                     </div>
                                     <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.phase-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
                                 </div>
-
-                                <div class="phase-content" style="display:${pDisp}; margin-top:10px; border-top: 1px dashed var(--border-soft); padding-top:10px;">
+                                
+                                <div class="phase-content" style="display:${pDisp}; margin-top:10px; border-top: 1px dashed #555; padding-top:10px;">
                                     <div class="attacks-list">`;
-
+                            
                             phase.attackSequence.forEach((attack, aIdx) => {
                                 bh += generateAttackHtml(attack);
                             });
-
-                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="padding:8px; font-size:12px; margin-top:10px;">+ Добавить Атаку</button>
+                            
+                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Добавить Атаку</button>
                                 </div>
                             </div>`;
                         });
-
-                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="margin-top:10px;">+ Добавить Фазу</button>
+                        
+                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Добавить Фазу</button>
                             </div></div>`;
                     });
                 }
-                bh += `</div><button class="btn-main" onclick="addBoss()" style="width:100%; padding:15px; font-size:16px;">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>`;
+                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>`;
                 document.getElementById('tab-bosses').innerHTML = bh;
             }
-
+            
             let h = '';
             let folders = {};
-
+            
             if (currentData.phases && currentData.phases.length > 0) {
                 currentData.phases.forEach((p) => {
                     let fName = p.folder || "Основная папка";
@@ -586,7 +459,7 @@
                     folders[fName].phases.push(p);
                 });
             } else {
-                folders["Основная папка"] = { isEnabled: true, phases: [] };
+                folders["Основная папка"] = { isEnabled: true, phases: [] }; 
             }
 
             let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
@@ -594,50 +467,46 @@
             for (let fName in folders) {
                 let fData = folders[fName];
                 let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
-
+                
                 let isCollapsed = collapsed.includes(fName);
                 let displayStyle = isCollapsed ? 'none' : 'block';
                 let iconText = isCollapsed ? '▶' : '▼';
-
-                h += `<div class="folder-container panel ${disabledClass}" style="background:var(--surface-2); border-left: 4px solid var(--c-group); padding:10px;">
+                
+                h += `<div class="folder-container panel ${disabledClass}" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
                     <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
-                        <div class="drag-handle folder-drag" style="color:var(--c-group);">☰</div>
-                        <span class="fold-icon" style="color:var(--c-group); margin-right:10px; font-size:12px;">${iconText}</span>
-                        <input type="text" class="f-name" value="${escapeHtml(fName)}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:var(--c-group); color:var(--c-group); background:transparent;">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${iconText}</span>
+                        <input type="text" class="f-name" value="${escapeHtml(fName)}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
                         <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
                             <input type="checkbox" class="f-enabled" ${fData.isEnabled ? 'checked' : ''} onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
                         </label>
                         <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
                     </div>
-                    <div class="folder-content sortable-list" style="display:${displayStyle}; margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid var(--border);">`;
+                    <div class="folder-content sortable-list" style="display:${displayStyle}; margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
 
                 fData.phases.forEach(p => {
                     h += generatePhaseHtml(p);
                 });
-
-                h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle};">➕ Добавить Волну в папку</button></div>`;
+                
+                h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle}; background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
             }
             document.getElementById('waves-list').innerHTML = h;
-
+            
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
 
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
-                let f1 = cardFold(collapsedCards, 'player_move');
-                ph += `<div class="upgrade-card player-card${f1.c}"><div class="card-header" data-foldid="player_move" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🏃</span><span class="card-label">Движение</span></div><span class="fold-icon">${f1.i}</span></div><div class="card-body" style="display:${f1.d}">
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
-                    </div></div>`;
-                let f2 = cardFold(collapsedCards, 'player_hp');
-                ph += `<div class="upgrade-card player-card${f2.c}"><div class="card-header" data-foldid="player_hp" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">❤️</span><span class="card-label">Выживаемость</span></div><span class="fold-icon">${f2.i}</span></div><div class="card-body" style="display:${f2.d}">
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div></div>`;
-                let f3 = cardFold(collapsedCards, 'player_ricochet');
-                ph += `<div class="upgrade-card player-card${f3.c}"><div class="card-header" data-foldid="player_ricochet" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🎯</span><span class="card-label">Рикошет</span></div><span class="fold-icon">${f3.i}</span></div><div class="card-body" style="display:${f3.d}">
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div></div>`;
-                let f4 = cardFold(collapsedCards, 'player_xp');
-                ph += `<div class="upgrade-card player-card${f4.c}"><div class="card-header" data-foldid="player_xp" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">🧠</span><span class="card-label">Опыт и Уровни</span></div><span class="fold-icon">${f4.i}</span></div><div class="card-body" style="display:${f4.d}">
-                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div></div>`;
+                    </div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div></div></div>`;
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
+                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
             }
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
@@ -646,9 +515,8 @@
             if (currentData.weapons) {
                 currentData.weapons.forEach((w, i) => {
                     let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
-                    let f = cardFold(collapsedCards, 'weapon_' + i);
-                    wh += `<div class="upgrade-card weapon-card${f.c}"><div class="card-header" data-foldid="weapon_${i}" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">${wIcon}</span><span class="card-label">${escapeHtml(w.weaponName)}</span></div><span class="fold-icon">${f.i}</span></div><div class="card-body" style="display:${f.d}">
-                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div></div>`;
+                    wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${escapeHtml(w.weaponName)}</div></div>
+                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
                 });
             }
             wh += '</div>';
@@ -658,58 +526,52 @@
             if (currentData.upgrades) {
                 currentData.upgrades.forEach((u, i) => {
                     let icon = getIconForType(u.type); let disabledClass = u.isEnabled ? '' : 'disabled'; let showTestBase = (u.type !== "Shield" && u.type !== "Distance" && u.type !== "BushSpeed" && u.type !== "XpBoost" && u.type !== "Speed" && u.type !== "CrystalRadius" && u.type !== "StunDuration");
-                    let f = cardFold(collapsedCards, 'upgrade_' + i);
-                    uh += '<div class="upgrade-card ' + disabledClass + f.c + '" id="card_' + i + '"><div class="card-header" data-foldid="upgrade_' + i + '" onclick="toggleCardFold(this)"><div class="card-title"><span class="card-icon">' + icon + '</span><span class="card-label">' + escapeHtml(u.type) + '</span></div><label onclick="event.stopPropagation()" style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:var(--text-dim);">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label><span class="fold-icon">' + f.i + '</span></div><div class="card-body" style="display:' + f.d + '">';
-                    if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:var(--warn); font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
-                    uh += '<h4 style="margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
+                    uh += '<div class="upgrade-card ' + disabledClass + '" id="card_' + i + '"><div class="card-header"><div class="card-title">' + icon + ' ' + escapeHtml(u.type) + '</div><label style="display:flex; align-items:center; cursor:pointer;"><span style="margin-right:8px; font-size:11px; color:#888;">' + (u.isEnabled?'ВКЛ':'ВЫКЛ') + '</span><input type="checkbox" id="u_en_' + i + '" ' + (u.isEnabled?'checked':'') + ' style="width:16px; height:16px; margin:0; cursor:pointer;" onchange="toggleCardVisual(' + i + ', this)"></label></div>';
+                    if (showTestBase) { uh += '<div style="margin-bottom:10px;"><label style="color:#dcdcaa; font-size:11px;">🧪 База для теста (не сохр.)</label><input type="number" step="0.1" id="u_testbase_' + i + '" class="test-base-input" placeholder="Введите число..." oninput="updatePreviews()"></div>'; }
+                    uh += '<h4 style="color:#888; margin-top:5px; margin-bottom:10px; font-size:12px;">Уровни прокачки (1 - 5):</h4><div class="card-levels">';
                     if (u.levelValues) { u.levelValues.forEach((v, lv) => { uh += '<div class="' + (lv === 4 ? 'full-width' : '') + '"><label>Lv ' + (lv+1) + '</label><input type="number" step="0.01" id="u_lv_' + i + '_' + lv + '" value="' + v + '" oninput="updatePreviews()"></div>'; }); }
-                    uh += '</div><div class="preview-box" id="preview_u_' + i + '">⏳ Считаем...</div></div></div>';
+                    uh += '</div><div class="preview-box" id="preview_u_' + i + '">⏳ Считаем...</div></div>';
                 });
             }
             uh += '</div>';
             document.getElementById('tab-upgrades').innerHTML = uh;
-
+            
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
-
-            let fAc = cardFold(collapsedCards, 'evo_ac');
-            evoHtml += `<div class="upgrade-card evo-card evo-ac${fAc.c}"><div class="card-header" data-foldid="evo_ac" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🧊</span><span class="card-label">Absolute Control</span></div><span class="fold-icon">${fAc.i}</span></div><div class="card-body" style="display:${fAc.d}">
+            
+            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
-                <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div></div>`;
-            let fHs = cardFold(collapsedCards, 'evo_hs');
-            evoHtml += `<div class="upgrade-card evo-card evo-hs${fHs.c}"><div class="card-header" data-foldid="evo_hs" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🌪</span><span class="card-label">Hurricane Strafe</span></div><span class="fold-icon">${fHs.i}</span></div><div class="card-body" style="display:${fHs.d}">
+                <div class="row"><div style="flex:1"><label>Реген HP / сек</label><input type="number" step="0.1" id="evo_ac_regen" value="${eData.absoluteControl.evoRegeneration}"></div><div style="flex:1"><label>Оглушение (сек)</label><input type="number" step="0.1" id="evo_ac_stun" value="${eData.absoluteControl.evoStunDuration}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
                 <div class="row"><div style="flex:1"><label>Скор. Стрейфа (EVO)</label><input type="number" step="0.1" id="evo_hs_strafe" value="${eData.hurricaneStrafe.evoStrafeSpeed}"></div></div>
-                <h4 style="margin:10px 0 5px;">Задержка выстрела</h4>
-                <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div></div>`;
-            let fLd = cardFold(collapsedCards, 'evo_ld');
-            evoHtml += `<div class="upgrade-card evo-card evo-ld${fLd.c}"><div class="card-header" data-foldid="evo_ld" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🔩</span><span class="card-label">Lead Drill</span></div><span class="fold-icon">${fLd.i}</span></div><div class="card-body" style="display:${fLd.d}">
+                <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела</h4>
+                <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
-                <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div></div>`;
-            let fHm = cardFold(collapsedCards, 'evo_hm');
-            evoHtml += `<div class="upgrade-card evo-card evo-hm${fHm.c}"><div class="card-header" data-foldid="evo_hm" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">🎯</span><span class="card-label">Homing</span></div><span class="fold-icon">${fHm.i}</span></div><div class="card-body" style="display:${fHm.d}">
+                <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div><div style="flex:1"><label>Скор. в кустах</label><input type="number" step="0.1" id="evo_ld_bush" value="${eData.leadDrill.evoBushSpeed}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + 🔭 Distance</div>
                 <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div></div>
                 <div class="row"><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div><div style="flex:1"><label>Множ. Разброса</label><input type="number" step="0.1" id="evo_hm_spr" value="${eData.homing.evoSpreadMultiplier}"></div></div>
-                <h4 style="margin:10px 0 5px;">Дальность пушек</h4>
-                <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div></div>`;
-            let fTk = cardFold(collapsedCards, 'evo_tk');
-            evoHtml += `<div class="upgrade-card evo-card evo-tk${fTk.c}"><div class="card-header" data-foldid="evo_tk" onclick="toggleCardFold(this)" style="margin-bottom:5px;"><div class="card-title"><span class="card-icon">💥</span><span class="card-label">Tank Breakthrough</span></div><span class="fold-icon">${fTk.i}</span></div><div class="card-body" style="display:${fTk.d}">
+                <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Дальность пушек</h4>
+                <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.1" id="evo_hm_p_dist" value="${eData.homing.pistolDistance}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.1" id="evo_hm_a_dist" value="${eData.homing.autoDistance}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.1" id="evo_hm_s_dist" value="${eData.homing.shotgunDistance}"></div></div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
-                <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div></div>`;
+                <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div>`;
 
             evoHtml += '</div>';
             document.getElementById('tab-evos').innerHTML = evoHtml;
 
-            try { updatePreviews(); } catch(e) {}
+            try { updatePreviews(); } catch(e) {} 
         }
 
         function generatePhaseHtml(p) {
             let start = p.startTime || 0; let end = p.endTime || 0;
-            let h = `<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:var(--warn); margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span><input type="text" class="p-name" value="${escapeHtml(p.phaseName)}" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end" value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
+            let h = `<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span><input type="text" class="p-name" value="${escapeHtml(p.phaseName)}" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end" value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
             if (p.enemies) { p.enemies.forEach(e => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; }); if (!isKnown) optionsHtml += `<option value="${escapeHtml(e.enemyID)}" selected>${escapeHtml(e.enemyID)} (Неизвестный)</option>`; h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`; }); }
-            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px; padding:8px; background:var(--surface-2); color:var(--text); border:1px solid var(--border-soft);">+ Враг</button></div>`;
+            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px; background:#1e1e1e; border: 1px solid #3e3e42;">+ Враг</button></div>`;
             return h;
         }
 
@@ -717,7 +579,7 @@
         function generateAttackHtml(attack) {
             let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
             let paramsHtml = '';
-
+            
             function makeParam(label, key, val, tooltip, type="number", step="0.1") {
                 let inputHtml = '';
                 if (type === "checkbox") {
@@ -726,9 +588,9 @@
                 } else {
                     inputHtml = `<input type="${type}" ${step ? 'step="'+step+'"' : ''} class="a-param" data-key="${key}" value="${val}">`;
                 }
-
+                
                 return `<div style="flex: 1; min-width: 160px; margin-bottom: 15px; display: flex; flex-direction: column;">
-                    <label style="margin-bottom:6px; font-size:12px; color:var(--accent);">${label}</label>
+                    <label style="margin-bottom:6px; font-size:12px; color:#4ec9b0;">${label}</label>
                     ${inputHtml}
                     <div class="hint-text">💡 ${tooltip}</div>
                 </div>`;
@@ -745,7 +607,7 @@
                     ${makeParam('Dmg / Tick', 'laserDamagePerTick', attack.laserDamagePerTick ?? 1, 'Сколько урона наносит одно касание лазера.', 'number', '')}
                     ${makeParam('Tick Rate', 'laserTickRate', attack.laserTickRate ?? 0.5, 'Если игрок стоит в лазере, как часто (в сек) он получает урон.')}
                 </div>`;
-            }
+            } 
             else if (attack.attackType === 'Rift') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Prep Time', 'riftPreparationTime', attack.riftPreparationTime ?? 2.0, 'Задержка перед появлением шипов.')}
@@ -759,7 +621,7 @@
                     ${makeParam('Spikes Per Row', 'riftSpikesPerRow', attack.riftSpikesPerRow ?? 3, 'Сколько шипов в ширину (3 = куст, 1 = узкая тропа).', 'number', '')}
                     ${makeParam('Scatter', 'riftRandomScatter', attack.riftRandomScatter ?? 0.5, 'Сила случайного хаоса (кривизна линии шипов).')}
                 </div>`;
-            }
+            } 
             else if (attack.attackType === 'EarthThrow') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Stone Count', 'stonesCount', attack.stonesCount ?? 3, 'Сколько камней бросит босс.', 'number', '')}
@@ -770,7 +632,7 @@
                     ${makeParam('Fly Speed', 'stonesSpeed', attack.stonesSpeed ?? 25.0, 'Скорость полета камня к цели.')}
                     ${makeParam('Damage', 'stonesDamage', attack.stonesDamage ?? 2, 'Урон при прямом попадании камня.', 'number', '')}
                 </div>`;
-            }
+            } 
             else if (attack.attackType === 'Rockets') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Launch Count', 'rocketsLaunchCount', attack.rocketsLaunchCount ?? 5, 'Сколько ракет вылетает за один залп.', 'number', '')}
@@ -785,7 +647,7 @@
                     ${makeParam('Damage', 'rocketsDamage', attack.rocketsDamage ?? 2, 'Урон от взрыва ракеты.', 'number', '')}
                     ${makeParam('Show Sphere', 'rocketsShowDebug', attack.rocketsShowDebug, 'Показывать полупрозрачную сферу взрыва (полезно для настройки радиуса).', 'checkbox')}
                 </div>`;
-            }
+            } 
             else if (attack.attackType === 'SummonHorde') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Enemy Count', 'hordeEnemyCount', attack.hordeEnemyCount ?? 4, 'Сколько врагов вылезет из-под земли.', 'number', '')}
@@ -802,7 +664,7 @@
 
             return `<div class="attack-card attack-panel">
                 <div class="row" style="margin-bottom: 15px;">
-                    <span style="color:var(--accent); font-size:18px;">⚔️</span>
+                    <span style="color:#569cd6; font-size:18px;">⚔️</span>
                     <select class="a-type" style="flex:1; margin:0;" onchange="syncData(); render();">${opts}</select>
                     <button class="btn-remove" onclick="this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
                 </div>
@@ -833,18 +695,18 @@
         }
 
         function addFolder() {
-            let h = `<div class="folder-container panel" style="background:var(--surface-2); border-left: 4px solid var(--c-group); padding:10px;">
+            let h = `<div class="folder-container panel" style="background:#252526; border-left: 4px solid #c586c0; padding:10px;">
                     <div class="header-row" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="toggleFolder(this)">
-                        <div class="drag-handle folder-drag" style="color:var(--c-group);">☰</div>
-                        <span class="fold-icon" style="color:var(--c-group); margin-right:10px; font-size:12px;">▼</span>
-                        <input type="text" class="f-name" value="Новая папка" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:var(--c-group); color:var(--c-group); background:transparent;">
+                        <div class="drag-handle folder-drag" style="color:#c586c0;">☰</div>
+                        <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">▼</span>
+                        <input type="text" class="f-name" value="Новая папка" onclick="event.stopPropagation()" style="margin:0; font-weight:bold; flex:1; border-color:#c586c0; color:#c586c0; background:transparent;">
                         <label style="margin: 0 15px; display:flex; align-items:center; cursor:pointer;" onclick="event.stopPropagation()">
                             <input type="checkbox" class="f-enabled" checked onchange="toggleFolderEnabled(this, event)" style="width:16px;height:16px;margin:0 5px 0 0;"> ВКЛ
                         </label>
                         <button class="btn-remove" onclick="removeFolder(this, event)">✖</button>
                     </div>
-                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid var(--border);"></div>
-                    <button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)">➕ Добавить Волну в папку</button>
+                    <div class="folder-content sortable-list" style="margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;"></div>
+                    <button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="background:#1f6b35;">➕ Добавить Волну в папку</button>
                 </div>`;
             document.getElementById('waves-list').insertAdjacentHTML('beforeend', h);
             initSortable();
@@ -859,16 +721,16 @@
 
         function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
 
-        function initSortable() {
+        function initSortable() { 
             let wl = document.getElementById('waves-list');
-            if(wl) new Sortable(wl, { handle: '.folder-drag', animation: 150 });
+            if(wl) new Sortable(wl, { handle: '.folder-drag', animation: 150 }); 
             document.querySelectorAll('.folder-content').forEach(el => {
                 new Sortable(el, { group: 'waves', handle: '.drag-handle', animation: 150 });
             });
         }
 
         function toggleCardVisual(index, checkbox) { let card = document.getElementById('card_' + index); let textSpan = checkbox.previousElementSibling; if(checkbox.checked) { card.classList.remove('disabled'); textSpan.innerText = 'ВКЛ'; } else { card.classList.add('disabled'); textSpan.innerText = 'ВЫКЛ'; } }
-
+        
         function updatePreviews() {
             try {
                 if(!currentData || !currentData.upgrades || !document.getElementById('preview_u_0')) return;
@@ -888,7 +750,7 @@
                     }
 
                     let text = "";
-
+                    
                     if (u.type === "Damage" || u.type === "FireRate") {
                         if (hasTestBase) {
                             let currentVal = tBase;
@@ -905,11 +767,11 @@
                                     let frInput = document.getElementById('w_fr_' + wIdx);
                                     let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
                                     let baseFr = clean(frInput ? frInput.value : w.fireRate);
-
+                                    
                                     let currentVal = u.type === "Damage" ? baseDmg : baseFr;
                                     let steps = [];
                                     for(let lv=0; lv<5; lv++) {
-                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
+                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
                                         steps.push(currentVal.toFixed(1));
                                     }
                                     return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
@@ -926,7 +788,7 @@
                         } else if (currentData.playerStats && currentData.playerStats.maxHealth) {
                             baseHpValue = currentData.playerStats.maxHealth;
                         }
-
+                        
                         let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
                         let currentVal = baseHp;
                         let steps = [];
@@ -957,20 +819,20 @@
 
                         let currentStrafe = baseSpdValue;
                         let currentTurn = baseTurnValue;
-
+                        
                         let strafeSteps = [];
                         let turnSteps = [];
-
+                        
                         for(let lv=0; lv<5; lv++) {
                             currentStrafe *= (1 + levels[lv]);
-                            currentTurn *= (1 + (levels[lv] * 0.5));
-
+                            currentTurn *= (1 + (levels[lv] * 0.5)); 
+                            
                             strafeSteps.push(currentStrafe.toFixed(1));
                             turnSteps.push(currentTurn.toFixed(1));
                         }
-
-                        text = "<b><span style='color:var(--c-player)'>Скор. Стрейфа</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
-                               "<br><br><b><span style='color:var(--accent)'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
+                        
+                        text = "<b><span style='color:#72ebd1'>Скор. Стрейфа</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
+                               "<br><br><b><span style='color:#ce9178'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
                     }
                     else if (u.type === "Shield") {
                         // ФИКС: раньше был статичный текст с ОШИБКОЙ (Lv5 показывал 15с, а в
@@ -1008,22 +870,22 @@
                                 let sprInput = document.getElementById('w_spr_' + wIdx);
                                 let baseDist = clean(distInput ? distInput.value : w.maxDistance);
                                 let baseSpr = clean(sprInput ? sprInput.value : w.spread);
-
+                                
                                 let distSteps = [];
                                 let sprSteps = [];
                                 for(let lv=0; lv<5; lv++) {
                                     distSteps.push((baseDist * distMults[lv]).toFixed(1));
                                     sprSteps.push((baseSpr * spreadMults[lv]).toFixed(1));
                                 }
-                                textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:var(--accent)'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:var(--c-weapon)'>Разброс:</span> " + sprSteps.join(" ➔ "));
+                                textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:#ce9178'>Разброс:</span> " + sprSteps.join(" ➔ "));
                             });
                         }
                         text = textBlocks.join("<br><br>");
                     }
                     else if (u.type === "BushSpeed") {
-                        let baseBush = 6.0;
-                        let baseStumble = 1.0;
-
+                        let baseBush = 6.0; 
+                        let baseStumble = 1.0; 
+                        
                         let bushSteps = [];
                         let treeSteps = [];
                         let currentBush = baseBush;
@@ -1032,13 +894,13 @@
                         for(let lv=0; lv<5; lv++) {
                             currentBush += levels[lv];
                             bushSteps.push(currentBush.toFixed(1));
-
+                            
                             currentStumble -= 0.2;
                             if (currentStumble <= 0.05) currentStumble = 0;
                             treeSteps.push((currentStumble === 0) ? "0 (Игнор)" : "x" + currentStumble.toFixed(1));
                         }
 
-                        text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") +
+                        text = "<b>Скор. в кустах (База 6.0)</b>:<br>" + bushSteps.join(" ➔ ") + 
                                "<br><br><b>Штраф от деревьев</b>:<br>" + treeSteps.join(" ➔ ");
                     }
                     else if (u.type === "XpBoost") {
@@ -1051,22 +913,22 @@
                         let lvl2Steps = [];
                         let lvl10Steps = [];
                         let lvl20Steps = [];
-
-                        let currentMult = 1.0;
+                        
+                        let currentMult = 1.0; 
                         let xpForLvl2 = baseXP;
-                        let xpForLvl10 = baseXP + (gFactor * 8);
-                        let xpForLvl20 = baseXP + (gFactor * 18);
+                        let xpForLvl10 = baseXP + (gFactor * 8); 
+                        let xpForLvl20 = baseXP + (gFactor * 18); 
 
                         for(let lv=0; lv<5; lv++) {
                             currentMult += levels[lv];
                             multSteps.push("x" + currentMult.toFixed(2));
-
+                            
                             lvl2Steps.push(Math.ceil(xpForLvl2 / currentMult));
                             lvl10Steps.push(Math.ceil(xpForLvl10 / currentMult));
                             lvl20Steps.push(Math.ceil(xpForLvl20 / currentMult));
                         }
 
-                        text = "<b>Множитель Опыта от Карточки</b>:<br>" + multSteps.join(" ➔ ") +
+                        text = "<b>Множитель Опыта от Карточки</b>:<br>" + multSteps.join(" ➔ ") + 
                                "<br><br><b>Алмазов до 2 Ур. (надо " + xpForLvl2.toFixed(1) + " XP)</b>:<br>" + lvl2Steps.join(" ➔ ") +
                                "<br><br><b>Алмазов до 10 Ур. (надо " + xpForLvl10.toFixed(1) + " XP)</b>:<br>" + lvl10Steps.join(" ➔ ") +
                                "<br><br><b>Алмазов до 20 Ур. (надо " + xpForLvl20.toFixed(1) + " XP)</b>:<br>" + lvl20Steps.join(" ➔ ");
@@ -1165,44 +1027,44 @@
         }
 
         function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
-        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "var(--success)"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
+        function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
 
-        async function load() {
-            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); }
-            if(!token) return;
-            document.getElementById('status').innerText = "🔄 Загрузка...";
-            document.getElementById('status').style.color = "var(--warn)";
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }});
-                if(!res.ok) throw new Error("Ошибка доступа");
-                const gist = await res.json();
-                currentData = JSON.parse(gist.files[FILE_NAME].content);
-                render();
-                document.getElementById('status').innerText = "✅ Данные загружены!";
-                document.getElementById('status').style.color = "var(--success)";
-                setTimeout(() => document.getElementById('status').innerText = "", 2000);
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ Ошибка загрузки";
-                document.getElementById('status').style.color = "var(--danger)";
-            }
+        async function load() { 
+            if(!token) { token = prompt("Введите GitHub Token:"); if(token) localStorage.setItem('gh_token', token); } 
+            if(!token) return; 
+            document.getElementById('status').innerText = "🔄 Загрузка..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { Authorization: 'token '+token }}); 
+                if(!res.ok) throw new Error("Ошибка доступа"); 
+                const gist = await res.json(); 
+                currentData = JSON.parse(gist.files[FILE_NAME].content); 
+                render(); 
+                document.getElementById('status').innerText = "✅ Данные загружены!"; 
+                document.getElementById('status').style.color = "#4ec9b0"; 
+                setTimeout(() => document.getElementById('status').innerText = "", 2000); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ Ошибка загрузки"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
         }
 
-        async function saveData() {
-            syncData();
-            document.getElementById('status').innerText = "⏳ Сохранение...";
-            document.getElementById('status').style.color = "var(--warn)";
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) });
-                if(res.ok) {
-                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!";
-                    document.getElementById('status').style.color = "var(--success)";
+        async function saveData() { 
+            syncData(); 
+            document.getElementById('status').innerText = "⏳ Сохранение..."; 
+            document.getElementById('status').style.color = "#dcdcaa"; 
+            try { 
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { method: 'PATCH', headers: { Authorization: 'token '+token }, body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(currentData, null, 2) } } }) }); 
+                if(res.ok) { 
+                    document.getElementById('status').innerText = "✅ УСПЕШНО СОХРАНЕНО!"; 
+                    document.getElementById('status').style.color = "#238636"; 
                     undoStack = [];
                     document.getElementById('btn-undo').style.display = 'none';
-                } else throw new Error();
-            } catch (e) {
-                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!";
-                document.getElementById('status').style.color = "var(--danger)";
-            }
+                } else throw new Error(); 
+            } catch (e) { 
+                document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
+                document.getElementById('status').style.color = "#f48771"; 
+            } 
         }
 
         load();
