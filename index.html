@@ -246,7 +246,7 @@
                 // Эволюции больше не задают статы состояний — те целиком за карточками.
                 // Absolute Control числовых параметров не имеет вовсе: только заморозка.
                 currentData.evos = {
-                    hurricaneStrafe: { pistolFireRate: 0.1, autoFireRate: 0.05, shotgunFireRate: 0.2 },
+                    hurricaneStrafe: { miniGunFireRate: 0.05 },
                     leadDrill: { infinitePiercingValue: 100 },
                     homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50 },
                     tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 }
@@ -354,12 +354,10 @@
                 // Сторож: собираем эволюции только если вкладка отрисована.
                 // Раньше проверялось поле evo_ac_regen — его удалили вместе с реген-параметром
                 // Абсолютного контроля, и блок молча переставал сохраняться.
-                if(document.getElementById('evo_hs_p_fr')) {
+                if(document.getElementById('evo_hs_fr')) {
                     ensureEvoData();
                     let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
-                    currentData.evos.hurricaneStrafe.pistolFireRate = getVal('evo_hs_p_fr', 0.1);
-                    currentData.evos.hurricaneStrafe.autoFireRate = getVal('evo_hs_a_fr', 0.05);
-                    currentData.evos.hurricaneStrafe.shotgunFireRate = getVal('evo_hs_s_fr', 0.2);
+                    currentData.evos.hurricaneStrafe.miniGunFireRate = getVal('evo_hs_fr', 0.05);
                     currentData.evos.leadDrill.infinitePiercingValue = parseInt(getVal('evo_ld_pierce', 100));
                     currentData.evos.homing.evoRicochetCount = parseInt(getVal('evo_hm_rico', 15));
                     currentData.evos.homing.evoRicochetRadius = getVal('evo_hm_rad', 40);
@@ -543,8 +541,8 @@
 
             evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + ⚡ Speed</div>
-                <h4 style="color:#888; font-size:11px; margin:10px 0 5px;">Задержка выстрела</h4>
-                <div class="row"><div style="flex:1"><label>Пистолет</label><input type="number" step="0.01" id="evo_hs_p_fr" value="${eData.hurricaneStrafe.pistolFireRate}"></div><div style="flex:1"><label>Автомат</label><input type="number" step="0.01" id="evo_hs_a_fr" value="${eData.hurricaneStrafe.autoFireRate}"></div><div style="flex:1"><label>Дробовик</label><input type="number" step="0.01" id="evo_hs_s_fr" value="${eData.hurricaneStrafe.shotgunFireRate}"></div></div></div>`;
+                <div class="row"><div style="flex:1"><label>Задержка выстрела минигана (сек)</label><input type="number" step="0.01" id="evo_hs_fr" value="${eData.hurricaneStrafe.miniGunFireRate}"></div></div>
+                <div style="color:#888; font-size:11px; padding-top:6px;">В руках всегда миниган, поэтому скорострельность одна на все стволы. Модель, вибрация и тряска — в самом ассете эволюции, они не числа баланса.</div></div>`;
 
             evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
