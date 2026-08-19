@@ -367,7 +367,7 @@
                 // Эволюции больше не задают статы состояний — те целиком за карточками.
                 // Absolute Control числовых параметров не имеет вовсе: только заморозка.
                 currentData.evos = {
-                    hurricaneStrafe: { miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50 },
+                    hurricaneStrafe: { miniGunDamage: 100, miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50 },
                     leadDrill: { infinitePiercingValue: 100 },
                     homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50 },
                     tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 }
@@ -454,6 +454,17 @@
             } catch(e) {}
 
             try {
+                if(document.getElementById('mg_dmg')) {
+                    ensureEvoData();
+                    let g = id => clean(document.getElementById(id).value);
+                    currentData.evos.hurricaneStrafe.miniGunDamage = g('mg_dmg');
+                    currentData.evos.hurricaneStrafe.miniGunFireRate = g('mg_fr');
+                    currentData.evos.hurricaneStrafe.miniGunMaxDistance = g('mg_dist');
+                    currentData.evos.hurricaneStrafe.miniGunSpread = g('mg_spr');
+                }
+            } catch(e) {}
+
+            try {
                 if(document.querySelector('.w-dmg') && currentData.weapons) {
                     currentData.weapons.forEach((w, i) => {
                         let dmgEl = document.getElementById('w_dmg_' + i);
@@ -475,12 +486,9 @@
                 // Сторож: собираем эволюции только если вкладка отрисована.
                 // Раньше проверялось поле evo_ac_regen — его удалили вместе с реген-параметром
                 // Абсолютного контроля, и блок молча переставал сохраняться.
-                if(document.getElementById('evo_hs_fr')) {
+                if(document.getElementById('evo_ld_pierce')) {
                     ensureEvoData();
                     let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
-                    currentData.evos.hurricaneStrafe.miniGunFireRate = getVal('evo_hs_fr', 0.05);
-                    currentData.evos.hurricaneStrafe.miniGunSpread = getVal('evo_hs_spread', 2);
-                    currentData.evos.hurricaneStrafe.miniGunMaxDistance = getVal('evo_hs_dist', 50);
                     currentData.evos.leadDrill.infinitePiercingValue = parseInt(getVal('evo_ld_pierce', 100));
                     currentData.evos.homing.evoRicochetCount = parseInt(getVal('evo_hm_rico', 15));
                     currentData.evos.homing.evoRicochetRadius = getVal('evo_hm_rad', 40);
@@ -638,6 +646,16 @@
                             <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
                 });
             }
+            // Миниган — не WeaponConfig, а подменённая моделью пушка Ураганного стрейфа,
+            // поэтому в currentData.weapons его нет и не будет. Но для игрока это обычное
+            // оружие со своими четырьмя статами, и место им здесь, рядом с остальными.
+            // Данные лежат в evos.hurricaneStrafe — карточка правит именно их.
+            ensureEvoData();
+            let mg = currentData.evos.hurricaneStrafe;
+            wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">🌪 Миниган</div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="mg_dmg" value="${mg.miniGunDamage !== undefined ? mg.miniGunDamage : 100}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="mg_fr" value="${mg.miniGunFireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="mg_dist" value="${mg.miniGunMaxDistance !== undefined ? mg.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="mg_spr" value="${mg.miniGunSpread}" oninput="updatePreviews()"></div></div>
+                    <div style="color:#888; font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанцию карточки прокачки умножают как обычно; разброс задан жёстко (карточка Дальности его не трогает), задержка выстрела — тоже.</div></div>`;
+
             wh += '</div>';
             document.getElementById('tab-weapons').innerHTML = wh;
 
@@ -664,8 +682,8 @@
 
             evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + 🔭 Distance</div>
-                <div class="row"><div style="flex:1"><label>Задержка выстрела (сек)</label><input type="number" step="0.01" id="evo_hs_fr" value="${eData.hurricaneStrafe.miniGunFireRate}"></div><div style="flex:1"><label>Разброс (град.)</label><input type="number" step="0.1" id="evo_hs_spread" value="${eData.hurricaneStrafe.miniGunSpread}"></div><div style="flex:1"><label>Дальность (м)</label><input type="number" step="1" id="evo_hs_dist" value="${eData.hurricaneStrafe.miniGunMaxDistance !== undefined ? eData.hurricaneStrafe.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div></div>
-                <div style="color:#888; font-size:11px; padding-top:6px;">В руках всегда миниган, поэтому темп и дальность у него свои — иначе он брал бы их от того ствола, что оказался в руках. Дальность карточка Дальности честно умножает, а вот разброс затирается ради картинки. Модель, вибрация и тряска — в ассете эволюции, они не числа баланса.</div></div>`;
+                <div style="color:#888; font-size:12px; line-height:1.5; padding:6px 0;">Числа этой эволюции — статы минигана, и живут они на вкладке <b>Оружие</b>, карточка «Миниган»: там урон, задержка, дистанция и разброс рядом с остальными стволами.</div>
+                </div>`;
 
             evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
@@ -906,7 +924,25 @@
                                     return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
                                 });
                                 text = weaponTexts.join("<br><br>");
-                                if (u.type === "FireRate") text += "<br><br><span style='color:#888'>Как только собран Ураганный стрейф, темп задаёт миниган и эта таблица перестаёт работать — карточка остаётся нужна только чтобы открыть эволюцию.</span>";
+
+                                // Миниган живёт в evos, а не в списке оружия, но карточка Урона
+                                // умножает и его — значит он должен быть в таблице.
+                                if (u.type === "Damage") {
+                                    let mgDmgEl = document.getElementById('mg_dmg');
+                                    let mgDmg = mgDmgEl ? clean(mgDmgEl.value)
+                                                        : ((currentData.evos && currentData.evos.hurricaneStrafe && currentData.evos.hurricaneStrafe.miniGunDamage) || 100);
+                                    let m = 1, mgSteps = [];
+                                    for (let lv = 0; lv < 5; lv++) { m = stepMult(m, levels[lv]); mgSteps.push((mgDmg * m).toFixed(1)); }
+                                    text += "<br><br><b>Миниган (Ураганный стрейф)</b>:<br>" + mgSteps.join(" ➔ ");
+                                }
+
+                                if (u.type === "FireRate") {
+                                    let mgFrEl = document.getElementById('mg_fr');
+                                    let mgFr = mgFrEl ? clean(mgFrEl.value)
+                                                      : ((currentData.evos && currentData.evos.hurricaneStrafe && currentData.evos.hurricaneStrafe.miniGunFireRate) || 0.05);
+                                    text += "<br><br><b>Миниган</b>: " + mgFr + " — не меняется" +
+                                            "<br><span style='color:#888'>Задержка минигана задана жёстко на вкладке Оружие, эта карточка её не умножает. Как только собран Ураганный стрейф, таблица выше перестаёт работать — карточка нужна только чтобы открыть эволюцию.</span>";
+                                }
                             }
                         }
                     }
@@ -1032,13 +1068,13 @@
                         // Миниган — не WeaponConfig, в списке оружия его нет, но карточка
                         // Дальности умножает и его дистанцию. Без этой строки панель
                         // показывала бы дальности стволов, которых в руках уже не будет.
-                        let mgInput = document.getElementById('evo_hs_dist');
+                        let mgInput = document.getElementById('mg_dist');
                         let mgDist = mgInput ? clean(mgInput.value)
                                              : ((currentData.evos && currentData.evos.hurricaneStrafe && currentData.evos.hurricaneStrafe.miniGunMaxDistance) || 50);
                         let mgSteps = [];
                         for (let lv = 0; lv < 5; lv++) mgSteps.push((mgDist * distMults[lv]).toFixed(1));
                         textBlocks.push("<b>Миниган (Ураганный стрейф)</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + mgSteps.join(" ➔ ") +
-                                        "<br><span style='color:#888'>Разброс у минигана свой и карточкой не меняется — задаётся на вкладке EVO.</span>");
+                                        "<br><span style='color:#888'>Разброс у минигана свой и карточкой не меняется — он в карточке «Миниган» на вкладке Оружие.</span>");
                         text = textBlocks.join("<br><br>");
                     }
                     else if (u.type === "BushSpeed") {
