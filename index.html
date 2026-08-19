@@ -71,6 +71,15 @@
         .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;}
         .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
         
+        .revert-btn {
+            position: absolute; right: 5px;
+            background: #3a3a3d; color: #dcdcaa; border: 1px solid #5a5a5e;
+            border-radius: 4px; font-size: 10px; line-height: 1; padding: 0 6px;
+            cursor: pointer; max-width: 60%; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .revert-btn:active { background: #4a4a4d; }
+
         .last-edited-mark {
             margin-left: auto; font-size: 10px; color: #6b6b6b; white-space: nowrap;
             border: 1px solid #3e3e42; border-radius: 10px; padding: 2px 7px;
@@ -223,8 +232,75 @@
             if (!key) return;
             try { localStorage.setItem('lastCard_' + tab, key); } catch (e) {}
         }
-        document.addEventListener('input', e => rememberEditedCard(e.target), true);
-        document.addEventListener('change', e => rememberEditedCard(e.target), true);
+        document.addEventListener('input', e => { rememberEditedCard(e.target); try { updateRevertButton(e.target); } catch (err) {} }, true);
+        document.addEventListener('change', e => { rememberEditedCard(e.target); try { updateRevertButton(e.target); } catch (err) {} }, true);
+
+        // ─── Кнопка «вернуть прежнее значение» ────────────────────────────
+        // Держим снимок значений на момент последней загрузки или сохранения в гист.
+        // Пока поле отличается от снимка, в его правом краю висит кнопка с прежним
+        // числом: правку видно, и её всегда можно откатить. После записи в гист снимок
+        // берётся заново, и кнопки исчезают — теперь это и есть сохранённое состояние.
+        //
+        // Только вкладки с фиксированной структурой (те же, что и у подъёма карточек):
+        // в Волнах и Боссах элементы добавляются и удаляются, id полей съезжают, и кнопка
+        // показывала бы значение от соседнего поля — то есть врала бы.
+        function baselineStore() {
+            if (!window.__baselineValues) window.__baselineValues = {};
+            return window.__baselineValues;
+        }
+        function revertScopes() { return promoteTabs().map(function(t){ return 'tab-' + t; }); }
+
+        function eachRevertInput(fn) {
+            revertScopes().forEach(function(scopeId) {
+                let scope = document.getElementById(scopeId);
+                if (!scope) return;
+                scope.querySelectorAll('input').forEach(function(inp) {
+                    if (inp.id && inp.type !== 'checkbox') fn(inp);
+                });
+            });
+        }
+
+        function snapshotBaseline() {
+            let store = baselineStore();
+            Object.keys(store).forEach(function(k){ delete store[k]; });
+            eachRevertInput(function(inp){ store[inp.id] = inp.value; });
+            refreshRevertButtons();
+        }
+
+        function updateRevertButton(inp) {
+            if (!inp || !inp.id || inp.type === 'checkbox') return;
+            let store = baselineStore();
+            if (!(inp.id in store)) return;          // поле появилось после снимка — сравнивать не с чем
+            let host = inp.parentElement;
+            if (!host) return;
+            let old = store[inp.id];
+            let btn = host.querySelector('.revert-btn[data-for="' + inp.id + '"]');
+
+            if (String(inp.value) === String(old)) {
+                if (btn) { btn.remove(); inp.style.paddingRight = ''; }
+                return;
+            }
+
+            host.style.position = 'relative';        // до замеров: от этого зависит offsetTop
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'revert-btn';
+                btn.setAttribute('data-for', inp.id);
+                btn.addEventListener('click', function() {
+                    inp.value = baselineStore()[inp.id];
+                    inp.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+                host.appendChild(btn);
+            }
+            btn.textContent = '↺ ' + old;
+            btn.title = 'Вернуть прежнее значение: ' + old;
+            btn.style.top = inp.offsetTop + 'px';
+            btn.style.height = inp.offsetHeight + 'px';
+            inp.style.paddingRight = (btn.offsetWidth + 10) + 'px';
+        }
+
+        function refreshRevertButtons() { eachRevertInput(updateRevertButton); }
 
         function promoteLastCard() {
             let tab = currentTabName();
@@ -267,6 +343,7 @@
             try { render(); } catch(e) { console.error("Render error:", e); }
             try { updatePreviews(); } catch(e) { console.error("Preview error:", e); }
             try { promoteLastCard(); } catch(e) { console.error("Promote error:", e); }
+            try { refreshRevertButtons(); } catch(e) { console.error("Revert error:", e); }
         }
 
         function clean(val) { let parsed = parseFloat(String(val).replace(',', '.')); return isNaN(parsed) ? 0 : parsed; }
@@ -1249,7 +1326,8 @@
                 const gist = await res.json(); 
                 currentData = JSON.parse(gist.files[FILE_NAME].content); 
                 render(); 
-                try { promoteLastCard(); } catch(e) {} 
+                try { promoteLastCard(); } catch(e) {}
+                try { snapshotBaseline(); } catch(e) {} 
                 document.getElementById('status').innerText = "✅ Данные загружены!"; 
                 document.getElementById('status').style.color = "#4ec9b0"; 
                 setTimeout(() => document.getElementById('status').innerText = "", 2000); 
@@ -1270,6 +1348,8 @@
                     document.getElementById('status').style.color = "#238636"; 
                     undoStack = [];
                     document.getElementById('btn-undo').style.display = 'none';
+                    // Сохранённое стало новой точкой отсчёта — кнопки отката гаснут
+                    try { snapshotBaseline(); } catch(e) {}
                 } else throw new Error(); 
             } catch (e) { 
                 document.getElementById('status').innerText = "❌ ОШИБКА СОХРАНЕНИЯ!"; 
