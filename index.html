@@ -751,12 +751,19 @@
                     let text = "";
                     
                     if (u.type === "Damage" || u.type === "FireRate") {
+                        // Оба стата — множители к базе оружия. У скорострельности множитель
+                        // в UpgradeFireRate зажат снизу: Mathf.Max(0.1f, ...), то есть темп
+                        // не может стать быстрее 10% от базового, сколько ни накручивай.
+                        const stepMult = (m, v) => {
+                            if (u.type === "Damage") return m * (1 + v);
+                            return Math.max(0.1, m * (1 - v));
+                        };
                         if (hasTestBase) {
-                            let currentVal = tBase;
+                            let mult = 1;
                             let steps = [];
                             for(let lv=0; lv<5; lv++) {
-                                currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv]));
-                                steps.push(currentVal.toFixed(1));
+                                mult = stepMult(mult, levels[lv]);
+                                steps.push((tBase * mult).toFixed(1));
                             }
                             text = "<b>🧪 ТЕСТ (База " + tBase + ")</b>:<br>" + steps.join(" ➔ ");
                         } else {
@@ -767,15 +774,17 @@
                                     let baseDmg = clean(dmgInput ? dmgInput.value : w.damage);
                                     let baseFr = clean(frInput ? frInput.value : w.fireRate);
                                     
-                                    let currentVal = u.type === "Damage" ? baseDmg : baseFr;
+                                    let base = u.type === "Damage" ? baseDmg : baseFr;
+                                    let mult = 1;
                                     let steps = [];
                                     for(let lv=0; lv<5; lv++) {
-                                        currentVal *= (u.type === "Damage" ? (1 + levels[lv]) : (1 - levels[lv])); 
-                                        steps.push(currentVal.toFixed(1));
+                                        mult = stepMult(mult, levels[lv]);
+                                        steps.push((base * mult).toFixed(u.type === "Damage" ? 1 : 3));
                                     }
                                     return "<b>" + w.weaponName + "</b>:<br>" + steps.join(" ➔ ");
                                 });
                                 text = weaponTexts.join("<br><br>");
+                                if (u.type === "FireRate") text += "<br><br><span style='color:#888'>Как только собран Ураганный стрейф, темп задаёт миниган и эта таблица перестаёт работать — карточка остаётся нужна только чтобы открыть эволюцию.</span>";
                             }
                         }
                     }
@@ -788,11 +797,20 @@
                             baseHpValue = currentData.playerStats.maxHealth;
                         }
                         
-                        let baseHp = hasTestBase ? Math.round(tBase) : Math.round(baseHpValue);
+                        // Mathf.RoundToInt в C# округляет ровную половину К ЧЁТНОМУ (2.5 -> 2),
+                        // а Math.round в JS — вверх (2.5 -> 3). На процентах вроде 0.5 панель
+                        // расходилась бы с игрой на целое сердце, поэтому повторяем C#.
+                        const roundHalfToEven = x => {
+                            const f = Math.floor(x), d = x - f;
+                            if (d > 0.5) return f + 1;
+                            if (d < 0.5) return f;
+                            return (f % 2 === 0) ? f : f + 1;
+                        };
+                        let baseHp = hasTestBase ? roundHalfToEven(tBase) : roundHalfToEven(baseHpValue);
                         let currentVal = baseHp;
                         let steps = [];
                         for(let lv=0; lv<5; lv++) {
-                            let bonus = Math.round(currentVal * levels[lv]);
+                            let bonus = roundHalfToEven(currentVal * levels[lv]);
                             if (bonus < 1) bonus = 1;
                             currentVal += bonus;
                             steps.push(currentVal);
@@ -834,29 +852,44 @@
                                "<br><br><b><span style='color:#ce9178'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
                     }
                     else if (u.type === "Shield") {
-                        // ФИКС: раньше был статичный текст с ОШИБКОЙ (Lv5 показывал 15с, а в
-                        // PlayerHealth.UpgradeShield реально 10с). Плюс сама игра вызывает
-                        // UpgradeShield( (int)levelValues[i] ) — то есть "уровень" щита это
-                        // ЦЕЛАЯ ЧАСТЬ введённого здесь числа, а НЕ номер карточки по счёту 1-5!
-                        // Если тут не стоит ровно 1,2,3,4,5 — реальный прогресс в игре будет
-                        // прыгать/повторяться. Показываем то, что ДЕЙСТВИТЕЛЬНО получится
-                        // с текущими значениями, а не выдуманную идеальную таблицу.
+                        // Щит — единственная карточка, у которой levelValues НЕ используются:
+                        // LevelUpManager подставляет сюда НОМЕР уровня карточки
+                        //   effectValue = (type == Shield) ? upgradeLevels[t] : levelValues[...]
+                        // поэтому UpgradeShield всегда получает 1..5 по порядку, что бы ни
+                        // стояло в полях выше. Раньше здесь считалось по int(levelValues) —
+                        // при значениях 1.5/1.5/1.5/1.5/2 панель показывала четыре одинаковых
+                        // шага, хотя игра выдаёт всю лестницу.
                         const shieldTable = { 1: [1, 30], 2: [1, 20], 3: [2, 20], 4: [2, 15], 5: [3, 10] };
                         let steps = [];
-                        for (let lv = 0; lv < 5; lv++) {
-                            let castLevel = Math.trunc(levels[lv]);
-                            let entry = shieldTable[castLevel];
-                            steps.push(entry ? (entry[0] + "щ/" + entry[1] + "с") : ("⚠️" + levels[lv] + "→" + castLevel + " (нет эффекта, нужно 1-5)"));
+                        for (let lv = 1; lv <= 5; lv++) {
+                            let entry = shieldTable[lv];
+                            steps.push(entry[0] + "щ/" + entry[1] + "с");
                         }
-                        text = "<b>Щиты — реальный расчёт игры</b> (по int() от введённых значений выше, не хардкод):<br>" + steps.join(" ➔ ");
+                        text = "<b>Щиты (макс / реген)</b>:<br>" + steps.join(" ➔ ") +
+                               "<br><span style='color:#888'>Значения в полях выше на щит не влияют вообще: игра берёт номер уровня карточки. Сама лестница захардкожена в PlayerHealth.UpgradeShield.</span>";
                     }
                     else if (u.type === "Distance") {
                         // Крит отсюда УЕХАЛ на карточку Рикошета — расчёт смотри там.
                         // Дальность даёт только дистанцию и кучность.
-                        let distMults = [1.1, 1.2, 1.3, 1.4, 1.5];
-                        let spreadMults = [0.8, 0.6, 0.4, 0.2, 0];
+                        //
+                        // Игра вызывает UpgradeDistance((int)levelValues[уровень-1]), а там switch
+                        // по 1..5, который ПРИСВАИВАЕТ множители, а не копит их. То есть поля выше —
+                        // это номера ступеней, а не проценты: поставил 1,1,1,1,1 — и все пять
+                        // уровней дадут одну и ту же ступень. Число вне 1..5 не делает ничего.
+                        const distTable = { 1: [1.1, 0.8], 2: [1.2, 0.6], 3: [1.3, 0.4], 4: [1.4, 0.2], 5: [1.5, 0.0] };
+                        let distMults = [], spreadMults = [], badSteps = [];
+                        let curDist = 1.0, curSpr = 1.0;
+                        for (let lv = 0; lv < 5; lv++) {
+                            let castLevel = Math.trunc(levels[lv]);
+                            let entry = distTable[castLevel];
+                            if (entry) { curDist = entry[0]; curSpr = entry[1]; }
+                            else badSteps.push("ур." + (lv + 1) + ": " + levels[lv] + "→" + castLevel);
+                            distMults.push(curDist);
+                            spreadMults.push(curSpr);
+                        }
 
                         let textBlocks = [];
+                        if (badSteps.length) textBlocks.push("<span style='color:#f48771'>⚠️ Ступени вне 1..5 не дают эффекта — " + badSteps.join(", ") + ". Значение просто остаётся прежним.</span>");
 
                         if (currentData.weapons) {
                             currentData.weapons.forEach((w, wIdx) => {
