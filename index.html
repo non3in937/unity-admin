@@ -654,7 +654,7 @@
             let mg = currentData.evos.hurricaneStrafe;
             wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">🌪 Миниган</div></div>
                     <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="mg_dmg" value="${mg.miniGunDamage !== undefined ? mg.miniGunDamage : 100}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="mg_fr" value="${mg.miniGunFireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="mg_dist" value="${mg.miniGunMaxDistance !== undefined ? mg.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="mg_spr" value="${mg.miniGunSpread}" oninput="updatePreviews()"></div></div>
-                    <div style="color:#888; font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанцию карточки прокачки умножают как обычно; разброс задан жёстко (карточка Дальности его не трогает), задержка выстрела — тоже.</div></div>`;
+                    <div style="color:#888; font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанция здесь базовые: карточки Урона и Дальности умножают их и дальше, причём уже накопленные уровни применяются сразу при выдаче минигана. Задержка выстрела фиксированная (Скорострельность после эволюции больше не выпадает), разброс тоже — карточка Дальности его намеренно не трогает.</div></div>`;
 
             wh += '</div>';
             document.getElementById('tab-weapons').innerHTML = wh;
@@ -941,7 +941,7 @@
                                     let mgFr = mgFrEl ? clean(mgFrEl.value)
                                                       : ((currentData.evos && currentData.evos.hurricaneStrafe && currentData.evos.hurricaneStrafe.miniGunFireRate) || 0.05);
                                     text += "<br><br><b>Миниган</b>: " + mgFr + " — не меняется" +
-                                            "<br><span style='color:#888'>Задержка минигана задана жёстко на вкладке Оружие, эта карточка её не умножает. Как только собран Ураганный стрейф, таблица выше перестаёт работать — карточка нужна только чтобы открыть эволюцию.</span>";
+                                            "<br><span style='color:#888'>Задержка минигана задана жёстко на вкладке Оружие и не умножается — умножать уже нечем: взяв эволюцию, игрок тратит на неё шестой уровень Скорострельности, и карточка выпадает из пула навсегда. Таблица выше описывает только жизнь до минигана.</span>";
                                 }
                             }
                         }
