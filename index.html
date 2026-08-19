@@ -501,7 +501,7 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div><div style="flex:1"><label>Крит за ур. Рикошета (%)</label><input type="number" step="0.1" id="ps_critPerRico" value="${currentData.playerStats.critPerRicochetLevel !== undefined ? currentData.playerStats.critPerRicochetLevel : 6}"></div></div></div>`;
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div><div style="flex:1"><label>Крит за ур. Рикошета (%)</label><input type="number" step="0.1" id="ps_critPerRico" value="${currentData.playerStats.critPerRicochetLevel !== undefined ? currentData.playerStats.critPerRicochetLevel : 6}" oninput="updatePreviews()"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
                         <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
             }
@@ -851,17 +851,12 @@
                         text = "<b>Щиты — реальный расчёт игры</b> (по int() от введённых значений выше, не хардкод):<br>" + steps.join(" ➔ ");
                     }
                     else if (u.type === "Distance") {
-                        let critInput = document.getElementById('ps_rHead');
-                        let baseCrit = critInput ? clean(critInput.value) : (currentData.playerStats ? currentData.playerStats.ricochetHeadChance : 15);
-
+                        // Крит отсюда УЕХАЛ на карточку Рикошета — расчёт смотри там.
+                        // Дальность даёт только дистанцию и кучность.
                         let distMults = [1.1, 1.2, 1.3, 1.4, 1.5];
                         let spreadMults = [0.8, 0.6, 0.4, 0.2, 0];
-                        let critBonuses = [5, 10, 15, 20, 30];
 
                         let textBlocks = [];
-                        let critSteps = [];
-                        for(let lv=0; lv<5; lv++) critSteps.push((baseCrit + critBonuses[lv]).toFixed(1) + "%");
-                        textBlocks.push("<b>Шанс Голова (Крит)</b>:<br>" + critSteps.join(" ➔ "));
 
                         if (currentData.weapons) {
                             currentData.weapons.forEach((w, wIdx) => {
@@ -879,6 +874,7 @@
                                 textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:#ce9178'>Разброс:</span> " + sprSteps.join(" ➔ "));
                             });
                         }
+                        textBlocks.push("<span style='color:#888'>Пока собран Ураганный стрейф, разброс задаёт миниган — эта колонка тогда ни на что не влияет, дистанция работает по-прежнему.</span>");
                         text = textBlocks.join("<br><br>");
                     }
                     else if (u.type === "BushSpeed") {
@@ -962,7 +958,21 @@
                             currentVal += levels[lv];
                             steps.push((hasTestBase ? "" : "+") + currentVal);
                         }
-                        text = "<b>Рикошетов (доп. целей)</b>" + (hasTestBase ? " (ТЕСТ, база " + tBase + ")" : "") + ":<br>" + steps.join(" ➔ ");
+                        // Крит переехал сюда с Дальности. В игре это
+                        // finalHeadChance = ricochetHeadChance + BonusHeadChance,
+                        // где BonusHeadChance копится по critPerRicochetLevel за уровень.
+                        let headInput = document.getElementById('ps_rHead');
+                        let baseHead = headInput ? clean(headInput.value)
+                                                 : (currentData.playerStats ? currentData.playerStats.ricochetHeadChance : 15);
+                        let critInput = document.getElementById('ps_critPerRico');
+                        let perLevel = critInput ? clean(critInput.value)
+                                                 : (currentData.playerStats && currentData.playerStats.critPerRicochetLevel !== undefined
+                                                    ? currentData.playerStats.critPerRicochetLevel : 6);
+                        let critSteps = [];
+                        for (let lv = 0; lv < 5; lv++) critSteps.push((baseHead + perLevel * (lv + 1)).toFixed(1) + "%");
+
+                        text = "<b>Рикошетов (доп. целей)</b>" + (hasTestBase ? " (ТЕСТ, база " + tBase + ")" : "") + ":<br>" + steps.join(" ➔ ") +
+                               "<br><br><b>Шанс Голова (Крит)</b> (база " + baseHead + "% + " + perLevel + "% за уровень):<br>" + critSteps.join(" ➔ ");
                     }
                     else if (u.type === "Regeneration") {
                         let currentVal = hasTestBase ? tBase : 0;
