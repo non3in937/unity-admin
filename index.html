@@ -71,6 +71,11 @@
         .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;}
         .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
         
+        .last-edited-mark {
+            margin-left: auto; font-size: 10px; color: #6b6b6b; white-space: nowrap;
+            border: 1px solid #3e3e42; border-radius: 10px; padding: 2px 7px;
+        }
+
         /* ── Узкий экран ──────────────────────────────────────────────
            Раньше медиазапросов не было вовсе: на десктопе всё «складывалось»
            просто потому, что flex-строки сжимаются, а телефон без meta viewport
@@ -180,8 +185,76 @@
         const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde"];
 
         let currentData = null;
-        let token = localStorage.getItem('gh_token');
+        // Чтение обёрнуто не для красоты: браузер бросает SecurityError, если хранилище
+        // запрещено (приватный режим, строгие настройки, data:-URL). Раньше исключение
+        // летело на верхнем уровне скрипта и обрывало ВСЮ дальнейшую инициализацию —
+        // выживали только объявления функций, а слушатели и константы молча пропадали.
+        let token = null;
+        try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
         let undoStack = []; 
+
+        // ─── Последняя правленая карточка поднимается наверх ───────────────
+        // На телефоне список карточек длинный: пока доскроллишь до нужной, переключил
+        // вкладку — и ищи заново. Запоминаем, в какой карточке последний раз что-то
+        // меняли, и при возврате на вкладку ставим её первой.
+        // Ключ — текст заголовка карточки: он уникален внутри вкладки и, в отличие от
+        // индекса, не ломается как раз от перестановки, ради которой всё и затевалось.
+        // Список нарочно возвращается функцией, а не лежит в const на верхнем уровне:
+        // объявления функций поднимаются и работают, даже если что-то выше по скрипту упало.
+        function promoteTabs() { return ['player', 'weapons', 'upgrades', 'evos']; }
+
+        function currentTabName() {
+            let el = document.querySelector('.tab-content.active');
+            return el ? el.id.replace(/^tab-/, '') : null;
+        }
+
+        function cardKeyOf(card) {
+            let t = card.querySelector('.card-title');
+            return t ? t.textContent.trim() : null;
+        }
+
+        function rememberEditedCard(target) {
+            if (!target || !target.closest) return;
+            let card = target.closest('.upgrade-card');
+            if (!card) return;
+            let tab = currentTabName();
+            if (!tab || promoteTabs().indexOf(tab) < 0) return;
+            let key = cardKeyOf(card);
+            if (!key) return;
+            try { localStorage.setItem('lastCard_' + tab, key); } catch (e) {}
+        }
+        document.addEventListener('input', e => rememberEditedCard(e.target), true);
+        document.addEventListener('change', e => rememberEditedCard(e.target), true);
+
+        function promoteLastCard() {
+            let tab = currentTabName();
+            if (!tab || promoteTabs().indexOf(tab) < 0) return;
+            let key = null;
+            try { key = localStorage.getItem('lastCard_' + tab); } catch (e) {}
+            if (!key) return;
+
+            let cards = document.querySelectorAll('#tab-' + tab + ' .upgrade-card');
+            for (let i = 0; i < cards.length; i++) {
+                let card = cards[i];
+                if (cardKeyOf(card) !== key) continue;
+
+                let parent = card.parentElement;
+                if (parent && parent.firstElementChild !== card) parent.insertBefore(card, parent.firstElementChild);
+
+                // Подпись, чтобы перестановка не выглядела глюком
+                let header = card.querySelector('.card-header');
+                if (header && !header.querySelector('.last-edited-mark')) {
+                    let mark = document.createElement('span');
+                    mark.className = 'last-edited-mark';
+                    mark.textContent = 'правили последней';
+                    mark.title = 'Карточка поднята наверх, потому что её меняли последней';
+                    header.appendChild(mark);
+                }
+
+                card.scrollIntoView({ block: 'nearest' });
+                break;
+            }
+        }
 
         function switchTab(t) {
             try { syncData(); } catch(e) { console.error("Sync error:", e); }
@@ -193,6 +266,7 @@
             if(tab) tab.classList.add('active');
             try { render(); } catch(e) { console.error("Render error:", e); }
             try { updatePreviews(); } catch(e) { console.error("Preview error:", e); }
+            try { promoteLastCard(); } catch(e) { console.error("Promote error:", e); }
         }
 
         function clean(val) { let parsed = parseFloat(String(val).replace(',', '.')); return isNaN(parsed) ? 0 : parsed; }
@@ -293,7 +367,7 @@
                 // Эволюции больше не задают статы состояний — те целиком за карточками.
                 // Absolute Control числовых параметров не имеет вовсе: только заморозка.
                 currentData.evos = {
-                    hurricaneStrafe: { miniGunFireRate: 0.05, miniGunSpread: 2 },
+                    hurricaneStrafe: { miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50 },
                     leadDrill: { infinitePiercingValue: 100 },
                     homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50 },
                     tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 }
@@ -406,6 +480,7 @@
                     let getVal = function(id, fallback) { let el = document.getElementById(id); return el ? clean(el.value) : fallback; };
                     currentData.evos.hurricaneStrafe.miniGunFireRate = getVal('evo_hs_fr', 0.05);
                     currentData.evos.hurricaneStrafe.miniGunSpread = getVal('evo_hs_spread', 2);
+                    currentData.evos.hurricaneStrafe.miniGunMaxDistance = getVal('evo_hs_dist', 50);
                     currentData.evos.leadDrill.infinitePiercingValue = parseInt(getVal('evo_ld_pierce', 100));
                     currentData.evos.homing.evoRicochetCount = parseInt(getVal('evo_hm_rico', 15));
                     currentData.evos.homing.evoRicochetRadius = getVal('evo_hm_rad', 40);
@@ -589,8 +664,8 @@
 
             evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + 🔭 Distance</div>
-                <div class="row"><div style="flex:1"><label>Задержка выстрела (сек)</label><input type="number" step="0.01" id="evo_hs_fr" value="${eData.hurricaneStrafe.miniGunFireRate}"></div><div style="flex:1"><label>Разброс (град.)</label><input type="number" step="0.1" id="evo_hs_spread" value="${eData.hurricaneStrafe.miniGunSpread}"></div></div>
-                <div style="color:#888; font-size:11px; padding-top:6px;">В руках всегда миниган, поэтому скорострельность одна на все стволы. Разброс затирает кучность от карточки Дальности — той остаётся только сама дистанция. Модель, вибрация и тряска — в ассете эволюции, они не числа баланса.</div></div>`;
+                <div class="row"><div style="flex:1"><label>Задержка выстрела (сек)</label><input type="number" step="0.01" id="evo_hs_fr" value="${eData.hurricaneStrafe.miniGunFireRate}"></div><div style="flex:1"><label>Разброс (град.)</label><input type="number" step="0.1" id="evo_hs_spread" value="${eData.hurricaneStrafe.miniGunSpread}"></div><div style="flex:1"><label>Дальность (м)</label><input type="number" step="1" id="evo_hs_dist" value="${eData.hurricaneStrafe.miniGunMaxDistance !== undefined ? eData.hurricaneStrafe.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div></div>
+                <div style="color:#888; font-size:11px; padding-top:6px;">В руках всегда миниган, поэтому темп и дальность у него свои — иначе он брал бы их от того ствола, что оказался в руках. Дальность карточка Дальности честно умножает, а вот разброс затирается ради картинки. Модель, вибрация и тряска — в ассете эволюции, они не числа баланса.</div></div>`;
 
             evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
@@ -954,7 +1029,16 @@
                                 textBlocks.push("<b>" + w.weaponName + "</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + distSteps.join(" ➔ ") + "<br><span style='color:#ce9178'>Разброс:</span> " + sprSteps.join(" ➔ "));
                             });
                         }
-                        textBlocks.push("<span style='color:#888'>Пока собран Ураганный стрейф, разброс задаёт миниган — эта колонка тогда ни на что не влияет, дистанция работает по-прежнему.</span>");
+                        // Миниган — не WeaponConfig, в списке оружия его нет, но карточка
+                        // Дальности умножает и его дистанцию. Без этой строки панель
+                        // показывала бы дальности стволов, которых в руках уже не будет.
+                        let mgInput = document.getElementById('evo_hs_dist');
+                        let mgDist = mgInput ? clean(mgInput.value)
+                                             : ((currentData.evos && currentData.evos.hurricaneStrafe && currentData.evos.hurricaneStrafe.miniGunMaxDistance) || 50);
+                        let mgSteps = [];
+                        for (let lv = 0; lv < 5; lv++) mgSteps.push((mgDist * distMults[lv]).toFixed(1));
+                        textBlocks.push("<b>Миниган (Ураганный стрейф)</b>:<br><span style='color:#b5cea8'>Дальн:</span> " + mgSteps.join(" ➔ ") +
+                                        "<br><span style='color:#888'>Разброс у минигана свой и карточкой не меняется — задаётся на вкладке EVO.</span>");
                         text = textBlocks.join("<br><br>");
                     }
                     else if (u.type === "BushSpeed") {
@@ -1129,6 +1213,7 @@
                 const gist = await res.json(); 
                 currentData = JSON.parse(gist.files[FILE_NAME].content); 
                 render(); 
+                try { promoteLastCard(); } catch(e) {} 
                 document.getElementById('status').innerText = "✅ Данные загружены!"; 
                 document.getElementById('status').style.color = "#4ec9b0"; 
                 setTimeout(() => document.getElementById('status').innerText = "", 2000); 
