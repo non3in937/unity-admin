@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Unity Config Admin PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
@@ -70,6 +71,52 @@
         .phase-card { background: #1e1e1e; border-left: 3px solid #c586c0; margin-top: 10px; padding: 10px; border-radius: 4px; border-top: 1px solid #333; border-right: 1px solid #333; border-bottom: 1px solid #333;}
         .attack-card { background: #252526; border: 1px dashed #569cd6; margin-top: 10px; padding: 10px; border-radius: 4px; }
         
+        /* ── Узкий экран ──────────────────────────────────────────────
+           Раньше медиазапросов не было вовсе: на десктопе всё «складывалось»
+           просто потому, что flex-строки сжимаются, а телефон без meta viewport
+           рисовал страницу в виртуальные ~980px и уменьшал целиком.
+           Теперь ширина настоящая, и строки надо переносить, а не давить. */
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .panel { padding: 10px; }
+            .upgrade-card { padding: 12px; }
+
+            /* Полям в строках проставлен inline style="flex:1" — с basis 0 они
+               никогда не переносятся, а бесконечно ужимаются. Перебить инлайн
+               можно только !important: даём каждому полю минимум 140px, дальше
+               строка переносится сама (обычно два поля в ряд). */
+            .row { flex-wrap: wrap; }
+            .row > * { flex: 1 1 140px !important; min-width: 140px; }
+
+            /* Подписи вроде «Крит за ур. Рикошета (%)» в одну строку не влезают */
+            label { white-space: normal; }
+
+            /* iOS Safari принудительно зумит страницу при фокусе на поле мельче
+               16px — это и есть тот прыжок вёрстки при тапе по инпуту */
+            input, select, textarea { font-size: 16px; }
+
+            .tabs { gap: 4px; }
+            .tab-btn { min-width: 0; flex: 1 1 30%; padding: 10px 4px; font-size: 13px; }
+
+            .cards-grid { grid-template-columns: 1fr; gap: 12px; }
+
+            /* Вложенность босс → фаза → атака съедала ширину отступами */
+            .phase-card, .attack-card { padding: 8px; }
+
+            .btn-main, .backup-btn { padding: 14px; font-size: 15px; }
+            h2 { font-size: 20px; }
+        }
+
+        /* Совсем узкие телефоны (iPhone SE ~320px). Строки полей отдельно
+           ужимать не нужно: flex-basis 140px переносит их сам, когда два поля
+           перестают влезать. Раньше здесь стоял принудительный 100% на 380px —
+           и на распространённых 375px поля вставали по одному, хотя два
+           помещались свободно. */
+        @media (max-width: 340px) {
+            .card-levels { grid-template-columns: 1fr; }
+            .card-levels .full-width { grid-column: span 1; }
+        }
+
         /* 🔥 НОВЫЕ СТИЛИ ПОДСКАЗОК ДЛЯ МОБИЛЬНЫХ 🔥 */
         .hint-text { 
             background-color: #1e1e1e; 
