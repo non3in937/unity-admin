@@ -447,7 +447,7 @@
                     hurricaneStrafe: { miniGunDamage: 100, miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50 },
                     leadDrill: { infinitePiercingValue: 100 },
                     homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50 },
-                    tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 }
+                    tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 , soloDelay: 0, comboDelay: 0.15, chainStepDelay: 0.05}
                 };
             }
         }
@@ -574,6 +574,9 @@
                     currentData.evos.tank.explosionRadius = getVal('evo_tk_rad', 3.5);
                     currentData.evos.tank.explosionShakeMagnitude = getVal('evo_tk_shake_mag', 0);
                     currentData.evos.tank.explosionShakeDuration = getVal('evo_tk_shake_dur', 0);
+                    currentData.evos.tank.soloDelay = getVal('evo_tk_solo', 0);
+                    currentData.evos.tank.comboDelay = getVal('evo_tk_combo', 0.15);
+                    currentData.evos.tank.chainStepDelay = getVal('evo_tk_step', 0.05);
                 }
             } catch(e) {}
         }
@@ -775,7 +778,7 @@
             evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
                 <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
                 <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
-                <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div></div>`;
+                <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div><div class="row"><div style="flex:1"><label>Пауза: Танк один</label><input type="number" step="0.01" id="evo_tk_solo" value="${eData.tank.soloDelay !== undefined ? eData.tank.soloDelay : 0}"></div><div style="flex:1"><label>Пауза: в связке</label><input type="number" step="0.01" id="evo_tk_combo" value="${eData.tank.comboDelay !== undefined ? eData.tank.comboDelay : 0.15}"></div><div style="flex:1"><label>Шаг цепочки</label><input type="number" step="0.01" id="evo_tk_step" value="${eData.tank.chainStepDelay !== undefined ? eData.tank.chainStepDelay : 0.05}"></div></div><div style="color:#888; font-size:11px; padding-top:6px;">Взрыв идёт по прилёту пули. Пауза добавляется только когда до взрыва есть что посмотреть — враг замерзает от Абсолютного контроля либо пуля прошивает и отскакивает; если Танк собран один, работает первое поле (по умолчанию 0 — рвёт сразу). Шаг цепочки разносит взрывы по точкам траектории, иначе они срабатывают одновременно.</div></div>`;
 
             evoHtml += '</div>';
             document.getElementById('tab-evos').innerHTML = evoHtml;
