@@ -527,6 +527,13 @@
                     currentData.playerStats.critPerRicochetLevel = getVal('ps_critPerRico', 6);
                     currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 5);
                     currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 10);
+                    // Галки отладочной выдачи. Отдельный раздел: к статам игрока отношения не имеет.
+                    if (!currentData.startEvos) currentData.startEvos = {};
+                    [['se_hs','hurricaneStrafe'],['se_ac','absoluteControl'],['se_ld','leadDrill'],
+                     ['se_hm','homing'],['se_tk','tank']].forEach(function(r) {
+                        let el = document.getElementById(r[0]);
+                        if (el) currentData.startEvos[r[1]] = el.checked;
+                    });
                 }
             } catch(e) {}
 
@@ -715,6 +722,22 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
                         <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
             }
+            // Отладочная выдача эволюций на старте: проверить эволюцию на телефоне,
+            // не наигрывая до неё. Живёт на вкладке Игрока, но это не баланс — отсюда
+            // и красная рамка, чтобы галку не забыли снять перед сборкой.
+            // Отдельного блока умолчаний нет намеренно: нет секции в гисте — значит выключено.
+            let se = currentData.startEvos || {};
+            const seRows = [['se_hs','hurricaneStrafe','🌪 Ураганный стрейф'],
+                            ['se_ac','absoluteControl','🧊 Абсолютный контроль'],
+                            ['se_ld','leadDrill','🔩 Свинцовый бур'],
+                            ['se_hm','homing','🎯 Самонаведение'],
+                            ['se_tk','tank','💥 Прорыв танка']];
+            ph += `<div class="upgrade-card" style="border-color:#f48771"><div class="card-header"><div class="card-title" style="color:#f48771">🧪 Выдать EVO на старте</div></div>`;
+            seRows.forEach(function(r) {
+                ph += `<label style="display:flex; align-items:center; gap:8px; white-space:normal; margin-bottom:8px; color:#d4d4d4; font-size:13px; cursor:pointer;"><input type="checkbox" id="${r[0]}" ${se[r[1]] ? 'checked' : ''} style="width:auto; margin:0; flex:0 0 auto;">${r[2]}</label>`;
+            });
+            ph += `<div style="color:#888; font-size:11px; padding-top:6px;">Только для тестов: отмеченные эволюции выдаются игроку сразу при старте забега, минуя карточки. Обычные условия — докачать модификатор и держать нужное состояние — при этом не проверяются. <b style="color:#f48771">Перед сборкой снять все галки.</b></div></div>`;
+
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
 
