@@ -444,7 +444,7 @@
                 // Эволюции больше не задают статы состояний — те целиком за карточками.
                 // Absolute Control числовых параметров не имеет вовсе: только заморозка.
                 currentData.evos = {
-                    hurricaneStrafe: { miniGunDamage: 100, miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50 },
+                    hurricaneStrafe: { miniGunDamage: 100, miniGunFireRate: 0.05, miniGunSpread: 2, miniGunMaxDistance: 50, miniGunBulletsPerShot: 1, miniGunIsSequential: false, miniGunBurstDelay: 0.05 },
                     leadDrill: { infinitePiercingValue: 100 },
                     homing: { evoRicochetCount: 15, evoRicochetRadius: 40, evoBonusHeadChance: 50 },
                     tank: { explosionDamage: 75, explosionRadius: 3.5, explosionShakeMagnitude: 0, explosionShakeDuration: 0 , soloDelay: 0, comboDelay: 0.15, chainStepDelay: 0.05}
@@ -528,6 +528,8 @@
                     currentData.playerStats.baseXP = getVal('ps_bXP', currentData.playerStats.baseXP || 5);
                     currentData.playerStats.growthFactor = getVal('ps_gFactor', currentData.playerStats.growthFactor || 10);
                     // Галки отладочной выдачи. Отдельный раздел: к статам игрока отношения не имеет.
+                    let swEl = document.getElementById('dbg_weapon');
+                    if (swEl) currentData.startWeapon = swEl.value;
                     if (!currentData.startEvos) currentData.startEvos = {};
                     [['se_hs','hurricaneStrafe'],['se_ac','absoluteControl'],['se_ld','leadDrill'],
                      ['se_hm','homing'],['se_tk','tank']].forEach(function(r) {
@@ -545,6 +547,9 @@
                     currentData.evos.hurricaneStrafe.miniGunFireRate = g('mg_fr');
                     currentData.evos.hurricaneStrafe.miniGunMaxDistance = g('mg_dist');
                     currentData.evos.hurricaneStrafe.miniGunSpread = g('mg_spr');
+                    currentData.evos.hurricaneStrafe.miniGunBulletsPerShot = g('mg_bps');
+                    currentData.evos.hurricaneStrafe.miniGunBurstDelay = g('mg_bd');
+                    currentData.evos.hurricaneStrafe.miniGunIsSequential = document.getElementById('mg_seq').checked;
                 }
             } catch(e) {}
 
@@ -732,11 +737,22 @@
                             ['se_ld','leadDrill','🔩 Свинцовый бур'],
                             ['se_hm','homing','🎯 Самонаведение'],
                             ['se_tk','tank','💥 Прорыв танка']];
-            ph += `<div class="upgrade-card" style="border-color:#f48771"><div class="card-header"><div class="card-title" style="color:#f48771">🧪 Выдать EVO на старте</div></div>`;
+            // Стартовое оружие: список берём из тех же конфигов, что и вкладка Оружие.
+            // Минигана здесь нет и быть не может — он не WeaponConfig, а подменённая
+            // модель, и выдаётся только через галку Ураганного стрейфа ниже.
+            let curSW = currentData.startWeapon || '';
+            let swOpts = '<option value="">— как в префабе —</option>';
+            (currentData.weapons || []).forEach(function(w) {
+                swOpts += `<option value="${escapeHtml(w.weaponName)}" ${curSW === w.weaponName ? 'selected' : ''}>${escapeHtml(w.weaponName)}</option>`;
+            });
+            ph += `<div class="upgrade-card" style="border-color:#f48771"><div class="card-header"><div class="card-title" style="color:#f48771">🧪 Старт забега (тесты)</div></div>
+                    <label>Начать с оружия</label><select id="dbg_weapon">${swOpts}</select>
+                    <div style="color:#888; font-size:11px; padding-bottom:10px;">Подменяет ствол в начале забега, в том числе поверх сейва. Пусто — как обычно.</div>
+                    <div style="border-top:1px solid #3e3e42; padding-top:10px; margin-bottom:8px; color:#dcdcaa; font-size:12px;">Выдать EVO сразу</div>`;
             seRows.forEach(function(r) {
                 ph += `<label style="display:flex; align-items:center; gap:8px; white-space:normal; margin-bottom:8px; color:#d4d4d4; font-size:13px; cursor:pointer;"><input type="checkbox" id="${r[0]}" ${se[r[1]] ? 'checked' : ''} style="width:auto; margin:0; flex:0 0 auto;">${r[2]}</label>`;
             });
-            ph += `<div style="color:#888; font-size:11px; padding-top:6px;">Только для тестов: отмеченные эволюции выдаются игроку сразу при старте забега, минуя карточки. Обычные условия — докачать модификатор и держать нужное состояние — при этом не проверяются. <b style="color:#f48771">Перед сборкой снять все галки.</b></div></div>`;
+            ph += `<div style="color:#888; font-size:11px; padding-top:6px;">Отмеченные эволюции выдаются игроку сразу при старте забега, минуя карточки. Обычные условия — докачать модификатор и держать нужное состояние — при этом не проверяются. <b style="color:#f48771">Перед сборкой снять все галки.</b></div></div>`;
 
             ph += '</div>';
             document.getElementById('tab-player').innerHTML = ph;
@@ -757,6 +773,8 @@
             let mg = currentData.evos.hurricaneStrafe;
             wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">🌪 Миниган</div></div>
                     <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="mg_dmg" value="${mg.miniGunDamage !== undefined ? mg.miniGunDamage : 100}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="mg_fr" value="${mg.miniGunFireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="mg_dist" value="${mg.miniGunMaxDistance !== undefined ? mg.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="mg_spr" value="${mg.miniGunSpread}" oninput="updatePreviews()"></div></div>
+                    <div class="row"><div style="flex:1"><label>Патронов за выстрел</label><input type="number" step="1" id="mg_bps" value="${mg.miniGunBulletsPerShot !== undefined ? mg.miniGunBulletsPerShot : 1}"></div><div style="flex:1"><label>Пауза в очереди</label><input type="number" step="0.01" id="mg_bd" value="${mg.miniGunBurstDelay !== undefined ? mg.miniGunBurstDelay : 0.05}"></div></div>
+                    <label style="display:flex; align-items:center; gap:8px; white-space:normal; margin-bottom:10px; color:#d4d4d4; font-size:13px; cursor:pointer;"><input type="checkbox" id="mg_seq" ${mg.miniGunIsSequential ? 'checked' : ''} style="width:auto; margin:0; flex:0 0 auto;">Разносить патроны очереди по времени</label>
                     <div style="color:#888; font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанция здесь базовые: карточки Урона и Дальности умножают их и дальше, причём уже накопленные уровни применяются сразу при выдаче минигана. Задержка выстрела фиксированная (Скорострельность после эволюции больше не выпадает), разброс тоже — карточка Дальности его намеренно не трогает.</div></div>`;
 
             wh += '</div>';
