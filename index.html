@@ -557,7 +557,7 @@
                 if(document.querySelector('.w-dmg') && currentData.weapons) {
                     currentData.weapons.forEach((w, i) => {
                         let dmgEl = document.getElementById('w_dmg_' + i);
-                        if(dmgEl) { w.damage = clean(dmgEl.value); w.fireRate = clean(document.getElementById('w_fr_' + i).value); w.maxDistance = clean(document.getElementById('w_dist_' + i).value); w.spread = clean(document.getElementById('w_spr_' + i).value); }
+                        if(dmgEl) { w.damage = clean(dmgEl.value); w.fireRate = clean(document.getElementById('w_fr_' + i).value); w.maxDistance = clean(document.getElementById('w_dist_' + i).value); w.spread = clean(document.getElementById('w_spr_' + i).value); let bd = document.getElementById('w_bd_' + i); if (bd) w.burstDelay = clean(bd.value); let bp = document.getElementById('w_bps_' + i); if (bp) w.bulletsPerShot = clean(bp.value); }
                     });
                 }
             } catch(e) {}
@@ -762,7 +762,7 @@
                 currentData.weapons.forEach((w, i) => {
                     let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
                     wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${escapeHtml(w.weaponName)}</div></div>
-                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
+                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Патронов за выстрел</label><input type="number" step="1" id="w_bps_${i}" value="${w.bulletsPerShot !== undefined ? w.bulletsPerShot : 1}"></div><div style="flex:1"><label>Пауза в очереди</label><input type="number" step="0.01" id="w_bd_${i}" value="${w.burstDelay !== undefined ? w.burstDelay : 0}"></div></div><div style="color:#888; font-size:11px; padding-top:6px;">«Задержка выстр.» — пауза МЕЖДУ очередями, «Пауза в очереди» — между патронами внутри неё. Карточка Скорострельности ужимает обе одним множителем, поэтому темп растёт ровно на обещанный процент.</div></div>`;
                 });
             }
             // Миниган — не WeaponConfig, а подменённая моделью пушка Ураганного стрейфа,
