@@ -603,27 +603,18 @@
                 let colB = JSON.parse(localStorage.getItem('colBoss') || '[]');
                 let colP = JSON.parse(localStorage.getItem('colPhase') || '[]');
 
-                // Считаем, сколько раз встречается каждый ID. Загрузчик кладёт боссов
-                // в словарь по bossID, поэтому одинаковые ID молча затирают друг друга:
-                // остаётся последний, а остальные боссы своих фаз не находят вовсе
-                // и просто стоят. Ровно так и потерялись атаки 21 августа 2026.
-                let idCount = {};
-                (currentData.bosses || []).forEach(function(b) {
-                    let k = (b.bossID || '').trim();
-                    idCount[k] = (idCount[k] || 0) + 1;
-                });
-
                 if (currentData.bosses) {
                     currentData.bosses.forEach((boss, bIdx) => {
                         let bIdStr = "boss_" + bIdx;
                         let bId = (boss.bossID || '').trim();
-                        let isDupe = bId !== '' && idCount[bId] > 1;
                         let phaseCount = (boss.phases || []).length;
                         let attackTotal = (boss.phases || []).reduce(function(n, ph) { return n + ((ph.attackSequence || []).length); }, 0);
                         let emptyPhases = (boss.phases || []).filter(function(ph) { return !ph.attackSequence || ph.attackSequence.length === 0; }).length;
                         let problems = [];
-                        if (bId === '') problems.push('Пустой ID — босс не найдёт свои фазы');
-                        if (isDupe) problems.push('ID «' + escapeHtml(bId) + '» повторяется: останется только последний из них, остальные молча перестанут атаковать');
+                        // Одинаковые ID — НЕ ошибка: это переиспользование одного префаба
+                        // для разных встреч. Игра различает их по порядку в расписании,
+                        // а не по ID, поэтому каждая запись живёт своей жизнью.
+                        if (bId === '') problems.push('Пустой ID — не найдётся префаб босса');
                         if (phaseCount === 0) problems.push('Нет ни одной фазы');
                         if (emptyPhases > 0) problems.push('Фаз без атак: ' + emptyPhases + ' — в них босс будет просто стоять');
                         let bIsCollapsed = colB.includes(bIdStr);
@@ -634,6 +625,7 @@
                             <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colBoss')">
                                 <span class="fold-icon" style="color:#f48771; font-size:14px;">${bIcon}</span>
                                 <span style="font-size:20px;">👹</span>
+                                <span style="font-size:11px; color:#888; white-space:nowrap;">#${bIdx + 1}</span>
                                 <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID, например Boss_1" style="flex:1; min-width:90px; font-weight:bold; color:#f48771; margin:0;">
                                 <span style="font-size:11px; color:#888; white-space:nowrap;">${phaseCount} фаз · ${attackTotal} атак</span>
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
@@ -681,7 +673,8 @@
                             </div></div>`;
                     });
                 }
-                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>`;
+                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>
+                    <div style="color:#888; font-size:11px; line-height:1.5; padding:10px 2px; white-space:normal;">ID выбирает <b>префаб</b>, а порядок в списке — <b>какая это по счёту встреча</b>. Один и тот же ID можно ставить нескольким записям: получатся разные бои на одной модели, каждый со своими фазами и атаками.</div>`;
                 document.getElementById('tab-bosses').innerHTML = bh;
             }
             
