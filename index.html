@@ -393,22 +393,26 @@
         function removePhase(btn) { saveStateForUndo(); btn.closest('.phase-panel').remove(); syncData(); }
 
         // 🔥 ФУНКЦИИ СВОРАЧИВАНИЯ БОССОВ 🔥
-        function togglePanelDisplay(headerEl, storageKey) {
+        // storeOpen = true: в хранилище лежит список РАСКРЫТЫХ, а не свёрнутых.
+        // Нужно атакам босса — у них по умолчанию всё спрятано, иначе вкладка
+        // разворачивается в простыню из десятков полей сразу при открытии.
+        function togglePanelDisplay(headerEl, storageKey, storeOpen) {
             let content = headerEl.nextElementSibling;
+            if (!content) return;
             let icon = headerEl.querySelector('.fold-icon');
             let id = headerEl.dataset.foldid;
-            let collapsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            let list = [];
+            try { list = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (e) {}
 
-            if (content.style.display === 'none') {
-                content.style.display = 'block'; 
-                icon.innerText = '▼';
-                collapsed = collapsed.filter(n => n !== id); 
-            } else {
-                content.style.display = 'none'; 
-                icon.innerText = '▶';
-                if (!collapsed.includes(id)) collapsed.push(id); 
-            }
-            localStorage.setItem(storageKey, JSON.stringify(collapsed));
+            let opening = (content.style.display === 'none');
+            content.style.display = opening ? 'block' : 'none';
+            if (icon) icon.innerText = opening ? '▼' : '▶';
+
+            let shouldBeInList = storeOpen ? opening : !opening;
+            list = list.filter(n => n !== id);
+            if (shouldBeInList) list.push(id);
+
+            try { localStorage.setItem(storageKey, JSON.stringify(list)); } catch (e) {}
         }
 
         function toggleFolder(header) {
@@ -601,80 +605,82 @@
             if (document.getElementById('tab-bosses').classList.contains('active')) {
                 let bh = '<div id="bosses-container">';
                 let colB = JSON.parse(localStorage.getItem('colBoss') || '[]');
-                let colP = JSON.parse(localStorage.getItem('colPhase') || '[]');
+                // У атак храним РАСКРЫТЫЕ, а не свёрнутые: по умолчанию параметры спрятаны,
+                // иначе вкладка превращается в простыню из десятков полей.
+                let expA = JSON.parse(localStorage.getItem('expAttack') || '[]');
 
                 if (currentData.bosses) {
                     currentData.bosses.forEach((boss, bIdx) => {
                         let bIdStr = "boss_" + bIdx;
-                        let bId = (boss.bossID || '').trim();
-                        let phaseCount = (boss.phases || []).length;
-                        let attackTotal = (boss.phases || []).reduce(function(n, ph) { return n + ((ph.attackSequence || []).length); }, 0);
-                        let emptyPhases = (boss.phases || []).filter(function(ph) { return !ph.attackSequence || ph.attackSequence.length === 0; }).length;
-                        let problems = [];
-                        // Одинаковые ID — НЕ ошибка: это переиспользование одного префаба
-                        // для разных встреч. Игра различает их по порядку в расписании,
-                        // а не по ID, поэтому каждая запись живёт своей жизнью.
-                        if (bId === '') problems.push('Пустой ID — не найдётся префаб босса');
-                        if (phaseCount === 0) problems.push('Нет ни одной фазы');
-                        if (emptyPhases > 0) problems.push('Фаз без атак: ' + emptyPhases + ' — в них босс будет просто стоять');
                         let bIsCollapsed = colB.includes(bIdStr);
                         let bDisp = bIsCollapsed ? 'none' : 'block';
                         let bIcon = bIsCollapsed ? '▶' : '▼';
+
+                        let phases = boss.phases || [];
+                        let attackTotal = phases.reduce((n, ph) => n + ((ph.attackSequence || []).length), 0);
+                        let emptyBlocks = phases.filter(ph => !ph.attackSequence || ph.attackSequence.length === 0).length;
+
+                        let problems = [];
+                        if ((boss.bossID || '').trim() === '') problems.push('Пустой ID — не найдётся префаб босса');
+                        if (attackTotal === 0) problems.push('Ни одной атаки — босс появится и будет просто стоять');
+                        else if (emptyBlocks > 0) problems.push('Блоков без атаки: ' + emptyBlocks);
 
                         bh += `<div class="panel boss-panel boss-card" style="padding-bottom:5px;">
                             <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colBoss')">
                                 <span class="fold-icon" style="color:#f48771; font-size:14px;">${bIcon}</span>
                                 <span style="font-size:20px;">👹</span>
-                                <span style="font-size:11px; color:#888; white-space:nowrap;">#${bIdx + 1}</span>
-                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID, например Boss_1" style="flex:1; min-width:90px; font-weight:bold; color:#f48771; margin:0;">
-                                <span style="font-size:11px; color:#888; white-space:nowrap;">${phaseCount} фаз · ${attackTotal} атак</span>
+                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID префаба" style="flex:1; min-width:80px; font-weight:bold; color:#f48771; margin:0;">
+                                <span style="font-size:11px; color:#888; white-space:nowrap;">#${bIdx + 1} · ${attackTotal} атак</span>
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
                             </div>
-                            <div class="row" style="margin-top:8px;" onclick="event.stopPropagation()">
-                                <div style="flex:1"><label style="margin-bottom:3px;">Появление, сек</label><input type="number" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div>
-                            </div>
-                            ${problems.length ? `<div style="margin-top:8px; padding:8px; border-radius:4px; background:#2a1a1a; border-left:3px solid #f48771; color:#f48771; font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
-                            
-                            <div class="boss-content" style="display:${bDisp}; margin-top:15px; border-top: 1px solid #3e3e42; padding-top:15px;">
+                            <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid #3e3e42; padding-top:12px;">
+                                <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
+                                ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:#2a1a1a; border-left:3px solid #f48771; color:#f48771; font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
-                        
-                        boss.phases.forEach((phase, pIdx) => {
-                            let pIdStr = "phase_" + bIdx + "_" + pIdx;
-                            let pIsCollapsed = colP.includes(pIdStr);
-                            let pDisp = pIsCollapsed ? 'none' : 'block';
-                            let pIcon = pIsCollapsed ? '▶' : '▼';
+
+                        phases.forEach((phase, pIdx) => {
+                            let aIdStr = "att_" + bIdx + "_" + pIdx;
+                            let isOpen = expA.includes(aIdStr);
+                            let aDisp = isOpen ? 'block' : 'none';
+                            let aIcon = isOpen ? '▼' : '▶';
+
+                            let seq = phase.attackSequence || [];
+                            let title = seq.length === 0 ? '— атака не выбрана —'
+                                      : (seq.length === 1 ? seq[0].attackType : seq.length + ' атаки подряд');
+                            let hpFrom = phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100;
+                            let hpTo = phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 0;
 
                             bh += `<div class="phase-card phase-panel" style="padding-bottom:5px;">
-                                <div class="header-row" data-foldid="${pIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colPhase')">
-                                    <span class="fold-icon" style="color:#c586c0; font-size:12px;">${pIcon}</span>
-                                    <input type="text" class="p-name" value="${escapeHtml(phase.phaseName)}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:1; min-width:90px; color:#c586c0; margin:0; font-weight:bold; background:transparent; border-color:#c586c0;">
-                                    <span style="font-size:11px; color:${(phase.attackSequence||[]).length ? '#888' : '#f48771'}; white-space:nowrap;">${(phase.attackSequence||[]).length} атак</span>
+                                <div class="header-row" data-foldid="${aIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'expAttack', true)">
+                                    <span class="fold-icon" style="color:#c586c0; font-size:12px;">${aIcon}</span>
+                                    <span style="flex:1; color:#c586c0; font-weight:bold; font-size:13px; white-space:normal;">${escapeHtml(title)}</span>
+                                    <span style="font-size:11px; color:#888; white-space:nowrap;">${hpFrom}→${hpTo}%</span>
                                     <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.phase-panel').remove(); syncData(); render();">✖</button>
                                 </div>
-                                <div class="row" style="margin-top:8px;" onclick="event.stopPropagation()">
-                                    <div style="flex:1"><label style="margin-bottom:3px;">Start HP %</label><input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;"></div>
-                                    <div style="flex:1"><label style="margin-bottom:3px;">End HP %</label><input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;"></div>
-                                    <div style="flex:1"><label style="margin-bottom:3px;">Пауза атак</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;"></div>
-                                </div>
-                                
-                                <div class="phase-content" style="display:${pDisp}; margin-top:10px; border-top: 1px dashed #555; padding-top:10px;">
+                                <div class="phase-content" style="display:${aDisp}; margin-top:10px; border-top:1px dashed #555; padding-top:10px;">
+                                    <input type="hidden" class="p-name" value="${escapeHtml(phase.phaseName || ('Блок ' + (pIdx + 1)))}">
+                                    <div class="row" style="margin-bottom:10px;">
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Включается на HP %</label><input type="number" class="p-start-hp" value="${hpFrom}" style="margin:0; border-color:#2ea043;"></div>
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Работает до HP %</label><input type="number" class="p-end-hp" value="${hpTo}" style="margin:0; border-color:#8a2a2a;"></div>
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Пауза, сек</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;"></div>
+                                    </div>
                                     <div class="attacks-list">`;
-                            
-                            phase.attackSequence.forEach((attack, aIdx) => {
-                                bh += generateAttackHtml(attack);
-                            });
-                            
-                            bh += `</div><button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:5px; font-size:12px; margin-top:10px;">+ Добавить Атаку</button>
+
+                            seq.forEach(attack => { bh += generateAttackHtml(attack); });
+
+                            bh += `</div>
+                                    <button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:6px; font-size:12px; margin-top:8px;">+ Ещё атака в этот же блок</button>
                                 </div>
                             </div>`;
                         });
-                        
-                        bh += `</div><button class="btn-add" onclick="addPhase(this)" style="background:#569cd6; margin-top:10px;">+ Добавить Фазу</button>
+
+                        bh += `</div>
+                                <button class="btn-add" onclick="addBossAttack(this)" style="background:#569cd6; margin-top:10px;">➕ Добавить атаку боссу</button>
                             </div></div>`;
                     });
                 }
-                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА НА УРОВЕНЬ</button>
-                    <div style="color:#888; font-size:11px; line-height:1.5; padding:10px 2px; white-space:normal;">ID выбирает <b>префаб</b>, а порядок в списке — <b>какая это по счёту встреча</b>. Один и тот же ID можно ставить нескольким записям: получатся разные бои на одной модели, каждый со своими фазами и атаками.</div>`;
+                bh += `</div><button class="btn-main" onclick="addBoss()">➕ ДОБАВИТЬ БОССА</button>
+                    <div style="color:#888; font-size:11px; line-height:1.5; padding:10px 2px; white-space:normal;">Босс — это папка: ID выбирает <b>префаб</b>, а порядок в списке — <b>какая это по счёту встреча</b>. Один ID можно ставить нескольким боссам: получатся разные бои на одной модели. Внутри — атаки, каждая включается на своём пороге здоровья и работает, пока HP не упадёт до нижней границы.</div>`;
                 document.getElementById('tab-bosses').innerHTML = bh;
             }
             
@@ -944,7 +950,7 @@
 
         function addBoss() {
             if (!currentData.bosses) currentData.bosses = [];
-            currentData.bosses.push({ bossID: "Boss_New", spawnTime: 300, phases: [{ phaseName: "Фаза 1", startAtHpPercent: 100, endAtHpPercent: 50, timeBetweenAttacks: 3, attackSequence: [] }] });
+            currentData.bosses.push({ bossID: "Boss_1", spawnTime: 300, phases: [{ phaseName: "Блок 1", startAtHpPercent: 100, endAtHpPercent: 0, timeBetweenAttacks: 3, attackSequence: [{ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 }] }] });
             render();
         }
         function addPhase(btn) {
@@ -955,6 +961,26 @@
             currentData.bosses[bIdx].phases.push({ phaseName: "Новая Фаза", startAtHpPercent: newStart, endAtHpPercent: newStart / 2, timeBetweenAttacks: 2, attackSequence: [] });
             render();
         }
+        // Атака боссу — это новый блок с порогом здоровья и одной атакой внутри.
+        // В данных это по-прежнему «фаза», игра читает их так же; в интерфейсе фаза
+        // как отдельное понятие больше не показывается — блок и есть атака.
+        function addBossAttack(btn) {
+            let bossPanel = btn.closest('.boss-panel');
+            let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
+            let phases = currentData.bosses[bIdx].phases;
+            let prev = phases[phases.length - 1];
+            // Продолжаем лестницу здоровья с того места, где кончился прошлый блок
+            let newStart = prev ? prev.endAtHpPercent : 100;
+            phases.push({
+                phaseName: "Блок " + (phases.length + 1),
+                startAtHpPercent: newStart,
+                endAtHpPercent: Math.max(0, Math.floor(newStart / 2)),
+                timeBetweenAttacks: 3,
+                attackSequence: [{ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 }]
+            });
+            render();
+        }
+
         function addAttack(btn) {
             let phasePanel = btn.closest('.phase-panel');
             let bossPanel = phasePanel.closest('.boss-panel');
