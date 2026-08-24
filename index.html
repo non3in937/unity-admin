@@ -603,22 +603,45 @@
                 let colB = JSON.parse(localStorage.getItem('colBoss') || '[]');
                 let colP = JSON.parse(localStorage.getItem('colPhase') || '[]');
 
+                // Считаем, сколько раз встречается каждый ID. Загрузчик кладёт боссов
+                // в словарь по bossID, поэтому одинаковые ID молча затирают друг друга:
+                // остаётся последний, а остальные боссы своих фаз не находят вовсе
+                // и просто стоят. Ровно так и потерялись атаки 21 августа 2026.
+                let idCount = {};
+                (currentData.bosses || []).forEach(function(b) {
+                    let k = (b.bossID || '').trim();
+                    idCount[k] = (idCount[k] || 0) + 1;
+                });
+
                 if (currentData.bosses) {
                     currentData.bosses.forEach((boss, bIdx) => {
                         let bIdStr = "boss_" + bIdx;
+                        let bId = (boss.bossID || '').trim();
+                        let isDupe = bId !== '' && idCount[bId] > 1;
+                        let phaseCount = (boss.phases || []).length;
+                        let attackTotal = (boss.phases || []).reduce(function(n, ph) { return n + ((ph.attackSequence || []).length); }, 0);
+                        let emptyPhases = (boss.phases || []).filter(function(ph) { return !ph.attackSequence || ph.attackSequence.length === 0; }).length;
+                        let problems = [];
+                        if (bId === '') problems.push('Пустой ID — босс не найдёт свои фазы');
+                        if (isDupe) problems.push('ID «' + escapeHtml(bId) + '» повторяется: останется только последний из них, остальные молча перестанут атаковать');
+                        if (phaseCount === 0) problems.push('Нет ни одной фазы');
+                        if (emptyPhases > 0) problems.push('Фаз без атак: ' + emptyPhases + ' — в них босс будет просто стоять');
                         let bIsCollapsed = colB.includes(bIdStr);
                         let bDisp = bIsCollapsed ? 'none' : 'block';
                         let bIcon = bIsCollapsed ? '▶' : '▼';
 
                         bh += `<div class="panel boss-panel boss-card" style="padding-bottom:5px;">
-                            <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0;" onclick="togglePanelDisplay(this, 'colBoss')">
-                                <span class="fold-icon" style="color:#f48771; margin-right:10px; font-size:14px;">${bIcon}</span>
-                                <span style="font-size: 20px; margin-right:5px;">👹</span>
-                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID (напр. Boss_Eye)" style="flex:2; font-weight:bold; color:#f48771; margin:0;">
-                                <label style="margin:0 10px;" onclick="event.stopPropagation()">Сек:</label>
-                                <input type="number" class="b-time" value="${boss.spawnTime}" onclick="event.stopPropagation()" style="flex:1; margin:0;">
-                                <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
+                            <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colBoss')">
+                                <span class="fold-icon" style="color:#f48771; font-size:14px;">${bIcon}</span>
+                                <span style="font-size:20px;">👹</span>
+                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID, например Boss_1" style="flex:1; min-width:90px; font-weight:bold; color:#f48771; margin:0;">
+                                <span style="font-size:11px; color:#888; white-space:nowrap;">${phaseCount} фаз · ${attackTotal} атак</span>
+                                <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
                             </div>
+                            <div class="row" style="margin-top:8px;" onclick="event.stopPropagation()">
+                                <div style="flex:1"><label style="margin-bottom:3px;">Появление, сек</label><input type="number" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div>
+                            </div>
+                            ${problems.length ? `<div style="margin-top:8px; padding:8px; border-radius:4px; background:#2a1a1a; border-left:3px solid #f48771; color:#f48771; font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                             
                             <div class="boss-content" style="display:${bDisp}; margin-top:15px; border-top: 1px solid #3e3e42; padding-top:15px;">
                                 <div class="phases-list">`;
@@ -630,22 +653,16 @@
                             let pIcon = pIsCollapsed ? '▶' : '▼';
 
                             bh += `<div class="phase-card phase-panel" style="padding-bottom:5px;">
-                                <div class="row" data-foldid="${pIdStr}" style="align-items: center; cursor:pointer;" onclick="togglePanelDisplay(this, 'colPhase')">
-                                    <span class="fold-icon" style="color:#c586c0; margin-right:10px; font-size:12px;">${pIcon}</span>
-                                    <input type="text" class="p-name" value="${escapeHtml(phase.phaseName)}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:2; color:#c586c0; margin:0; font-weight:bold; background:transparent; border-color:#c586c0;">
-                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
-                                        <label style="margin:0;">Start HP %</label>
-                                        <input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;">
-                                    </div>
-                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
-                                        <label style="margin:0;">End HP %</label>
-                                        <input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;">
-                                    </div>
-                                    <div style="flex:1; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
-                                        <label style="margin:0;">Пауза Атак</label>
-                                        <input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;">
-                                    </div>
-                                    <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.phase-panel').remove(); syncData(); render();" style="margin-left:10px;">✖</button>
+                                <div class="header-row" data-foldid="${pIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colPhase')">
+                                    <span class="fold-icon" style="color:#c586c0; font-size:12px;">${pIcon}</span>
+                                    <input type="text" class="p-name" value="${escapeHtml(phase.phaseName)}" onclick="event.stopPropagation()" placeholder="Имя фазы" style="flex:1; min-width:90px; color:#c586c0; margin:0; font-weight:bold; background:transparent; border-color:#c586c0;">
+                                    <span style="font-size:11px; color:${(phase.attackSequence||[]).length ? '#888' : '#f48771'}; white-space:nowrap;">${(phase.attackSequence||[]).length} атак</span>
+                                    <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.phase-panel').remove(); syncData(); render();">✖</button>
+                                </div>
+                                <div class="row" style="margin-top:8px;" onclick="event.stopPropagation()">
+                                    <div style="flex:1"><label style="margin-bottom:3px;">Start HP %</label><input type="number" class="p-start-hp" value="${phase.startAtHpPercent !== undefined ? phase.startAtHpPercent : 100}" style="margin:0; border-color:#2ea043;"></div>
+                                    <div style="flex:1"><label style="margin-bottom:3px;">End HP %</label><input type="number" class="p-end-hp" value="${phase.endAtHpPercent !== undefined ? phase.endAtHpPercent : 50}" style="margin:0; border-color:#8a2a2a;"></div>
+                                    <div style="flex:1"><label style="margin-bottom:3px;">Пауза атак</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;"></div>
                                 </div>
                                 
                                 <div class="phase-content" style="display:${pDisp}; margin-top:10px; border-top: 1px dashed #555; padding-top:10px;">
