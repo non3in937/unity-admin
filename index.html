@@ -248,14 +248,37 @@
             if (!window.__baselineValues) window.__baselineValues = {};
             return window.__baselineValues;
         }
-        function revertScopes() { return promoteTabs().map(function(t){ return 'tab-' + t; }); }
+        // Боссы тоже откатываются, хотя карточки наверх там не всплывают.
+        function revertScopes() { return promoteTabs().map(function(t){ return 'tab-' + t; }).concat(['tab-bosses']); }
+
+        // Отпечаток структуры боссов: сколько боссов, блоков и атак в каждом. Поля там
+        // пронумерованы по порядку, поэтому после удаления или добавления номера съезжают
+        // и прежнее значение прилипло бы к соседнему полю — кнопка соврала бы. При любом
+        // изменении структуры снимок по боссам сбрасывается: лучше пропасть, чем соврать.
+        function bossShape() {
+            return (currentData && currentData.bosses ? currentData.bosses : [])
+                .map(function(b) {
+                    return (b.phases || []).map(function(ph) { return (ph.attackSequence || []).length; }).join('.');
+                }).join('|');
+        }
+
+        function dropBossBaselineIfReshaped() {
+            let store = baselineStore();
+            let now = bossShape();
+            if (window.__baselineBossShape === undefined) { window.__baselineBossShape = now; return; }
+            if (window.__baselineBossShape === now) return;
+            Object.keys(store).forEach(function(k) {
+                if (k.indexOf('b_') === 0 || k.indexOf('p_') === 0 || k.indexOf('a_') === 0) delete store[k];
+            });
+            window.__baselineBossShape = now;
+        }
 
         function eachRevertInput(fn) {
             revertScopes().forEach(function(scopeId) {
                 let scope = document.getElementById(scopeId);
                 if (!scope) return;
                 scope.querySelectorAll('input').forEach(function(inp) {
-                    if (inp.id && inp.type !== 'checkbox') fn(inp);
+                    if (inp.id && inp.type !== 'hidden') fn(inp);
                 });
             });
         }
@@ -263,21 +286,25 @@
         function snapshotBaseline() {
             let store = baselineStore();
             Object.keys(store).forEach(function(k){ delete store[k]; });
-            eachRevertInput(function(inp){ store[inp.id] = inp.value; });
+            eachRevertInput(function(inp){ store[inp.id] = (inp.type === 'checkbox') ? String(inp.checked) : inp.value; });
+            window.__baselineBossShape = bossShape();
             refreshRevertButtons();
         }
 
         function updateRevertButton(inp) {
-            if (!inp || !inp.id || inp.type === 'checkbox') return;
+            if (!inp || !inp.id || inp.type === 'hidden') return;
             let store = baselineStore();
             if (!(inp.id in store)) return;          // поле появилось после снимка — сравнивать не с чем
             let host = inp.parentElement;
             if (!host) return;
+
+            let isCheck = (inp.type === 'checkbox');
             let old = store[inp.id];
+            let cur = isCheck ? String(inp.checked) : inp.value;
             let btn = host.querySelector('.revert-btn[data-for="' + inp.id + '"]');
 
-            if (String(inp.value) === String(old)) {
-                if (btn) { btn.remove(); inp.style.paddingRight = ''; }
+            if (String(cur) === String(old)) {
+                if (btn) { btn.remove(); if (!isCheck) inp.style.paddingRight = ''; }
                 return;
             }
 
@@ -288,19 +315,29 @@
                 btn.className = 'revert-btn';
                 btn.setAttribute('data-for', inp.id);
                 btn.addEventListener('click', function() {
-                    inp.value = baselineStore()[inp.id];
+                    let was = baselineStore()[inp.id];
+                    if (isCheck) inp.checked = (was === 'true');
+                    else inp.value = was;
                     inp.dispatchEvent(new Event('input', { bubbles: true }));
+                    inp.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 host.appendChild(btn);
             }
-            btn.textContent = '↺ ' + old;
-            btn.title = 'Вернуть прежнее значение: ' + old;
+
+            let label = isCheck ? (old === 'true' ? 'вкл' : 'выкл') : old;
+            btn.textContent = '↺ ' + label;
+            btn.title = 'Вернуть прежнее значение: ' + label;
             btn.style.top = inp.offsetTop + 'px';
             btn.style.height = inp.offsetHeight + 'px';
-            inp.style.paddingRight = (btn.offsetWidth + 10) + 'px';
+            // У галки поле узкое и отступом её не подвинешь — кнопку ставим следом за ней
+            if (isCheck) { btn.style.right = 'auto'; btn.style.left = (inp.offsetLeft + inp.offsetWidth + 8) + 'px'; }
+            else inp.style.paddingRight = (btn.offsetWidth + 10) + 'px';
         }
 
-        function refreshRevertButtons() { eachRevertInput(updateRevertButton); }
+        function refreshRevertButtons() {
+            try { dropBossBaselineIfReshaped(); } catch (e) {}
+            eachRevertInput(updateRevertButton);
+        }
 
         function promoteLastCard() {
             let tab = currentTabName();
@@ -634,7 +671,7 @@
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
                             </div>
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid #3e3e42; padding-top:12px;">
-                                <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
+                                <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:#2a1a1a; border-left:3px solid #f48771; color:#f48771; font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
@@ -660,13 +697,13 @@
                                 <div class="phase-content" style="display:${aDisp}; margin-top:10px; border-top:1px dashed #555; padding-top:10px;">
                                     <input type="hidden" class="p-name" value="${escapeHtml(phase.phaseName || ('Блок ' + (pIdx + 1)))}">
                                     <div class="row" style="margin-bottom:10px;">
-                                        <div style="flex:1"><label style="margin-bottom:3px;">Включается на HP %</label><input type="number" class="p-start-hp" value="${hpFrom}" style="margin:0; border-color:#2ea043;"></div>
-                                        <div style="flex:1"><label style="margin-bottom:3px;">Работает до HP %</label><input type="number" class="p-end-hp" value="${hpTo}" style="margin:0; border-color:#8a2a2a;"></div>
-                                        <div style="flex:1"><label style="margin-bottom:3px;">Пауза, сек</label><input type="number" step="0.1" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;"></div>
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Включается на HP %</label><input type="number" id="p_${bIdx}_${pIdx}_start" class="p-start-hp" value="${hpFrom}" style="margin:0; border-color:#2ea043;"></div>
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Работает до HP %</label><input type="number" id="p_${bIdx}_${pIdx}_end" class="p-end-hp" value="${hpTo}" style="margin:0; border-color:#8a2a2a;"></div>
+                                        <div style="flex:1"><label style="margin-bottom:3px;">Пауза, сек</label><input type="number" step="0.1" id="p_${bIdx}_${pIdx}_delay" class="p-delay" value="${phase.timeBetweenAttacks}" style="margin:0;"></div>
                                     </div>
                                     <div class="attacks-list">`;
 
-                            seq.forEach(attack => { bh += generateAttackHtml(attack); });
+                            seq.forEach((attack, aIdx) => { bh += generateAttackHtml(attack, `a_${bIdx}_${pIdx}_${aIdx}`); });
 
                             bh += `</div>
                                     <button class="btn-add" onclick="addAttack(this)" style="background:#0e639c; padding:6px; font-size:12px; margin-top:8px;">+ Ещё атака в этот же блок</button>
@@ -852,7 +889,11 @@
         }
 
         // 🔥 ПОЛНЫЙ ВЫВОД АТАК С МОБИЛЬНЫМИ ПОДСКАЗКАМИ 🔥
-        function generateAttackHtml(attack) {
+        // idPrefix нужен только кнопке отката: она узнаёт поле по id и по нему же
+        // помнит прежнее значение. На сохранение id не влияет — оно читает классы
+        // и data-key. Без префикса (вызов из старого кода) поля просто остаются без id.
+        function generateAttackHtml(attack, idPrefix) {
+            let idFor = k => idPrefix ? ` id="${idPrefix}_${k}"` : '';
             let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
             let paramsHtml = '';
             
@@ -860,9 +901,9 @@
                 let inputHtml = '';
                 if (type === "checkbox") {
                     let isChecked = val !== false;
-                    inputHtml = `<input type="checkbox" class="a-param" data-key="${key}" ${isChecked ? 'checked' : ''} style="width:20px; height:20px; margin: 0;">`;
+                    inputHtml = `<input type="checkbox"${idFor(key)} class="a-param" data-key="${key}" ${isChecked ? 'checked' : ''} style="width:20px; height:20px; margin: 0;">`;
                 } else {
-                    inputHtml = `<input type="${type}" ${step ? 'step="'+step+'"' : ''} class="a-param" data-key="${key}" value="${val}">`;
+                    inputHtml = `<input type="${type}"${idFor(key)} ${step ? 'step="'+step+'"' : ''} class="a-param" data-key="${key}" value="${val}">`;
                 }
                 
                 return `<div style="flex: 1; min-width: 160px; margin-bottom: 15px; display: flex; flex-direction: column;">
