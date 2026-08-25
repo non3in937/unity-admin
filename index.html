@@ -249,7 +249,7 @@
             return window.__baselineValues;
         }
         // Боссы тоже откатываются, хотя карточки наверх там не всплывают.
-        function revertScopes() { return promoteTabs().map(function(t){ return 'tab-' + t; }).concat(['tab-bosses']); }
+        function revertScopes() { return promoteTabs().map(function(t){ return 'tab-' + t; }).concat(['tab-bosses', 'tab-waves']); }
 
         // Отпечаток структуры боссов: сколько боссов, блоков и атак в каждом. Поля там
         // пронумерованы по порядку, поэтому после удаления или добавления номера съезжают
@@ -262,15 +262,35 @@
                 }).join('|');
         }
 
-        function dropBossBaselineIfReshaped() {
-            let store = baselineStore();
-            let now = bossShape();
-            if (window.__baselineBossShape === undefined) { window.__baselineBossShape = now; return; }
-            if (window.__baselineBossShape === now) return;
-            Object.keys(store).forEach(function(k) {
-                if (k.indexOf('b_') === 0 || k.indexOf('p_') === 0 || k.indexOf('a_') === 0) delete store[k];
+        // Волны сложнее боссов: их таскают мышкой и переносят между папками, а количество
+        // при этом не меняется — счётом такое не поймать. Поэтому в отпечаток входит
+        // ПОРЯДОК: имена папок, а внутри — имена волн и их наборы врагов. Перетащил,
+        // переименовал, сменил врага — снимок сбрасывается. Правка чисел отпечаток
+        // не трогает, ради неё кнопки и нужны.
+        function waveShape() {
+            let byFolder = {};
+            (currentData && currentData.phases ? currentData.phases : []).forEach(function(p) {
+                let f = p.folder || "Основная папка";
+                if (!byFolder[f]) byFolder[f] = [];
+                byFolder[f].push((p.phaseName || '') + '/' + (p.enemies || []).map(function(e){ return e.enemyID; }).join('+'));
             });
-            window.__baselineBossShape = now;
+            return Object.keys(byFolder).map(function(f){ return f + ':' + byFolder[f].join(','); }).join('|');
+        }
+
+        function dropBaselineIfReshaped(shapeFn, stateKey, prefixes) {
+            let store = baselineStore();
+            let now = shapeFn();
+            if (window[stateKey] === undefined) { window[stateKey] = now; return; }
+            if (window[stateKey] === now) return;
+            Object.keys(store).forEach(function(k) {
+                if (prefixes.some(function(pre){ return k.indexOf(pre) === 0; })) delete store[k];
+            });
+            window[stateKey] = now;
+        }
+
+        function dropStructuralBaselines() {
+            dropBaselineIfReshaped(bossShape, '__baselineBossShape', ['b_', 'p_', 'a_']);
+            dropBaselineIfReshaped(waveShape, '__baselineWaveShape', ['w_']);
         }
 
         function eachRevertInput(fn) {
@@ -288,6 +308,7 @@
             Object.keys(store).forEach(function(k){ delete store[k]; });
             eachRevertInput(function(inp){ store[inp.id] = (inp.type === 'checkbox') ? String(inp.checked) : inp.value; });
             window.__baselineBossShape = bossShape();
+            window.__baselineWaveShape = waveShape();
             refreshRevertButtons();
         }
 
@@ -335,7 +356,7 @@
         }
 
         function refreshRevertButtons() {
-            try { dropBossBaselineIfReshaped(); } catch (e) {}
+            try { dropStructuralBaselines(); } catch (e) {}
             eachRevertInput(updateRevertButton);
         }
 
@@ -736,7 +757,9 @@
 
             let collapsed = JSON.parse(localStorage.getItem('collapsedFolders') || '[]');
 
+            let fIdx = -1;
             for (let fName in folders) {
+                fIdx++;
                 let fData = folders[fName];
                 let disabledClass = fData.isEnabled ? '' : 'disabled-folder';
                 
@@ -756,8 +779,8 @@
                     </div>
                     <div class="folder-content sortable-list" style="display:${displayStyle}; margin-top:15px; min-height:10px; padding-left:15px; border-left:2px solid #3e3e42;">`;
 
-                fData.phases.forEach(p => {
-                    h += generatePhaseHtml(p);
+                fData.phases.forEach((p, pIdx) => {
+                    h += generatePhaseHtml(p, `w_${fIdx}_${pIdx}`);
                 });
                 
                 h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle}; background:#1f6b35;">➕ Добавить Волну в папку</button></div>`;
@@ -880,10 +903,13 @@
             try { updatePreviews(); } catch(e) {} 
         }
 
-        function generatePhaseHtml(p) {
+        // idPrefix — только для кнопки отката, как и у атак боссов. Сохранение читает
+        // классы, поэтому id ни на что больше не влияют.
+        function generatePhaseHtml(p, idPrefix) {
+            let idFor = k => idPrefix ? ` id="${idPrefix}_${k}"` : '';
             let start = p.startTime || 0; let end = p.endTime || 0;
-            let h = `<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span><input type="text" class="p-name" value="${escapeHtml(p.phaseName)}" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start" value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end" value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int" value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch" value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
-            if (p.enemies) { p.enemies.forEach(e => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; }); if (!isKnown) optionsHtml += `<option value="${escapeHtml(e.enemyID)}" selected>${escapeHtml(e.enemyID)} (Неизвестный)</option>`; h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w" value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`; }); }
+            let h = `<div class="panel phase-panel"><div class="header-row"><div class="drag-handle">☰</div><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:#dcdcaa; margin-bottom:3px; font-weight:bold;">00:00 - 00:00</span><input type="text" class="p-name"${idFor("name")} value="${escapeHtml(p.phaseName)}" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="removePhase(this)" style="margin-left:10px">✖</button></div><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start"${idFor("start")} value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end"${idFor("end")} value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int"${idFor("int")} value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch"${idFor("batch")} value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
+            if (p.enemies) { p.enemies.forEach((e, eIdx) => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; }); if (!isKnown) optionsHtml += `<option value="${escapeHtml(e.enemyID)}" selected>${escapeHtml(e.enemyID)} (Неизвестный)</option>`; h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w"${idFor('e' + eIdx + '_w')} value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`; }); }
             h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px; background:#1e1e1e; border: 1px solid #3e3e42;">+ Враг</button></div>`;
             return h;
         }
