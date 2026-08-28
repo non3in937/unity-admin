@@ -1,0 +1,2361 @@
+{
+  "version": 1,
+  "updated": "2026-08-29",
+  "tasks": [
+    {
+      "id": "obuchenie-podskazki-po-hodu-pervogo--1",
+      "title": "Обучение: подсказки по ходу первого забега",
+      "section": "Геймплей",
+      "stage": "Э1",
+      "disciplines": [
+        "Код",
+        "ГД",
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Система подсказок: показ по триггеру, скрытие, «уже видел» в сохранении",
+          "done": false
+        },
+        {
+          "text": "Сценарий: что показываем, в каком порядке, по какому событию",
+          "done": false
+        },
+        {
+          "text": "Подсказки управления: свайп, стрельба, переключение режима огня",
+          "done": false
+        },
+        {
+          "text": "Подсказки прокачки: первая карточка, что такое слоты",
+          "done": false
+        },
+        {
+          "text": "Подсказки боя: смена оружия и рюкзак, ульта, вырывание из захвата",
+          "done": false
+        },
+        {
+          "text": "Графика подсказок: рамки, стрелки, рука для тапа",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "balans-zabega-na-pyatnadcat-minut-2",
+      "title": "Баланс забега на пятнадцать минут",
+      "section": "Геймплей",
+      "stage": "Э1",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Плотность волн по времени",
+          "done": false
+        },
+        {
+          "text": "Состав врагов в каждой фазе",
+          "done": false
+        },
+        {
+          "text": "Прогон целиком: не пусто и не завал",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "proverit-styk-voln-s-bossami-3",
+      "title": "Проверить стык волн с боссами",
+      "section": "Геймплей",
+      "stage": "Э1",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "На боссфайте время не тикает — проверить, что фазы не кончаются на секунде боя",
+          "done": false
+        },
+        {
+          "text": "Прогнать все три боя и посмотреть, что после них враги есть",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "balans-prokachki-4",
+      "title": "Баланс прокачки",
+      "section": "Геймплей",
+      "stage": "Э1",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Кривая уровней: сколько кристаллов на уровень",
+          "done": false
+        },
+        {
+          "text": "Частота выпадения карточек",
+          "done": false
+        },
+        {
+          "text": "Карточки между собой: ни одной обязательной, ни одной пустой",
+          "done": false
+        },
+        {
+          "text": "Пять эволюций: момент получения и сила относительно обычного оружия",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sverit-slozhnost-po-vsem-chetyrem-ci-5",
+      "title": "Сверить сложность по всем четырём циклам",
+      "section": "Геймплей",
+      "stage": "Э1",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Убедиться, что роста сложности нет",
+          "done": false
+        },
+        {
+          "text": "Проверить, что четвёртый цикл проходится так же, как первый",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "dodelat-pervogo-bossa-6",
+      "title": "Доделать первого босса",
+      "section": "Боссы",
+      "stage": "Э1",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Фазы по здоровью",
+          "done": false
+        },
+        {
+          "text": "Набор атак",
+          "done": false
+        },
+        {
+          "text": "Тайминги атак",
+          "done": false
+        },
+        {
+          "text": "Слабые точки",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "udalit-dva-nenastroennyh-prefaba-bos-7",
+      "title": "Удалить два ненастроенных префаба Boss_2 и Boss_3",
+      "section": "Боссы",
+      "stage": "Э1",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Проверить, что на них никто не ссылается",
+          "done": false
+        },
+        {
+          "text": "Удалить префабы вместе с .meta",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sobrat-vtorogo-bossa-8",
+      "title": "Собрать второго босса",
+      "section": "Боссы",
+      "stage": "Э2",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Фазы",
+          "done": false
+        },
+        {
+          "text": "Атаки",
+          "done": false
+        },
+        {
+          "text": "Слабые точки",
+          "done": false
+        },
+        {
+          "text": "Расписание появления",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sobrat-tretego-bossa-9",
+      "title": "Собрать третьего босса",
+      "section": "Боссы",
+      "stage": "Э2",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Фазы",
+          "done": false
+        },
+        {
+          "text": "Атаки",
+          "done": false
+        },
+        {
+          "text": "Слабые точки",
+          "done": false
+        },
+        {
+          "text": "Расписание появления",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "peredelat-poyavlenie-bossa-10",
+      "title": "Переделать появление босса",
+      "section": "Боссы",
+      "stage": "Э2",
+      "disciplines": [
+        "Код",
+        "VFX"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Переписать секвенсор: выкинуть цилиндр и сворачивание врагов",
+          "done": false
+        },
+        {
+          "text": "Эффект светового взрыва",
+          "done": false
+        },
+        {
+          "text": "Логика исчезновения врагов под взрывом",
+          "done": false
+        },
+        {
+          "text": "Логика исчезновения окружения под взрывом",
+          "done": false
+        },
+        {
+          "text": "Свести тайминги: взрыв, исчезновение, выход босса",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "rolik-poyavleniya-bossa-11",
+      "title": "Ролик появления босса",
+      "section": "Боссы",
+      "stage": "Э2",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Решить: 2D или 3D",
+          "done": false
+        },
+        {
+          "text": "Сделать ролик",
+          "done": false
+        },
+        {
+          "text": "Вставить и связать с началом боя",
+          "done": false
+        },
+        {
+          "text": "Пропуск по тапу",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "smert-bossa-12",
+      "title": "Смерть босса",
+      "section": "Боссы",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним",
+        "VFX"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Анимация смерти",
+          "done": false
+        },
+        {
+          "text": "Эффект смерти",
+          "done": false
+        },
+        {
+          "text": "Связать с выпадением лута и выходом из боя",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "napisat-istoriyu-13",
+      "title": "Написать историю",
+      "section": "Нарратив",
+      "stage": "Э2",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "События первого цикла",
+          "done": false
+        },
+        {
+          "text": "События второго цикла",
+          "done": false
+        },
+        {
+          "text": "События третьего цикла",
+          "done": false
+        },
+        {
+          "text": "События четвёртого цикла",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "napisat-chetyre-nachala-cikla-i-chet-14",
+      "title": "Написать четыре начала цикла и четыре сцены дома",
+      "section": "Нарратив",
+      "stage": "Э2",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Четыре начала — герой помнит петлю",
+          "done": false
+        },
+        {
+          "text": "Четыре сцены дома — вечер разматывается назад",
+          "done": false
+        },
+        {
+          "text": "Свести: чтобы в конце он оказался в машине",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zastavki-nachala-i-konca-cikla-vosem-15",
+      "title": "Заставки начала и конца цикла: восемь штук",
+      "section": "Нарратив",
+      "stage": "Э2",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Решить: 2D или 3D",
+          "done": false
+        },
+        {
+          "text": "Четыре заставки начала",
+          "done": false
+        },
+        {
+          "text": "Четыре заставки конца",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        },
+        {
+          "text": "Пропуск по тапу",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "logika-ciklov-16",
+      "title": "Логика циклов",
+      "section": "Нарратив",
+      "stage": "Э2",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Счётчик пройденных циклов",
+          "done": false
+        },
+        {
+          "text": "Подстановка нужного начала",
+          "done": false
+        },
+        {
+          "text": "Подстановка нужной сцены дома",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-to-be-continued-i-vozmozhnost--17",
+      "title": "Экран «to be continued» и возможность начать заново",
+      "section": "Нарратив",
+      "stage": "Э2",
+      "disciplines": [
+        "Код",
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика экрана",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        },
+        {
+          "text": "Рестарт после четвёртого круга",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "art-direkshn-18",
+      "title": "Арт-дирекшн",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Референсы",
+          "done": false
+        },
+        {
+          "text": "Палитра",
+          "done": false
+        },
+        {
+          "text": "Правила стиля, чтобы всё сходилось",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "koncept-interfeysa-i-ux-19",
+      "title": "Концепт интерфейса и UX",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Схема экранов и переходов",
+          "done": false
+        },
+        {
+          "text": "Визуальный язык: панели, кнопки, типографика",
+          "done": false
+        },
+        {
+          "text": "Правила для HUD",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "edinaya-uv-razvertka-dlya-vsego-oruz-20",
+      "title": "Единая UV-развёртка для всего оружия",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Договориться о лейауте",
+          "done": false
+        },
+        {
+          "text": "Проверить на пистолете",
+          "done": false
+        },
+        {
+          "text": "Зафиксировать как правило для всех моделей",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "bazovyy-arsenal-chetyre-stvola-21",
+      "title": "Базовый арсенал: четыре ствола",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Автомат",
+          "done": false
+        },
+        {
+          "text": "Дробовик",
+          "done": false
+        },
+        {
+          "text": "Гранатомёт ульты",
+          "done": false
+        },
+        {
+          "text": "Миниган эволюции",
+          "done": false
+        },
+        {
+          "text": "Вставить: префабы, точки крепления, привязка к анимациям",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "tekstura-ruk-igroka-22",
+      "title": "Текстура рук игрока",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Текстура",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "vragi-chetyre-vida-23",
+      "title": "Враги: четыре вида",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Дрон: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Танк со взрывом: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Танк с ядом: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Бронированный: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Вставить: зоны урона, отрывание головы и ног",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "komplekty-odezhdy-dlya-raznoobraziya-24",
+      "title": "Комплекты одежды для разнообразия врагов",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Определить число комплектов",
+          "done": false
+        },
+        {
+          "text": "Сделать комплекты",
+          "done": false
+        },
+        {
+          "text": "Вставить в систему случайной одежды",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "modeli-treh-bossov-25",
+      "title": "Модели трёх боссов",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Босс 1: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Босс 2: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Босс 3: модель и текстура",
+          "done": false
+        },
+        {
+          "text": "Вставить: слабые точки, точки атак",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "napolnenie-treh-biomov-26",
+      "title": "Наполнение трёх биомов",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Биом 1",
+          "done": false
+        },
+        {
+          "text": "Биом 2",
+          "done": false
+        },
+        {
+          "text": "Биом 3",
+          "done": false
+        },
+        {
+          "text": "Собрать в дорогу и настроить переходы",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "prepyatstviya-27",
+      "title": "Препятствия",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Дерево",
+          "done": false
+        },
+        {
+          "text": "Кусты",
+          "done": false
+        },
+        {
+          "text": "Джамп",
+          "done": false
+        },
+        {
+          "text": "Стена",
+          "done": false
+        },
+        {
+          "text": "Вставить в дорогу",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "lut-kristall-i-aptechka-28",
+      "title": "Лут: кристалл и аптечка",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Кристалл",
+          "done": false
+        },
+        {
+          "text": "Аптечка",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "osveschenie-i-materialy-29",
+      "title": "Освещение и материалы",
+      "section": "Арт",
+      "stage": "Э2",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Настроить свет под свои шейдеры",
+          "done": false
+        },
+        {
+          "text": "Свести материалы, чтобы всё жило в одном свете",
+          "done": false
+        },
+        {
+          "text": "Проверить во всех трёх биомах",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "tri-stilya-skinov-pyatnadcat-modeley-30",
+      "title": "Три стиля скинов — пятнадцать моделей",
+      "section": "Арт",
+      "stage": "Э3",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Стиль 1: пять стволов",
+          "done": false
+        },
+        {
+          "text": "Стиль 2: пять стволов",
+          "done": false
+        },
+        {
+          "text": "Стиль 3: пять стволов",
+          "done": false
+        },
+        {
+          "text": "Вставить: подмена модели по выбранному стилю",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sem-raskrasok-31",
+      "title": "Семь раскрасок",
+      "section": "Арт",
+      "stage": "Э3",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Раскраска 1 — базовый вид арсенала",
+          "done": false
+        },
+        {
+          "text": "Раскраска 2",
+          "done": false
+        },
+        {
+          "text": "Раскраска 3",
+          "done": false
+        },
+        {
+          "text": "Раскраска 4",
+          "done": false
+        },
+        {
+          "text": "Раскраска 5",
+          "done": false
+        },
+        {
+          "text": "Раскраска 6",
+          "done": false
+        },
+        {
+          "text": "Раскраска 7",
+          "done": false
+        },
+        {
+          "text": "Вставить: подмена материала разом на всём оружии",
+          "done": false
+        },
+        {
+          "text": "Проверить каждую на всех двадцати моделях",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "tri-brelka-i-tochki-krepleniya-32",
+      "title": "Три брелка и точки крепления",
+      "section": "Арт",
+      "stage": "Э3",
+      "disciplines": [
+        "3D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Брелок 1",
+          "done": false
+        },
+        {
+          "text": "Брелок 2",
+          "done": false
+        },
+        {
+          "text": "Брелок 3",
+          "done": false
+        },
+        {
+          "text": "Точки крепления на пяти стволах",
+          "done": false
+        },
+        {
+          "text": "Вставить: надевание и болтание",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "animacii-oruzhiya-33",
+      "title": "Анимации оружия",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Доставание и убирание",
+          "done": false
+        },
+        {
+          "text": "Реакции автомата на мир",
+          "done": false
+        },
+        {
+          "text": "Реакции дробовика на мир",
+          "done": false
+        },
+        {
+          "text": "Реакции гранатомёта и минигана",
+          "done": false
+        },
+        {
+          "text": "Вставить в аниматор и повесить события",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "smert-igroka-34",
+      "title": "Смерть игрока",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Клип",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "mini-igra-vyryvaniya-iz-zahvata-35",
+      "title": "Мини-игра вырывания из захвата",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Клип",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "animacii-chetyreh-vragov-36",
+      "title": "Анимации четырёх врагов",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Дрон: полёт, атака, засада, смерть",
+          "done": false
+        },
+        {
+          "text": "Танк со взрывом",
+          "done": false
+        },
+        {
+          "text": "Танк с ядом",
+          "done": false
+        },
+        {
+          "text": "Бронированный",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "animacii-treh-bossov-37",
+      "title": "Анимации трёх боссов",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Босс 1: атаки, урон, смерть",
+          "done": false
+        },
+        {
+          "text": "Босс 2",
+          "done": false
+        },
+        {
+          "text": "Босс 3",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zapolnit-pustye-klipy-38",
+      "title": "Заполнить пустые клипы",
+      "section": "Анимация",
+      "stage": "Э2",
+      "disciplines": [
+        "Аним"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Захват",
+          "done": false
+        },
+        {
+          "text": "Карточки",
+          "done": false
+        },
+        {
+          "text": "Эволюции",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "svoy-effekt-kazhdoy-iz-pyati-evolyuc-39",
+      "title": "Свой эффект каждой из пяти эволюций",
+      "section": "Эффекты",
+      "stage": "Э2",
+      "disciplines": [
+        "VFX",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Ураганный стрейф",
+          "done": false
+        },
+        {
+          "text": "Абсолютный контроль",
+          "done": false
+        },
+        {
+          "text": "Свинцовый бур",
+          "done": false
+        },
+        {
+          "text": "Самонаведение",
+          "done": false
+        },
+        {
+          "text": "Прорыв танка",
+          "done": false
+        },
+        {
+          "text": "Вставить все пять",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "boevye-effekty-vmesto-vremennyh-40",
+      "title": "Боевые эффекты вместо временных",
+      "section": "Эффекты",
+      "stage": "Э2",
+      "disciplines": [
+        "VFX",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Попадания и кровь",
+          "done": false
+        },
+        {
+          "text": "Взрывы",
+          "done": false
+        },
+        {
+          "text": "Ядовитое облако",
+          "done": false
+        },
+        {
+          "text": "Заморозка и осколки",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "dulnye-vspyshki-i-trassery-na-pyat-s-41",
+      "title": "Дульные вспышки и трассеры на пять стволов",
+      "section": "Эффекты",
+      "stage": "Э2",
+      "disciplines": [
+        "VFX",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Сделать",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "effekty-prepyatstviy-i-podbora-luta-42",
+      "title": "Эффекты препятствий и подбора лута",
+      "section": "Эффекты",
+      "stage": "Э2",
+      "disciplines": [
+        "VFX",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Кусты",
+          "done": false
+        },
+        {
+          "text": "Дерево",
+          "done": false
+        },
+        {
+          "text": "Стена",
+          "done": false
+        },
+        {
+          "text": "Подбор лута",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "hud-43",
+      "title": "HUD",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Прицелы",
+          "done": false
+        },
+        {
+          "text": "Полоски здоровья",
+          "done": false
+        },
+        {
+          "text": "Счётчики",
+          "done": false
+        },
+        {
+          "text": "Значки состояний",
+          "done": false
+        },
+        {
+          "text": "Иконки оружия и слотов",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ikonki-kartochek-prokachki-i-evolyuc-44",
+      "title": "Иконки карточек прокачки и эволюций",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Иконки карточек",
+          "done": false
+        },
+        {
+          "text": "Иконки пяти эволюций",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-zagruzki-45",
+      "title": "Экран загрузки",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка вместо голой полоски прогресса",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-vybora-kartochek-46",
+      "title": "Экран выбора карточек",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-polucheniya-evolyucii-47",
+      "title": "Экран получения эволюции",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        },
+        {
+          "text": "Джус: выезд иконки и скейлы",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-pauzy-48",
+      "title": "Экран паузы",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "lobbi-49",
+      "title": "Лобби",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка: вход в забег, магазин, кабинет, настройки",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-rezultatov-zabega-50",
+      "title": "Экран результатов забега",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        },
+        {
+          "text": "Начисленная валюта и полёт монеток",
+          "done": false
+        },
+        {
+          "text": "Кнопка «удвоить»: ролик или тикет",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "magazin-51",
+      "title": "Магазин",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Карточки товаров",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "kabinet-igroka-52",
+      "title": "Кабинет игрока",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        },
+        {
+          "text": "Предпросмотр оружия: покрутить и посмотреть",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ekran-nastroek-53",
+      "title": "Экран настроек",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "2D",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Графика",
+          "done": false
+        },
+        {
+          "text": "Сборка",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "perehody-mezhdu-ekranami-54",
+      "title": "Переходы между экранами",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Схема переходов",
+          "done": false
+        },
+        {
+          "text": "Реализация",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "dzhus-interfeysa-55",
+      "title": "Джус интерфейса",
+      "section": "Интерфейс",
+      "stage": "Э2",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Решить, берём ли Feel — он куплен и лежит без дела",
+          "done": false
+        },
+        {
+          "text": "Отклик и переливание кнопок",
+          "done": false
+        },
+        {
+          "text": "Всплывающие числа",
+          "done": false
+        },
+        {
+          "text": "Подсветки наград",
+          "done": false
+        },
+        {
+          "text": "Полёт монеток",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "podderzhka-raznyh-ekranov-56",
+      "title": "Поддержка разных экранов",
+      "section": "Интерфейс",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Соотношения сторон",
+          "done": false
+        },
+        {
+          "text": "Вырезы",
+          "done": false
+        },
+        {
+          "text": "Планшеты",
+          "done": false
+        },
+        {
+          "text": "Прогнать на нескольких устройствах",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "podobrat-i-kupit-biblioteki-57",
+      "title": "Подобрать и купить библиотеки",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Найти подходящие",
+          "done": false
+        },
+        {
+          "text": "Купить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sistema-zvuka-58",
+      "title": "Система звука",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Микшер",
+          "done": false
+        },
+        {
+          "text": "Громкости по группам",
+          "done": false
+        },
+        {
+          "text": "Пул источников",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zvuki-boya-59",
+      "title": "Звуки боя",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Выстрелы пяти стволов",
+          "done": false
+        },
+        {
+          "text": "Попадания",
+          "done": false
+        },
+        {
+          "text": "Рикошеты и пробивания",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zvuki-vragov-i-bossov-60",
+      "title": "Звуки врагов и боссов",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Крик, атака, смерть, захват",
+          "done": false
+        },
+        {
+          "text": "Атаки боссов",
+          "done": false
+        },
+        {
+          "text": "Появление и смерть боссов",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zvuki-mira-61",
+      "title": "Звуки мира",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Бег",
+          "done": false
+        },
+        {
+          "text": "Препятствия",
+          "done": false
+        },
+        {
+          "text": "Подбор лута и оружия",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zvuki-interfeysa-62",
+      "title": "Звуки интерфейса",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Кнопки",
+          "done": false
+        },
+        {
+          "text": "Карточки",
+          "done": false
+        },
+        {
+          "text": "Награды",
+          "done": false
+        },
+        {
+          "text": "Переходы",
+          "done": false
+        },
+        {
+          "text": "Вставить",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "muzyka-63",
+      "title": "Музыка",
+      "section": "Звук",
+      "stage": "Э2",
+      "disciplines": [
+        "Звук",
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Лобби",
+          "done": false
+        },
+        {
+          "text": "Забег",
+          "done": false
+        },
+        {
+          "text": "Боссфайт",
+          "done": false
+        },
+        {
+          "text": "Вставить и настроить переходы",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "dodelat-vibraciyu-tam-gde-ee-net-64",
+      "title": "Доделать вибрацию там, где её нет",
+      "section": "Вибрация",
+      "stage": "Э2",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Препятствия: прыжок, кусты, дерево, стена",
+          "done": false
+        },
+        {
+          "text": "Смерть игрока",
+          "done": false
+        },
+        {
+          "text": "Карточки и получение эволюции",
+          "done": false
+        },
+        {
+          "text": "Боссы: атаки и смерть",
+          "done": false
+        },
+        {
+          "text": "Интерфейс: кнопки и награды",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "svesti-silu-otdachi-mezhdu-oruzhiem-65",
+      "title": "Свести силу отдачи между оружием",
+      "section": "Вибрация",
+      "stage": "Э2",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Прогнать все пять стволов",
+          "done": false
+        },
+        {
+          "text": "Выровнять, чтобы не выбивалось",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sohranenie-na-disk-66",
+      "title": "Сохранение на диск",
+      "section": "Прогресс",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Формат файла и запись",
+          "done": false
+        },
+        {
+          "text": "Чтение и починка битого файла",
+          "done": false
+        },
+        {
+          "text": "Пройденные циклы",
+          "done": false
+        },
+        {
+          "text": "Покупки и надетая косметика",
+          "done": false
+        },
+        {
+          "text": "Валюты и тикеты",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "prodolzhenie-prervannogo-zabega-67",
+      "title": "Продолжение прерванного забега",
+      "section": "Прогресс",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Дотянуть чекпоинт до сохранения на диск",
+          "done": false
+        },
+        {
+          "text": "Предложить продолжить при входе",
+          "done": false
+        },
+        {
+          "text": "Проверить на выходе из приложения",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sistema-kosmetiki-68",
+      "title": "Система косметики",
+      "section": "Мета",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Набор применяется сразу ко всем стволам, включая миниган",
+          "done": false
+        },
+        {
+          "text": "Хранение купленного и надетого",
+          "done": false
+        },
+        {
+          "text": "Применение при старте забега",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "vitrina-magazina-69",
+      "title": "Витрина магазина",
+      "section": "Мета",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Позиции и цены",
+          "done": false
+        },
+        {
+          "text": "Наборы",
+          "done": false
+        },
+        {
+          "text": "Покупка и списание валюты",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "kabinet-primerka-i-nadevanie-70",
+      "title": "Кабинет: примерка и надевание",
+      "section": "Мета",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Список купленного",
+          "done": false
+        },
+        {
+          "text": "Надевание",
+          "done": false
+        },
+        {
+          "text": "Сохранение выбора",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "soft-valyuta-71",
+      "title": "Софт-валюта",
+      "section": "Экономика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Формула начисления по результату забега",
+          "done": false
+        },
+        {
+          "text": "Кошелёк",
+          "done": false
+        },
+        {
+          "text": "Показ на экране результатов",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "hard-valyuta-i-tikety-72",
+      "title": "Хард-валюта и тикеты",
+      "section": "Экономика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Кошелёк хард-валюты",
+          "done": false
+        },
+        {
+          "text": "Покупка тикетов за хард",
+          "done": false
+        },
+        {
+          "text": "Трата тикета вместо просмотра ролика",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "pokupki-za-realnye-dengi-73",
+      "title": "Покупки за реальные деньги",
+      "section": "Экономика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Интеграция с Apple",
+          "done": false
+        },
+        {
+          "text": "Интеграция с Google",
+          "done": false
+        },
+        {
+          "text": "Восстановление покупок",
+          "done": false
+        },
+        {
+          "text": "Обработка ошибок и отмен",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "reklama-za-nagradu-74",
+      "title": "Реклама за награду",
+      "section": "Экономика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Выбрать и подключить сеть",
+          "done": false
+        },
+        {
+          "text": "Кнопка «удвоить»",
+          "done": false
+        },
+        {
+          "text": "Обработка недосмотренного ролика",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "balans-ekonomiki-75",
+      "title": "Баланс экономики",
+      "section": "Экономика",
+      "stage": "Э3",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Сколько софт-валюты приносит забег",
+          "done": false
+        },
+        {
+          "text": "Цены косметики",
+          "done": false
+        },
+        {
+          "text": "Цены хард-валюты и что за неё дают",
+          "done": false
+        },
+        {
+          "text": "Размер награды за ролик",
+          "done": false
+        },
+        {
+          "text": "Цена пачки тикетов",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "profilirovanie-76",
+      "title": "Профилирование",
+      "section": "Производительность",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Определить эталонные телефоны среднего сегмента",
+          "done": false
+        },
+        {
+          "text": "Профилировать забег",
+          "done": false
+        },
+        {
+          "text": "Профилировать боссфайт",
+          "done": false
+        },
+        {
+          "text": "Починить найденное",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "vychistit-proekt-77",
+      "title": "Вычистить проект",
+      "section": "Производительность",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Демо-контент купленных паков",
+          "done": false
+        },
+        {
+          "text": "Неиспользуемые пакеты",
+          "done": false
+        },
+        {
+          "text": "Проверить, что ничего не отвалилось",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ves-sborki-i-vremya-zagruzki-78",
+      "title": "Вес сборки и время загрузки",
+      "section": "Производительность",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Замерить",
+          "done": false
+        },
+        {
+          "text": "Ужать",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "reshit-sudbu-adaptive-performance-79",
+      "title": "Решить судьбу Adaptive Performance",
+      "section": "Производительность",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Подключить или выкинуть",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "podklyuchit-firebase-i-crashlytics-80",
+      "title": "Подключить Firebase и Crashlytics",
+      "section": "Аналитика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Завести проект в Firebase",
+          "done": false
+        },
+        {
+          "text": "Подключить пакет",
+          "done": false
+        },
+        {
+          "text": "Выкинуть старый com.unity.analytics",
+          "done": false
+        },
+        {
+          "text": "Проверить, что падения долетают",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sobytiya-81",
+      "title": "События",
+      "section": "Аналитика",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Забег: старт, конец, докуда дошёл, смерть",
+          "done": false
+        },
+        {
+          "text": "Прокачка: какие карточки и эволюции берут",
+          "done": false
+        },
+        {
+          "text": "Экономика: покупка, ролик, трата тикета",
+          "done": false
+        },
+        {
+          "text": "Проверить, что события приходят",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "panel-po-kotoroy-smotrim-retenshen-82",
+      "title": "Панель, по которой смотрим ретеншен",
+      "section": "Аналитика",
+      "stage": "Э3",
+      "disciplines": [
+        "ГД"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Собрать",
+          "done": false
+        },
+        {
+          "text": "Проверить на своих же запусках",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "nastroyki-zvuka-i-vibracii-83",
+      "title": "Настройки звука и вибрации",
+      "section": "Настройки",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Логика",
+          "done": false
+        },
+        {
+          "text": "Сохранение между запусками",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ikonka-skrinshoty-opisanie-84",
+      "title": "Иконка, скриншоты, описание",
+      "section": "Публикация",
+      "stage": "Э3",
+      "disciplines": [
+        "2D"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Иконка приложения",
+          "done": false
+        },
+        {
+          "text": "Скриншоты",
+          "done": false
+        },
+        {
+          "text": "Описание для сторов",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "politika-konfidencialnosti-i-vozrast-85",
+      "title": "Политика конфиденциальности и возрастной рейтинг",
+      "section": "Публикация",
+      "stage": "Э3",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Политика",
+          "done": false
+        },
+        {
+          "text": "Рейтинг в обоих сторах",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "zavesti-tovary-dlya-pokupok-86",
+      "title": "Завести товары для покупок",
+      "section": "Публикация",
+      "stage": "Э3",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "App Store Connect",
+          "done": false
+        },
+        {
+          "text": "Google Play Console",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "soglasiya-i-razresheniya-87",
+      "title": "Согласия и разрешения",
+      "section": "Публикация",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Запрос на отслеживание в iOS",
+          "done": false
+        },
+        {
+          "text": "Согласие на обработку данных для Европы",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sborka-i-otpravka-na-revyu-88",
+      "title": "Сборка и отправка на ревью",
+      "section": "Публикация",
+      "stage": "Э3",
+      "disciplines": [
+        "Код"
+      ],
+      "status": "todo",
+      "checklist": [
+        {
+          "text": "Собрать релизные билды",
+          "done": false
+        },
+        {
+          "text": "Отправить в оба стора",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "lokalizaciya-vynesti-stroki-perevest-89",
+      "title": "Локализация: вынести строки, перевести историю",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "oblachnoe-sohranenie-90",
+      "title": "Облачное сохранение",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "snayperka-konfig-lezhit-gotovyy-91",
+      "title": "Снайперка — конфиг лежит готовый",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "push-uvedomleniya-paket-v-proekte-es-92",
+      "title": "Пуш-уведомления — пакет в проекте есть",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "tikety-na-peretasovku-vybora-kartoch-93",
+      "title": "Тикеты на перетасовку выбора карточек",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "svoy-zakaznoy-zvuk-vmesto-pokupnyh-b-94",
+      "title": "Свой заказной звук вместо покупных библиотек",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    },
+    {
+      "id": "skiny-vypadenie-v-geymplee-reshili-c-95",
+      "title": "Скины: выпадение в геймплее — решили, что нет, но идея остаётся",
+      "section": "Бэклог",
+      "stage": "—",
+      "disciplines": [],
+      "status": "todo",
+      "checklist": []
+    }
+  ]
+}
