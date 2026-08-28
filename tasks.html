@@ -107,11 +107,8 @@ button.primary:disabled{opacity:.45; cursor:default}
   #board::-webkit-scrollbar{display:none}
   .col{flex:0 0 86%; scroll-snap-align:start; padding:9px; transition:flex-basis .2s}
   #board.z1 .col{flex-basis:56%}
-  #board.z2 .col{flex-basis:39%}
   #board.z1 .card h3{font-size:12.5px}
-  #board.z2 .card h3{font-size:11.5px}
-  #board.z2 .meta, #board.z1 .mv, #board.z2 .mv{display:none}
-  #board.z2 .card{padding:8px}
+  #board.z1 .mv{display:none}
 }
 </style>
 </head>
@@ -229,7 +226,8 @@ function load(){
 function save(){
   if(!data || !token) return;
   say('Сохраняю…');
-  data.updated=new Date().toISOString().slice(0,10);
+  var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
+  data.updated=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   var body={}; body[FILE_NAME]={content:JSON.stringify(data,null,2)+'\n'};
   fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:body})})
@@ -407,7 +405,7 @@ $('board').addEventListener('click',function(e){
   if(e.target.closest('.card')) return;
   var now=Date.now();
   if(now-lastTap<330){
-    zoom=(zoom+1)%3;
+    zoom=(zoom+1)%2;
     $('board').className=zoom?('z'+zoom):'';
     lastTap=0;
   } else lastTap=now;
