@@ -57,6 +57,18 @@ button.primary:disabled{opacity:.45; cursor:default}
 .mv{display:none; gap:6px; margin-top:9px}
 .mv button{flex:1; padding:5px; font-size:12px}
 
+#gate{position:fixed; inset:0; background:var(--bg); z-index:80; display:none;
+  align-items:center; justify-content:center; padding:24px}
+#gate.on{display:flex}
+.gbox{max-width:380px; width:100%; text-align:center}
+.gbox h2{font-size:19px; margin:0 0 10px}
+.gbox p{color:var(--dim); font-size:13.5px; line-height:1.5; margin:0 0 18px}
+.gbox input{width:100%; font:inherit; font-size:16px; color:var(--txt); background:var(--panel2);
+  border:1px solid var(--line); border-radius:9px; padding:11px 13px; margin-bottom:10px}
+.gbox input:focus{outline:none; border-color:var(--acc)}
+.gbox button{width:100%; padding:11px}
+#gerr{color:var(--e1); font-size:13px; min-height:18px; margin-top:10px}
+
 #modal{position:fixed; inset:0; background:#000a; display:none; z-index:50;
   align-items:center; justify-content:center; padding:16px}
 #modal.on{display:flex}
@@ -85,11 +97,21 @@ button.primary:disabled{opacity:.45; cursor:default}
   .filters::-webkit-scrollbar{display:none}
   h1{font-size:14px}
   header button{padding:6px 10px; font-size:13px}
-  #board{grid-template-columns:1fr; padding:10px; gap:10px}
   .mv{display:flex}
-  .col{padding:9px}
-  h1{font-size:15px}
   .sheet{max-height:92vh}
+
+  /* доска едет вбок, соседняя колонка выглядывает — как в джире */
+  #board{display:flex; grid-template-columns:none; padding:10px; gap:10px;
+    overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch}
+  #board::-webkit-scrollbar{display:none}
+  .col{flex:0 0 86%; scroll-snap-align:start; padding:9px; transition:flex-basis .2s}
+  #board.z1 .col{flex-basis:56%}
+  #board.z2 .col{flex-basis:39%}
+  #board.z1 .card h3{font-size:12.5px}
+  #board.z2 .card h3{font-size:11.5px}
+  #board.z2 .meta, #board.z1 .mv, #board.z2 .mv{display:none}
+  #board.z2 .card{padding:8px}
 }
 </style>
 </head>
@@ -123,6 +145,18 @@ button.primary:disabled{opacity:.45; cursor:default}
   </div>
 </div>
 
+<div id="gate">
+  <div class="gbox">
+    <h2>Нужен токен</h2>
+    <p>Тот же GitHub Token, что и в панели баланса. Вводится один раз —
+       дальше доска открывается сама.</p>
+    <input id="gtok" type="password" placeholder="ghp_…" autocomplete="off"
+           autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button class="primary" id="gok">Войти</button>
+    <div id="gerr"></div>
+  </div>
+</div>
+
 <div id="modal">
   <div class="sheet">
     <div class="shead">
@@ -135,9 +169,9 @@ button.primary:disabled{opacity:.45; cursor:default}
 </div>
 
 <script>
-var OWNER='non3in937', REPO='unity-admin', PATH='tasks.json';
-var API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH;
-var data=null, sha=null, dirty=false, openId=null;
+var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
+var API='https://api.github.com/gists/'+GIST_ID;
+var data=null, dirty=false, openId=null, token=null, zoom=0;
 var F={stage:null, section:null};
 var STAGES={'Э1':'--e1','Э2':'--e2','Э3':'--e3','—':'--bl'};
 
@@ -157,31 +191,55 @@ function b64dec(b64){
   return new TextDecoder('utf-8').decode(a);
 }
 
+function gate(msg){
+  $('gerr').textContent=msg||'';
+  $('gate').classList.add('on');
+  setTimeout(function(){ $('gtok').focus(); },50);
+}
+
 function load(){
+  if(!token){ gate(); return; }
   say('Загружаю…');
-  fetch(API+'?ref=main&t='+Date.now(), {cache:'no-store'})
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  fetch(API+'?t='+Date.now(), {cache:'no-store', headers:{Authorization:'token '+token}})
+    .then(function(r){
+      if(r.status===401 || r.status===403) throw new Error('BADTOKEN');
+      if(r.status===404) throw new Error('Гист не найден — проверь ID в коде страницы');
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    })
     .then(function(j){
-      sha=j.sha; data=JSON.parse(b64dec(j.content));
+      var f=j.files[FILE_NAME];
+      if(!f) throw new Error('В гисте нет файла '+FILE_NAME);
+      if(f.truncated) return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.text(); });
+      return f.content;
+    })
+    .then(function(txt){
+      if(txt===undefined) return;
+      data=JSON.parse(txt);
       dirty=false; $('save').disabled=true;
+      $('gate').classList.remove('on');
       buildFilters(); render(); say('Загружено','ok');
     })
-    .catch(function(e){ say('Не загрузилось: '+e.message,'err'); });
+    .catch(function(e){
+      if(e.message==='BADTOKEN'){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
+      say('Не загрузилось: '+e.message,'err');
+    });
 }
 
 function save(){
-  if(!data) return;
-  var token=ls('gh_token');
-  if(!token){ token=prompt('GitHub Token (нужен только для сохранения):'); if(!token) return; lsSet('gh_token',token); }
+  if(!data || !token) return;
   say('Сохраняю…');
   data.updated=new Date().toISOString().slice(0,10);
-  fetch(API,{method:'PUT',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({message:'Доска задач: обновление статусов',content:b64enc(JSON.stringify(data,null,2)+'\n'),sha:sha,branch:'main'})})
+  var body={}; body[FILE_NAME]={content:JSON.stringify(data,null,2)+'\n'};
+  fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({files:body})})
     .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.message||('HTTP '+r.status)); return j; }); })
-    .then(function(j){ sha=j.content.sha; dirty=false; $('save').disabled=true; say('Сохранено','ok'); })
+    .then(function(){ dirty=false; $('save').disabled=true; say('Сохранено','ok'); })
     .catch(function(e){
+      if(/bad credentials|401|403/i.test(e.message)){
+        token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return;
+      }
       say('Не сохранилось: '+e.message,'err');
-      if(/bad credentials|401/i.test(e.message)){ lsSet('gh_token',''); say('Токен не подошёл — нажми «Сохранить» ещё раз и введи новый','err'); }
     });
 }
 
@@ -270,7 +328,7 @@ function step(t,dir){
   var o=['todo','doing','done'], i=o.indexOf(t.status);
   i += (dir==='fwd'?1:-1);
   if(i<0||i>2) return;
-  t.status=o[i]; touch(); render();
+  t.status=o[i]; touch(); render(); scrollToCol(o[i]);
 }
 
 document.querySelectorAll('.col').forEach(function(col){
@@ -332,6 +390,37 @@ $('reload').onclick=function(){
 };
 $('save').onclick=save;
 window.addEventListener('beforeunload',function(e){ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+
+// ─── ворота токена
+function enter(){
+  var v=$('gtok').value.trim();
+  if(!v){ $('gerr').textContent='Пусто'; return; }
+  token=v; lsSet('gh_token',v); $('gtok').value=''; $('gerr').textContent='';
+  load();
+}
+$('gok').onclick=enter;
+$('gtok').addEventListener('keydown',function(e){ if(e.key==='Enter') enter(); });
+
+// ─── двойной тап по доске: колонки ужимаются, видно больше
+var lastTap=0;
+$('board').addEventListener('click',function(e){
+  if(e.target.closest('.card')) return;
+  var now=Date.now();
+  if(now-lastTap<330){
+    zoom=(zoom+1)%3;
+    $('board').className=zoom?('z'+zoom):'';
+    lastTap=0;
+  } else lastTap=now;
+});
+
+// ─── после стрелки доводим доску до колонки, куда уехала карточка
+function scrollToCol(st){
+  if(window.innerWidth>820) return;
+  var col=document.querySelector('.col[data-st="'+st+'"]');
+  if(col) col.scrollIntoView({behavior:'smooth', inline:'start', block:'nearest'});
+}
+
+token=ls('gh_token')||null;
 load();
 </script>
 </body>
