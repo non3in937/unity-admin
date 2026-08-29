@@ -144,7 +144,14 @@ header button{flex:none; white-space:nowrap}
   border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg)}
 .note p{margin:0; flex:1; font-size:15px; line-height:1.4; word-break:break-word}
 .note.done p{color:var(--dim); text-decoration:line-through}
-.note .del{flex:none; color:var(--dim); font-size:19px; line-height:1; padding:0 4px; cursor:pointer}
+.note .del{flex:none; color:var(--dim); font-size:17px; line-height:1; padding:2px 4px 2px 12px;
+  cursor:pointer; opacity:.55}
+.note .del:active{opacity:1; color:var(--e1)}
+.undo{display:flex; align-items:center; gap:10px; background:#4f8cff1a;
+  border:1px solid var(--acc); border-radius:9px; padding:10px 12px; margin-bottom:10px}
+.undo p{margin:0; flex:1; font-size:13px; color:var(--dim); overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.undo button{padding:5px 11px; font-size:13px}
 .nsect{font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em;
   margin:22px 0 4px; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none}
 .nsect .car{font-size:9px}
@@ -253,7 +260,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='16';
+var VERSION='17';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -621,7 +628,7 @@ $('gok').onclick=enter;
 $('gtok').addEventListener('keydown',function(e){ if(e.key==='Enter') enter(); });
 
 /* ─────────── заметки */
-var archOpen=false;
+var archOpen=false, trash=null;
 
 function noteRow(n){
   var el=document.createElement('div');
@@ -630,20 +637,31 @@ function noteRow(n){
   var p=document.createElement('p'); p.textContent=n.text;
   box.onclick=function(){ n.done=!n.done; touch(); renderNotes(); };
   el.appendChild(box); el.appendChild(p);
-  if(n.done){
-    var d=document.createElement('div'); d.className='del'; d.textContent='×';
-    d.onclick=function(){
-      if(!confirm('Удалить насовсем?')) return;
-      data.notes.splice(data.notes.indexOf(n),1); touch(); renderNotes();
-    };
-    el.appendChild(d);
-  }
+  var d=document.createElement('div'); d.className='del'; d.textContent='🗑';
+  d.onclick=function(){
+    var i=data.notes.indexOf(n);
+    trash={note:n, at:i};
+    data.notes.splice(i,1); touch(); renderNotes();
+  };
+  el.appendChild(d);
   return el;
 }
 
 function renderNotes(){
   if(!data) return;
   var box=$('nbody'); box.innerHTML='';
+
+  if(trash){
+    var u=document.createElement('div'); u.className='undo';
+    var p=document.createElement('p'); p.textContent='Удалено: '+trash.note.text;
+    var b=document.createElement('button'); b.textContent='Вернуть';
+    b.onclick=function(){
+      data.notes.splice(Math.min(trash.at, data.notes.length), 0, trash.note);
+      trash=null; touch(); renderNotes();
+    };
+    u.appendChild(p); u.appendChild(b); box.appendChild(u);
+  }
+
   var live=data.notes.filter(function(n){ return !n.done; });
   var arch=data.notes.filter(function(n){ return n.done; });
 
@@ -682,6 +700,7 @@ $('fab').onclick=function(){
 };
 function closeNotes(){
   $('notes').classList.remove('on');
+  trash=null;
   if(dirty) save();          // закрыл — сохранилось само
 }
 $('nclose').onclick=closeNotes;
