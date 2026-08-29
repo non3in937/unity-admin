@@ -27,6 +27,7 @@ button:active{transform:translateY(1px)}
 button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
 button.primary:disabled{opacity:.45; cursor:default}
 #status{font-size:12.5px; color:var(--dim); min-height:16px}
+#ver{font-size:11px; color:var(--dim); opacity:.65; white-space:nowrap}
 #status.err{color:var(--e1)} #status.ok{color:var(--ok)}
 .bar{height:5px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:9px}
 .bar>i{display:block; height:100%; background:var(--ok); width:0; transition:width .25s}
@@ -39,9 +40,9 @@ button.primary:disabled{opacity:.45; cursor:default}
   color:var(--dim); cursor:pointer; user-select:none; white-space:nowrap}
 .fbtn.on{background:var(--acc); border-color:var(--acc); color:#fff}
 .fbtn .car{font-size:9px; opacity:.7}
-.fpop{position:absolute; top:calc(100% + 6px); left:0; z-index:40; min-width:190px;
-  max-height:52vh; overflow-y:auto; background:var(--panel2); border:1px solid var(--line);
-  border-radius:11px; padding:5px; display:none; box-shadow:0 10px 30px #0009}
+.fpop{position:fixed; z-index:60; min-width:200px;
+  max-height:56vh; overflow-y:auto; background:var(--panel2); border:1px solid var(--line);
+  border-radius:11px; padding:5px; display:none; box-shadow:0 12px 34px #000b}
 .fpop.on{display:block}
 .fopt{display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px;
   font-size:13.5px; cursor:pointer; white-space:nowrap}
@@ -136,6 +137,7 @@ button.primary:disabled{opacity:.45; cursor:default}
   <div class="hrow">
     <h1>RunNShoot</h1>
     <span class="count" id="total">—</span>
+    <span id="ver"></span>
     <div class="spacer"></div>
     <button id="reload">Обновить</button>
     <button id="save" class="primary" disabled>Сохранить</button>
@@ -184,6 +186,7 @@ button.primary:disabled{opacity:.45; cursor:default}
 </div>
 
 <script>
+var VERSION='9';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -250,45 +253,71 @@ function save(){
 }
 
 /* ─────────── фильтры */
-function dropdown(label, opts, sel, onPick){
+function closePops(){
+  document.querySelectorAll('.fpop').forEach(function(p){ p.remove(); });
+}
+
+function dropdown(label, opts, sel){
   var g=document.createElement('div'); g.className='fg';
-  var b=document.createElement('div'); b.className='fbtn'+(sel.length?' on':'');
-  b.innerHTML='<span></span><span class="car">▼</span>';
-  b.firstChild.textContent = sel.length ? label+' · '+sel.length : label;
-  var pop=document.createElement('div'); pop.className='fpop';
-  opts.forEach(function(o){
-    var row=document.createElement('div');
-    row.className='fopt'+(sel.indexOf(o)>=0?' sel':'');
-    var tk=document.createElement('div'); tk.className='tick';
-    var sp=document.createElement('span'); sp.textContent=o;
-    row.appendChild(tk); row.appendChild(sp);
-    row.onclick=function(e){ e.stopPropagation(); onPick(o); };
-    pop.appendChild(row);
-  });
-  if(sel.length){
-    var cl=document.createElement('div'); cl.className='fclear';
-    var row=document.createElement('div'); row.className='fopt';
-    row.textContent='Показать все';
-    row.onclick=function(e){ e.stopPropagation(); sel.length=0; buildFilters(); render(); };
-    cl.appendChild(row); pop.appendChild(cl);
+  var b=document.createElement('div'); b.className='fbtn';
+  var cap=document.createElement('span');
+  var car=document.createElement('span'); car.className='car'; car.textContent='▼';
+  b.appendChild(cap); b.appendChild(car);
+
+  function paint(){
+    cap.textContent = sel.length ? label+' · '+sel.length : label;
+    b.className='fbtn'+(sel.length?' on':'');
   }
+  paint();
+
   b.onclick=function(e){
     e.stopPropagation();
-    var was=pop.classList.contains('on');
-    document.querySelectorAll('.fpop').forEach(function(p){ p.classList.remove('on'); });
-    if(!was) pop.classList.add('on');
+    var mine=document.querySelector('.fpop[data-for="'+label+'"]');
+    closePops();
+    if(mine) return;                       // был открыт — просто закрыли
+
+    var pop=document.createElement('div');
+    pop.className='fpop on'; pop.dataset.for=label;
+    pop.onclick=function(ev){ ev.stopPropagation(); };
+
+    opts.forEach(function(o){
+      var row=document.createElement('div');
+      row.className='fopt'+(sel.indexOf(o)>=0?' sel':'');
+      var tk=document.createElement('div'); tk.className='tick';
+      var sp=document.createElement('span'); sp.textContent=o;
+      row.appendChild(tk); row.appendChild(sp);
+      row.onclick=function(){
+        var i=sel.indexOf(o);
+        if(i<0) sel.push(o); else sel.splice(i,1);
+        row.classList.toggle('sel', sel.indexOf(o)>=0);
+        paint(); render();                 // список остаётся открытым
+      };
+      pop.appendChild(row);
+    });
+
+    var cl=document.createElement('div'); cl.className='fclear';
+    var all=document.createElement('div'); all.className='fopt';
+    all.textContent='Показать все';
+    all.onclick=function(){
+      sel.length=0;
+      pop.querySelectorAll('.fopt.sel').forEach(function(r){ r.classList.remove('sel'); });
+      paint(); render();
+    };
+    cl.appendChild(all); pop.appendChild(cl);
+
+    document.body.appendChild(pop);
+    var r=b.getBoundingClientRect();
+    var w=pop.offsetWidth;
+    pop.style.left=Math.round(Math.max(8, Math.min(r.left, window.innerWidth-w-8)))+'px';
+    pop.style.top=Math.round(r.bottom+6)+'px';
   };
-  g.appendChild(b); g.appendChild(pop);
+
+  g.appendChild(b);
   return g;
 }
 
-function toggle(arr,v){
-  var i=arr.indexOf(v);
-  if(i<0) arr.push(v); else arr.splice(i,1);
-  buildFilters(); render();
-}
-
 function buildFilters(){
+  closePops();
   var box=$('filters'); box.innerHTML='';
   var stages=[], secs=[];
   data.tasks.forEach(function(t){
@@ -297,18 +326,23 @@ function buildFilters(){
     if(secs.indexOf(t.section)<0) secs.push(t.section);
   });
   stages.sort();
-  box.appendChild(dropdown('Этап', stages, F.stages, function(v){ toggle(F.stages,v); }));
-  box.appendChild(dropdown('Раздел', secs, F.sections, function(v){ toggle(F.sections,v); }));
+  box.appendChild(dropdown('Этап', stages, F.stages));
+  box.appendChild(dropdown('Раздел', secs, F.sections));
 
   var b=document.createElement('div'); b.className='fbtn'+(F.backlog?' on':'');
   b.textContent=BACKLOG;
-  b.onclick=function(e){ e.stopPropagation(); F.backlog=!F.backlog; buildFilters(); render(); };
+  b.onclick=function(e){
+    e.stopPropagation(); closePops();
+    F.backlog=!F.backlog;
+    b.className='fbtn'+(F.backlog?' on':'');
+    render();
+  };
   box.appendChild(b);
 }
 
-document.addEventListener('click',function(){
-  document.querySelectorAll('.fpop').forEach(function(p){ p.classList.remove('on'); });
-});
+document.addEventListener('click', closePops);
+window.addEventListener('resize', closePops);
+$('filters').addEventListener('scroll', closePops);
 
 function visible(t){
   if(F.backlog) return t.section===BACKLOG;
@@ -498,6 +532,7 @@ $('board').addEventListener('click',function(e){
   else lastTap=now;
 });
 
+$('ver').textContent='сборка '+VERSION;
 token=ls('gh_token')||null;
 load();
 </script>
