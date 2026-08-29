@@ -170,7 +170,7 @@ var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
 var F={stage:null, section:null};
-var STAGES={'Э1':'--e1','Э2':'--e2','Э3':'--e3','—':'--bl'};
+var STAGES={'Э0':'--ok','Э1':'--e1','Э2':'--e2','Э3':'--e3','—':'--bl'};
 
 function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
@@ -246,7 +246,7 @@ function touch(){ dirty=true; $('save').disabled=false; }
 function buildFilters(){
   var secs=[], box=$('filters'); box.innerHTML='';
   data.tasks.forEach(function(t){ if(secs.indexOf(t.section)<0) secs.push(t.section); });
-  ['Э1','Э2','Э3'].forEach(function(s){
+  ['Э0','Э1','Э2','Э3'].forEach(function(s){
     var c=document.createElement('div'); c.className='chip'+(F.stage===s?' on':''); c.textContent=s;
     c.onclick=function(){ F.stage=(F.stage===s?null:s); buildFilters(); render(); };
     box.appendChild(c);
