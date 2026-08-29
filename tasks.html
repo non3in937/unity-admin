@@ -26,7 +26,11 @@ button{font:inherit; color:var(--txt); background:var(--panel2);
 button:active{transform:translateY(1px)}
 button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
 button.primary:disabled{opacity:.45; cursor:default}
-#status{font-size:12.5px; color:var(--dim); min-height:16px}
+#status{font-size:12.5px; color:var(--dim); min-height:0}
+#reload{transition:color .2s, border-color .2s, background .2s}
+#reload.ready{color:var(--ok); border-color:var(--ok); background:#3fbf6a1f}
+#reload.busy{color:var(--dim); border-color:var(--line); background:var(--panel2); opacity:.6}
+#reload.fail{color:var(--e1); border-color:var(--e1); background:#e05c5c1f}
 #ver{font-size:11px; color:var(--dim); opacity:.65; white-space:nowrap}
 #status.err{color:var(--e1)} #status.ok{color:var(--ok)}
 .bar{height:5px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:9px}
@@ -147,11 +151,11 @@ button.primary:disabled{opacity:.45; cursor:default}
     <span class="count" id="total">—</span>
     <span id="ver"></span>
     <div class="spacer"></div>
-    <button id="reload">Обновить</button>
+    <button id="reload" class="busy" disabled>Обновить</button>
     <button id="save" class="primary" disabled>Сохранить</button>
   </div>
   <div class="bar"><i id="gbar"></i></div>
-  <div id="status">Загружаю…</div>
+  <div id="status"></div>
   <div class="filters" id="filters"></div>
 </header>
 
@@ -194,7 +198,7 @@ button.primary:disabled{opacity:.45; cursor:default}
 </div>
 
 <script>
-var VERSION='11';
+var VERSION='12';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -205,7 +209,9 @@ var BACKLOG='Бэклог';
 function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function $(id){ return document.getElementById(id); }
-function say(t,c){ var s=$('status'); s.textContent=t; s.className=c||''; }
+function say(t,c){ var s=$('status'); s.textContent=t||''; s.className=c||''; }
+function busy(on){ var b=$('reload'); b.disabled=!!on; b.className=on?'busy':'ready'; }
+function failed(){ $('reload').disabled=false; $('reload').className='fail'; }
 function touch(){ dirty=true; $('save').disabled=false; }
 
 /* ─────────── данные */
@@ -217,7 +223,7 @@ function gate(msg){
 
 function load(){
   if(!token){ gate(); return; }
-  say('Загружаю…');
+  busy(true); say('');
   fetch(API+'?t='+Date.now(), {cache:'no-store', headers:{Authorization:'token '+token}})
     .then(function(r){
       if(r.status===401||r.status===403) throw new Error('BADTOKEN');
@@ -236,27 +242,27 @@ function load(){
       data=JSON.parse(txt);
       dirty=false; $('save').disabled=true;
       $('gate').classList.remove('on');
-      buildFilters(); render(); say('Загружено','ok');
+      buildFilters(); render(); busy(false); say('');
     })
     .catch(function(e){
-      if(e.message==='BADTOKEN'){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
-      say('Не загрузилось: '+e.message,'err');
+      if(e.message==='BADTOKEN'){ token=null; lsSet('gh_token',''); busy(false); gate('Токен не подошёл'); return; }
+      failed(); say('Не загрузилось: '+e.message,'err');
     });
 }
 
 function save(){
   if(!data||!token) return;
-  say('Сохраняю…');
+  $('save').disabled=true; say('');
   var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
   data.updated=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   var body={}; body[FILE_NAME]={content:JSON.stringify(data,null,2)+'\n'};
   fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:body})})
     .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.message||('HTTP '+r.status)); return j; }); })
-    .then(function(){ dirty=false; $('save').disabled=true; say('Сохранено','ok'); })
+    .then(function(){ dirty=false; $('save').disabled=true; say(''); })
     .catch(function(e){
       if(/bad credentials|401|403/i.test(e.message)){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
-      say('Не сохранилось: '+e.message,'err');
+      $('save').disabled=false; say('Не сохранилось: '+e.message,'err');
     });
 }
 
