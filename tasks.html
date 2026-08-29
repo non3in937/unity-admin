@@ -253,7 +253,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='15';
+var VERSION='16';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -597,7 +597,11 @@ function openTask(id){
 
 $('mclose').onclick=function(){ $('modal').classList.remove('on'); };
 $('modal').onclick=function(e){ if(e.target===this) this.classList.remove('on'); };
-document.addEventListener('keydown',function(e){ if(e.key==='Escape') $('modal').classList.remove('on'); });
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape') return;
+  if($('notes').classList.contains('on')){ closeNotes(); return; }
+  $('modal').classList.remove('on');
+});
 
 /* ─────────── прочее */
 $('reload').onclick=function(){
@@ -676,7 +680,11 @@ $('fab').onclick=function(){
   if(!data) return;
   $('notes').classList.add('on'); renderNotes();
 };
-$('nclose').onclick=function(){ $('notes').classList.remove('on'); };
+function closeNotes(){
+  $('notes').classList.remove('on');
+  if(dirty) save();          // закрыл — сохранилось само
+}
+$('nclose').onclick=closeNotes;
 $('nsave').onclick=save;
 $('nadd').onclick=addNote;
 $('ntext').addEventListener('keydown',function(e){ if(e.key==='Enter') addNote(); });
