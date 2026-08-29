@@ -52,7 +52,7 @@ button.primary:disabled{opacity:.45; cursor:default}
 .fopt.sel .tick{background:var(--acc); border-color:var(--acc)}
 .fopt.sel .tick:after{content:""; position:absolute; left:5px; top:1.5px; width:4px; height:8px;
   border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg)}
-.fclear{border-top:1px solid var(--line); margin-top:4px; padding-top:4px}
+.fclear{border-bottom:1px solid var(--line); margin-bottom:4px; padding-bottom:4px}
 .fclear .fopt{color:var(--dim); justify-content:center}
 
 #board{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:14px; align-items:start}
@@ -194,7 +194,7 @@ button.primary:disabled{opacity:.45; cursor:default}
 </div>
 
 <script>
-var VERSION='10';
+var VERSION='11';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -288,6 +288,16 @@ function dropdown(label, opts, sel){
     pop.className='fpop on'; pop.dataset.for=label;
     pop.onclick=function(ev){ ev.stopPropagation(); };
 
+    var cl=document.createElement('div'); cl.className='fclear';
+    var all=document.createElement('div'); all.className='fopt';
+    all.textContent='Показать все';
+    all.onclick=function(){
+      sel.length=0;
+      pop.querySelectorAll('.fopt.sel').forEach(function(r){ r.classList.remove('sel'); });
+      paint(); render();
+    };
+    cl.appendChild(all); pop.appendChild(cl);
+
     opts.forEach(function(o){
       var row=document.createElement('div');
       row.className='fopt'+(sel.indexOf(o)>=0?' sel':'');
@@ -302,16 +312,6 @@ function dropdown(label, opts, sel){
       };
       pop.appendChild(row);
     });
-
-    var cl=document.createElement('div'); cl.className='fclear';
-    var all=document.createElement('div'); all.className='fopt';
-    all.textContent='Показать все';
-    all.onclick=function(){
-      sel.length=0;
-      pop.querySelectorAll('.fopt.sel').forEach(function(r){ r.classList.remove('sel'); });
-      paint(); render();
-    };
-    cl.appendChild(all); pop.appendChild(cl);
 
     document.body.appendChild(pop);
     var r=b.getBoundingClientRect();
