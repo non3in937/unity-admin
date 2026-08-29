@@ -26,7 +26,7 @@ button{font:inherit; color:var(--txt); background:var(--panel2);
 button:active{transform:translateY(1px)}
 button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
 button.primary:disabled{opacity:.45; cursor:default}
-#status{font-size:12.5px; color:var(--dim); min-height:0}
+#status{font-size:12.5px; color:var(--dim); margin-top:9px; display:none}
 #reload{transition:color .2s, border-color .2s, background .2s}
 #reload.ready{color:var(--ok); border-color:var(--ok); background:#3fbf6a1f}
 #reload.busy{color:var(--dim); border-color:var(--line); background:var(--panel2); opacity:.6}
@@ -157,9 +157,9 @@ header button{flex:none; white-space:nowrap}
     <button id="reload" class="busy" disabled>Обновить</button>
     <button id="save" class="primary" disabled>Сохранить</button>
   </div>
+  <div id="status"></div>
   <div class="prow"><span class="count" id="total">—</span></div>
   <div class="bar"><i id="gbar"></i></div>
-  <div id="status"></div>
   <div class="filters" id="filters"></div>
 </header>
 
@@ -202,7 +202,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='13';
+var VERSION='14';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -213,7 +213,14 @@ var BACKLOG='Бэклог';
 function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function $(id){ return document.getElementById(id); }
-function say(t,c){ var s=$('status'); s.textContent=t||''; s.className=c||''; }
+var sayTimer=null;
+function say(t,c,fade){
+  clearTimeout(sayTimer);
+  var s=$('status');
+  s.textContent=t||''; s.className=c||'';
+  s.style.display=t?'block':'none';
+  if(t && fade) sayTimer=setTimeout(function(){ s.textContent=''; s.style.display='none'; },1600);
+}
 function busy(on){ var b=$('reload'); b.disabled=!!on; b.className=on?'busy':'ready'; }
 function failed(){ $('reload').disabled=false; $('reload').className='fail'; }
 function touch(){ dirty=true; $('save').disabled=false; }
@@ -227,7 +234,7 @@ function gate(msg){
 
 function load(){
   if(!token){ gate(); return; }
-  busy(true); say('');
+  busy(true); say('Обновляю…');
   fetch(API+'?t='+Date.now(), {cache:'no-store', headers:{Authorization:'token '+token}})
     .then(function(r){
       if(r.status===401||r.status===403) throw new Error('BADTOKEN');
@@ -246,7 +253,7 @@ function load(){
       data=JSON.parse(txt);
       dirty=false; $('save').disabled=true;
       $('gate').classList.remove('on');
-      buildFilters(); render(); busy(false); say('');
+      buildFilters(); render(); busy(false); say('Обновлено','ok',true);
     })
     .catch(function(e){
       if(e.message==='BADTOKEN'){ token=null; lsSet('gh_token',''); busy(false); gate('Токен не подошёл'); return; }
@@ -256,14 +263,14 @@ function load(){
 
 function save(){
   if(!data||!token) return;
-  $('save').disabled=true; say('');
+  $('save').disabled=true; say('Сохраняю…');
   var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
   data.updated=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   var body={}; body[FILE_NAME]={content:JSON.stringify(data,null,2)+'\n'};
   fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
     body:JSON.stringify({files:body})})
     .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.message||('HTTP '+r.status)); return j; }); })
-    .then(function(){ dirty=false; $('save').disabled=true; say(''); })
+    .then(function(){ dirty=false; $('save').disabled=true; say('Сохранено','ok',true); })
     .catch(function(e){
       if(/bad credentials|401|403/i.test(e.message)){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
       $('save').disabled=false; say('Не сохранилось: '+e.message,'err');
