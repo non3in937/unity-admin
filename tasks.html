@@ -83,7 +83,7 @@ header button{flex:none; white-space:nowrap}
 .prog{font-size:11.5px; color:var(--dim); margin-top:7px; display:flex; align-items:center; gap:7px}
 .prog .bar{flex:1; margin:0; height:4px}
 
-#modal{position:fixed; inset:0; background:#000a; display:none; z-index:50;
+#modal{position:fixed; inset:0; background:#000a; display:none; z-index:85;
   align-items:center; justify-content:center; padding:16px}
 #modal.on{display:flex}
 .sheet{background:var(--panel); border:1px solid var(--line); border-radius:14px;
@@ -130,7 +130,17 @@ header button{flex:none; white-space:nowrap}
 .dmid{font-size:26px; font-weight:700; fill:var(--txt)}
 .dsub{font-size:4.6px; fill:var(--dim)}
 .legend{margin-top:22px}
-.lrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #ffffff0d}
+.lrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #ffffff0d;
+  cursor:pointer; user-select:none; -webkit-user-select:none}
+.lrow.open{border-bottom-color:transparent}
+.lsub{padding:2px 0 12px 23px; border-bottom:1px solid #ffffff0d}
+.lt{display:flex; align-items:center; gap:8px; padding:7px 0; cursor:pointer}
+.lt .st{flex:none; width:8px; height:8px; border-radius:50%}
+.lt .tt{flex:1; font-size:13px; line-height:1.35; min-width:0}
+.lt .sg{flex:none; font-size:10px; padding:1px 6px; border-radius:99px;
+  border:1px solid var(--line); color:var(--dim)}
+.lt .cnt{flex:none; font-size:11.5px; color:var(--dim); font-variant-numeric:tabular-nums}
+.lt.done .tt{color:var(--dim)}
 .lrow:last-child{border-bottom:none}
 .ldot{flex:none; width:13px; height:13px; border-radius:50%}
 .lname{flex:1; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -304,7 +314,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='18';
+var VERSION='19';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -646,7 +656,10 @@ function openTask(id){
   $('modal').classList.add('on');
 }
 
-$('mclose').onclick=function(){ $('modal').classList.remove('on'); };
+$('mclose').onclick=function(){
+  $('modal').classList.remove('on');
+  if($('board2').classList.contains('on')) renderDash();
+};
 $('modal').onclick=function(e){ if(e.target===this) this.classList.remove('on'); };
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
@@ -675,7 +688,9 @@ $('gtok').addEventListener('keydown',function(e){ if(e.key==='Enter') enter(); }
 /* ─────────── дашборд */
 var PAL=['#4f8cff','#3fbf6a','#e0a33e','#e05c5c','#8b7fd6','#3fb8bf','#d67fb0','#7fbf3f',
          '#bf7f3f','#5f7fd6','#bf3f7f','#3fbf9f','#9f9f3f','#7f5fbf','#d6613f','#4fb0ff','#a0a8b8'];
-var dStage=null;
+var dStage=null, dOpen=null;
+var STCOL={todo:'--bl', doing:'--warn', done:'--ok'};
+var STNAME={todo:'к работе', doing:'в работе', done:'готово'};
 
 // вес задачи — число подпунктов: так «Семь раскрасок» весит больше, чем «Смерть игрока»
 function weigh(t){
@@ -717,7 +732,7 @@ function renderDash(){
     var c=document.createElement('div');
     c.className='fbtn'+(dStage===v?' on':'');
     c.textContent=v||'Всё';
-    c.onclick=function(){ dStage=v; renderDash(); };
+    c.onclick=function(){ dStage=v; dOpen=null; renderDash(); };
     chips.appendChild(c);
   });
 
@@ -741,7 +756,8 @@ function renderDash(){
 
   var lg=$('dlegend'); lg.innerHTML='';
   d.rows.forEach(function(r){
-    var row=document.createElement('div'); row.className='lrow';
+    var open=(dOpen===r.name);
+    var row=document.createElement('div'); row.className='lrow'+(open?' open':'');
     var dot=document.createElement('div'); dot.className='ldot'; dot.style.background=r.color;
     var nm=document.createElement('div'); nm.className='lname'; nm.textContent=r.name;
     var sh=document.createElement('div'); sh.className='lpct';
@@ -755,11 +771,35 @@ function renderDash(){
     pr.textContent=r.done+'/'+r.all;
     row.appendChild(dot); row.appendChild(nm); row.appendChild(sh);
     row.appendChild(bar); row.appendChild(pr);
+    row.onclick=function(){ dOpen = open ? null : r.name; renderDash(); };
     lg.appendChild(row);
+
+    if(!open) return;
+    var sub=document.createElement('div'); sub.className='lsub';
+    var list=data.tasks.filter(function(t){
+      return t.section===r.name && (!dStage || t.stage===dStage);
+    });
+    var ord={doing:0, todo:1, done:2};
+    list.sort(function(a,b){ return ord[a.status]-ord[b.status]; });
+    list.forEach(function(t){
+      var w=weigh(t);
+      var it=document.createElement('div'); it.className='lt'+(t.status==='done'?' done':'');
+      var st=document.createElement('div'); st.className='st';
+      st.style.background='var('+STCOL[t.status]+')';
+      st.title=STNAME[t.status];
+      var tt=document.createElement('div'); tt.className='tt'; tt.textContent=t.title;
+      var sg=document.createElement('div'); sg.className='sg'; sg.textContent=t.stage;
+      var cn=document.createElement('div'); cn.className='cnt'; cn.textContent=w.done+'/'+w.all;
+      it.appendChild(st); it.appendChild(tt); it.appendChild(sg); it.appendChild(cn);
+      it.onclick=function(e){ e.stopPropagation(); openTask(t.id); };
+      sub.appendChild(it);
+    });
+    lg.appendChild(sub);
   });
 
   $('dnote').textContent='Доля считается по подпунктам, а не по числу карточек: '+
-    d.all+' шт. Полоска у раздела — сколько в нём уже закрыто. Бэклог не учитывается.';
+    d.all+' шт. Полоска у раздела — сколько в нём уже закрыто. Бэклог не учитывается. '+
+    'Нажми на раздел, чтобы увидеть его задачи: раздел может идти сразу в нескольких этапах.';
 }
 
 $('dash').onclick=function(){ if(!data) return; $('board2').classList.add('on'); renderDash(); };
