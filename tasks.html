@@ -136,6 +136,9 @@ header button{flex:none; white-space:nowrap}
 .lt .sc{flex:none; font-size:10px; padding:1px 6px; border-radius:99px;
   background:#00000038; border:1px solid var(--line); color:var(--dim)}
 .donut{display:block; margin:0 auto; width:min(70vw,260px); height:min(70vw,260px)}
+.dcap{text-align:center; color:var(--dim); font-size:13px; margin-top:10px}
+.dcap b{color:var(--txt); font-weight:600}
+.lrow.empty .lname, .lrow.empty .lpct{color:var(--dim); opacity:.55}
 .dmid{font-size:26px; font-weight:700; fill:var(--txt)}
 .legend{margin-top:22px}
 .lrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #ffffff0d;
@@ -327,7 +330,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='24';
+var VERSION='25';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -772,13 +775,16 @@ function dashData(){
     by[g].all+=w.all; by[g].done+=w.done;
     all+=w.all; done+=w.done;
   });
+  var left=all-done;
   var rows=Object.keys(by).map(function(k){
-    return {name:k, all:by[k].all, done:by[k].done, share:all?by[k].all/all:0};
-  }).sort(function(a,b){ return b.all-a.all; });
+    var rest=by[k].all-by[k].done;
+    return {name:k, all:by[k].all, done:by[k].done, rest:rest,
+            share: left ? rest/left : 0};
+  }).sort(function(a,b){ return b.rest-a.rest || b.all-a.all; });
   rows.forEach(function(r){
     r.color = dMode==='sys' ? (SYSCOL[r.name]||'#6b7280') : secColor(r.name);
   });
-  return {rows:rows, all:all, done:done};
+  return {rows:rows, all:all, done:done, left:all-done};
 }
 
 function renderDash(){
@@ -807,7 +813,7 @@ function renderDash(){
     seg.appendChild(e);
   });
 
-  var pct=d.all?Math.round(d.done/d.all*100):0;
+  var pct=d.all?Math.round(d.left/d.all*100):0;
   var svg='<svg class="donut" viewBox="0 0 42 42">';
   svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#232733" stroke-width="5.5"/>';
   var off=0;
@@ -822,12 +828,14 @@ function renderDash(){
   svg+='<text class="dmid" x="21" y="21" text-anchor="middle" dominant-baseline="central"'
      +' style="font-size:8.5px">'+pct+'%</text>';
   svg+='</svg>';
+  svg+='<div class="dcap">осталось <b>'+d.left+'</b> из '+d.all+' подпунктов</div>';
   $('dchart').innerHTML=svg;
 
   var lg=$('dlegend'); lg.innerHTML='';
   d.rows.forEach(function(r){
     var open=(dOpen===r.name);
-    var row=document.createElement('div'); row.className='lrow'+(open?' open':'');
+    var row=document.createElement('div');
+    row.className='lrow'+(open?' open':'')+(r.rest?'':' empty');
     var dot=document.createElement('div'); dot.className='ldot'; dot.style.background=r.color;
     var nm=document.createElement('div'); nm.className='lname'; nm.textContent=r.name;
     var sh=document.createElement('div'); sh.className='lpct';
@@ -838,7 +846,7 @@ function renderDash(){
     fill.style.background=r.color;
     bar.appendChild(fill);
     var pr=document.createElement('div'); pr.className='lpct';
-    pr.textContent=r.done+'/'+r.all;
+    pr.textContent=r.rest ? ('−'+r.rest) : 'всё';
     row.appendChild(dot); row.appendChild(nm); row.appendChild(sh);
     row.appendChild(bar); row.appendChild(pr);
     row.onclick=function(){ dOpen = open ? null : r.name; renderDash(); };
@@ -872,8 +880,9 @@ function renderDash(){
     lg.appendChild(sub);
   });
 
-  $('dnote').textContent='Доля считается по подпунктам, а не по числу карточек: '+
-    d.all+' шт. Полоска у раздела — сколько в нём уже закрыто. Бэклог не учитывается. '+
+  $('dnote').textContent='В кольце — только оставшаяся работа: доля показывает, '+
+    'какую часть остатка занимает система. Полоска — сколько в ней уже закрыто, '+
+    'справа — сколько подпунктов ещё висит. Бэклог не учитывается. '+
     (dMode==='sys'
       ? 'Системы — это склеенные разделы: так в кольце восемь долей вместо двадцати одной. Переключись на «Разделы» для полной картины.'
       : 'Полная разбивка по разделам. Переключись на «Системы», если долей слишком много.')+
