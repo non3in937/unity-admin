@@ -121,6 +121,7 @@ button.primary:disabled{opacity:.45; cursor:default}
     -webkit-overflow-scrolling:touch}
   #board::-webkit-scrollbar{display:none}
   .col{flex:0 0 86%; scroll-snap-align:start; padding:9px; transition:flex-basis .2s}
+  body.dragging #board{scroll-snap-type:none}
   #board.z1 .col{flex-basis:56%}
   #board.z1 .card h3{font-size:12.5px}
 }
@@ -396,7 +397,7 @@ function edgeScroll(x){
   if(window.innerWidth>820) return;
   clearInterval(autoTimer);
   var d=0;
-  if(x<52) d=-14; else if(x>window.innerWidth-52) d=14;
+  if(x<64) d=-18; else if(x>window.innerWidth-64) d=18;
   if(d) autoTimer=setInterval(function(){ b.scrollLeft+=d; },16);
 }
 
