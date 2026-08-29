@@ -330,7 +330,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='25';
+var VERSION='26';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -846,7 +846,7 @@ function renderDash(){
     fill.style.background=r.color;
     bar.appendChild(fill);
     var pr=document.createElement('div'); pr.className='lpct';
-    pr.textContent=r.rest ? ('−'+r.rest) : 'всё';
+    pr.textContent=r.done+'/'+r.all;
     row.appendChild(dot); row.appendChild(nm); row.appendChild(sh);
     row.appendChild(bar); row.appendChild(pr);
     row.onclick=function(){ dOpen = open ? null : r.name; renderDash(); };
@@ -881,8 +881,8 @@ function renderDash(){
   });
 
   $('dnote').textContent='В кольце — только оставшаяся работа: доля показывает, '+
-    'какую часть остатка занимает система. Полоска — сколько в ней уже закрыто, '+
-    'справа — сколько подпунктов ещё висит. Бэклог не учитывается. '+
+    'какую часть остатка занимает система. Полоска и число справа — сколько '+
+    'в ней уже закрыто. Бэклог не учитывается. '+
     (dMode==='sys'
       ? 'Системы — это склеенные разделы: так в кольце восемь долей вместо двадцати одной. Переключись на «Разделы» для полной картины.'
       : 'Полная разбивка по разделам. Переключись на «Системы», если долей слишком много.')+
