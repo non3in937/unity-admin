@@ -114,6 +114,31 @@ header button{flex:none; white-space:nowrap}
 .hint.on{display:block}
 .empty{color:var(--dim); font-size:12.5px; padding:6px 0}
 
+/* полоса прогресса с кнопкой дашборда */
+.brow{display:flex; align-items:center; gap:10px; margin-top:6px}
+.brow .bar{flex:1; margin:0}
+#dash{flex:none; width:30px; height:30px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center}
+#dash svg{width:17px; height:17px}
+
+/* дашборд */
+#board2{position:fixed; inset:0; background:var(--bg); z-index:75; display:none; flex-direction:column}
+#board2.on{display:flex}
+.dbody{flex:1; overflow-y:auto; padding:16px 16px 40px}
+.dchips{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:18px}
+.donut{display:block; margin:0 auto; width:min(70vw,260px); height:min(70vw,260px)}
+.dmid{font-size:26px; font-weight:700; fill:var(--txt)}
+.dsub{font-size:4.6px; fill:var(--dim)}
+.legend{margin-top:22px}
+.lrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #ffffff0d}
+.lrow:last-child{border-bottom:none}
+.ldot{flex:none; width:13px; height:13px; border-radius:50%}
+.lname{flex:1; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.lpct{flex:none; font-size:13px; color:var(--dim); font-variant-numeric:tabular-nums}
+.lbar{flex:none; width:64px; height:5px; background:var(--panel2); border-radius:99px; overflow:hidden}
+.lbar>i{display:block; height:100%; background:var(--ok)}
+.dnote{color:var(--dim); font-size:12.5px; line-height:1.5; margin-top:20px}
+
 /* круглая кнопка заметок */
 #fab{position:fixed; right:18px; z-index:45; width:56px; height:56px; padding:0;
   bottom:calc(18px + env(safe-area-inset-bottom));
@@ -202,7 +227,13 @@ header button{flex:none; white-space:nowrap}
   </div>
   <div id="status"></div>
   <div class="prow"><span class="count" id="total">—</span></div>
-  <div class="bar"><i id="gbar"></i></div>
+  <div class="brow">
+    <div class="bar"><i id="gbar"></i></div>
+    <button id="dash" title="Дашборд"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13"
+      fill="none" stroke="currentColor" stroke-width="6" stroke-dasharray="34 82"></circle>
+      <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="6"
+      stroke-dasharray="20 82" stroke-dashoffset="-38" opacity=".45"></circle></svg></button>
+  </div>
   <div class="filters" id="filters"></div>
 </header>
 
@@ -218,6 +249,19 @@ header button{flex:none; white-space:nowrap}
   <div class="col" data-st="done">
     <div class="colhead">Готово <span class="count" id="c-done">0</span></div>
     <div class="drop" id="l-done"></div>
+  </div>
+</div>
+
+<div id="board2">
+  <div class="nhead">
+    <h2>Дашборд</h2>
+    <button id="dclose">Закрыть</button>
+  </div>
+  <div class="dbody">
+    <div class="dchips" id="dchips"></div>
+    <div id="dchart"></div>
+    <div class="legend" id="dlegend"></div>
+    <div class="dnote" id="dnote"></div>
   </div>
 </div>
 
@@ -260,7 +304,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='17';
+var VERSION='18';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -606,6 +650,7 @@ $('mclose').onclick=function(){ $('modal').classList.remove('on'); };
 $('modal').onclick=function(e){ if(e.target===this) this.classList.remove('on'); };
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
+  if($('board2').classList.contains('on')){ $('board2').classList.remove('on'); return; }
   if($('notes').classList.contains('on')){ closeNotes(); return; }
   $('modal').classList.remove('on');
 });
@@ -626,6 +671,99 @@ function enter(){
 }
 $('gok').onclick=enter;
 $('gtok').addEventListener('keydown',function(e){ if(e.key==='Enter') enter(); });
+
+/* ─────────── дашборд */
+var PAL=['#4f8cff','#3fbf6a','#e0a33e','#e05c5c','#8b7fd6','#3fb8bf','#d67fb0','#7fbf3f',
+         '#bf7f3f','#5f7fd6','#bf3f7f','#3fbf9f','#9f9f3f','#7f5fbf','#d6613f','#4fb0ff','#a0a8b8'];
+var dStage=null;
+
+// вес задачи — число подпунктов: так «Семь раскрасок» весит больше, чем «Смерть игрока»
+function weigh(t){
+  var n=t.checklist.length;
+  if(!n) return {all:1, done:t.status==='done'?1:0};
+  var d=0; t.checklist.forEach(function(c){ if(c.done) d++; });
+  if(t.status==='done') d=n;
+  return {all:n, done:d};
+}
+
+function dashData(){
+  var by={}, all=0, done=0;
+  data.tasks.forEach(function(t){
+    if(t.section===BACKLOG) return;
+    if(dStage && t.stage!==dStage) return;
+    var w=weigh(t);
+    if(!by[t.section]) by[t.section]={all:0,done:0};
+    by[t.section].all+=w.all; by[t.section].done+=w.done;
+    all+=w.all; done+=w.done;
+  });
+  var rows=Object.keys(by).map(function(k){
+    return {name:k, all:by[k].all, done:by[k].done, share:all?by[k].all/all:0};
+  }).sort(function(a,b){ return b.all-a.all; });
+  rows.forEach(function(r,i){ r.color=PAL[i%PAL.length]; });
+  return {rows:rows, all:all, done:done};
+}
+
+function renderDash(){
+  if(!data) return;
+  var d=dashData();
+
+  var chips=$('dchips'); chips.innerHTML='';
+  var stages=[]; 
+  data.tasks.forEach(function(t){
+    if(t.section!==BACKLOG && t.stage!=='—' && stages.indexOf(t.stage)<0) stages.push(t.stage);
+  });
+  stages.sort();
+  [null].concat(stages).forEach(function(v){
+    var c=document.createElement('div');
+    c.className='fbtn'+(dStage===v?' on':'');
+    c.textContent=v||'Всё';
+    c.onclick=function(){ dStage=v; renderDash(); };
+    chips.appendChild(c);
+  });
+
+  var pct=d.all?Math.round(d.done/d.all*100):0;
+  var svg='<svg class="donut" viewBox="0 0 42 42">';
+  svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#232733" stroke-width="5.5"/>';
+  var off=0;
+  d.rows.forEach(function(r){
+    var len=r.share*100;
+    if(len<=0) return;
+    svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="'+r.color+'" stroke-width="5.5"'
+       +' stroke-dasharray="'+len.toFixed(2)+' '+(100-len).toFixed(2)+'"'
+       +' stroke-dashoffset="'+(25-off).toFixed(2)+'"/>';
+    off+=len;
+  });
+  svg+='<text class="dmid" x="21" y="21.5" text-anchor="middle" dominant-baseline="middle"'
+     +' style="font-size:7px">'+pct+'%</text>';
+  svg+='<text class="dsub" x="21" y="26.5" text-anchor="middle">сделано</text>';
+  svg+='</svg>';
+  $('dchart').innerHTML=svg;
+
+  var lg=$('dlegend'); lg.innerHTML='';
+  d.rows.forEach(function(r){
+    var row=document.createElement('div'); row.className='lrow';
+    var dot=document.createElement('div'); dot.className='ldot'; dot.style.background=r.color;
+    var nm=document.createElement('div'); nm.className='lname'; nm.textContent=r.name;
+    var sh=document.createElement('div'); sh.className='lpct';
+    sh.textContent=Math.round(r.share*100)+'%';
+    var bar=document.createElement('div'); bar.className='lbar';
+    var fill=document.createElement('i');
+    fill.style.width=(r.all?r.done/r.all*100:0)+'%';
+    fill.style.background=r.color;
+    bar.appendChild(fill);
+    var pr=document.createElement('div'); pr.className='lpct';
+    pr.textContent=r.done+'/'+r.all;
+    row.appendChild(dot); row.appendChild(nm); row.appendChild(sh);
+    row.appendChild(bar); row.appendChild(pr);
+    lg.appendChild(row);
+  });
+
+  $('dnote').textContent='Доля считается по подпунктам, а не по числу карточек: '+
+    d.all+' шт. Полоска у раздела — сколько в нём уже закрыто. Бэклог не учитывается.';
+}
+
+$('dash').onclick=function(){ if(!data) return; $('board2').classList.add('on'); renderDash(); };
+$('dclose').onclick=function(){ $('board2').classList.remove('on'); };
 
 /* ─────────── заметки */
 var archOpen=false, trash=null;
