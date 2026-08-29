@@ -330,7 +330,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='26';
+var VERSION='27';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -813,7 +813,7 @@ function renderDash(){
     seg.appendChild(e);
   });
 
-  var pct=d.all?Math.round(d.left/d.all*100):0;
+  var pct=d.all?Math.round(d.done/d.all*100):0;   // в центре — пройденный путь
   var svg='<svg class="donut" viewBox="0 0 42 42">';
   svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#232733" stroke-width="5.5"/>';
   var off=0;
