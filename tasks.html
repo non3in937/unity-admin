@@ -120,7 +120,8 @@ header button{flex:none; white-space:nowrap}
 .brow .bar{flex:1; margin:0}
 #dash{flex:none; width:30px; height:30px; padding:0; border-radius:50%;
   display:flex; align-items:center; justify-content:center}
-#dash svg{width:17px; height:17px}
+#dash{border-color:var(--line)}
+#dash svg{width:19px; height:19px}
 
 /* дашборд */
 #board2{position:fixed; inset:0; background:var(--bg); z-index:75; display:none; flex-direction:column}
@@ -253,10 +254,7 @@ header button{flex:none; white-space:nowrap}
   <div class="prow"><span class="count" id="total">—</span></div>
   <div class="brow">
     <div class="bar"><i id="gbar"></i></div>
-    <button id="dash" title="Дашборд"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13"
-      fill="none" stroke="currentColor" stroke-width="6" stroke-dasharray="34 82"></circle>
-      <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="6"
-      stroke-dasharray="20 82" stroke-dashoffset="-38" opacity=".45"></circle></svg></button>
+    <button id="dash" title="Дашборд"><svg viewBox="0 0 42 42" id="dashicon"></svg></button>
   </div>
   <div class="filters" id="filters"></div>
 </header>
@@ -329,7 +327,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='23';
+var VERSION='24';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -881,6 +879,19 @@ function renderDash(){
       : 'Полная разбивка по разделам. Переключись на «Системы», если долей слишком много.')+
     ' Нажми на строку, чтобы увидеть задачи: одна система обычно идёт сразу в нескольких этапах.';
 }
+
+(function(){
+  var slices=[['Контент',25],['Бой и мир',18],['Релиз',16],['Интерфейс',12],
+              ['Боссы',9],['Звук',8],['Мета и деньги',7],['Техника',5]];
+  var svg='', off=0;
+  slices.forEach(function(p){
+    svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="'+SYSCOL[p[0]]+'"'
+       +' stroke-width="11" stroke-dasharray="'+p[1]+' '+(100-p[1])+'"'
+       +' stroke-dashoffset="'+(25-off)+'"/>';
+    off+=p[1];
+  });
+  $('dashicon').innerHTML=svg;
+})();
 
 $('dash').onclick=function(){ if(!data) return; $('board2').classList.add('on'); renderDash(); };
 $('dclose').onclick=function(){ $('board2').classList.remove('on'); };
