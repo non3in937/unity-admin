@@ -330,7 +330,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='28';
+var VERSION='29';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -613,7 +613,7 @@ document.addEventListener('touchmove',function(e){ if(drag) e.preventDefault(); 
 function drop(e){
   if(hold){ clearTimeout(hold); hold=null; }
   clearInterval(autoTimer);
-  if(moved) suppress=true;
+  if(moved || drag) suppress=true;   // схватил и передумал — карточку не открываем
   if(!drag){ start=null; return; }
   var col=colAt(e.clientX,e.clientY);
   if(col && drag.t.status!==col.dataset.st){ drag.t.status=col.dataset.st; touch(); }
