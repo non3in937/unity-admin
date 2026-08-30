@@ -149,7 +149,7 @@ header button{flex:none; white-space:nowrap}
 .cm .del{flex:none; color:var(--dim); font-size:15px; line-height:1; cursor:pointer;
   padding:1px 2px 1px 8px; opacity:.5}
 .cm .del:active{opacity:1; color:var(--e1)}
-.cadd{display:flex; gap:8px; margin-top:10px}
+.cadd{display:flex; gap:8px; margin-bottom:12px}
 .cadd textarea{flex:1; min-width:0; font:inherit; font-size:16px; color:var(--txt);
   background:var(--panel2); border:1px solid var(--line); border-radius:9px;
   padding:10px 12px; resize:vertical; min-height:44px; max-height:160px}
@@ -398,7 +398,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='47';
+var VERSION='48';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -896,21 +896,9 @@ function openTask(id){
   h.textContent='Комментарии'+(t.comments.length?' · '+t.comments.length:'');
   sec.appendChild(h);
 
-  t.comments.forEach(function(c){
-    var box=document.createElement('div'); box.className='cm';
-    var bd=document.createElement('div'); bd.className='body';
-    var p=document.createElement('p'); p.textContent=c.text;
-    var tm=document.createElement('time'); tm.textContent=c.ts||'';
-    bd.appendChild(p); bd.appendChild(tm);
-    var d=document.createElement('div'); d.className='del'; d.textContent='🗑';
-    d.onclick=function(){
-      t.comments.splice(t.comments.indexOf(c),1);
-      touch(); cTouched=true; openTask(id);
-    };
-    box.appendChild(bd); box.appendChild(d);
-    sec.appendChild(box);
-  });
-
+  // Поле ввода сверху, а сообщения под ним свежими вперёд — как карточка,
+  // которая ложится первой в колонке. Раньше и то и другое уезжало вниз,
+  // и до поля приходилось мотать через всю переписку.
   var add=document.createElement('div'); add.className='cadd';
   var ta=document.createElement('textarea'); ta.placeholder='Что заметил по этой задаче…';
   var btn=document.createElement('button'); btn.className='primary'; btn.textContent='Добавить';
@@ -925,6 +913,22 @@ function openTask(id){
   ta.addEventListener('keydown',function(e){ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) post(); });
   add.appendChild(ta); add.appendChild(btn);
   sec.appendChild(add);
+
+  t.comments.slice().reverse().forEach(function(c){
+    var box=document.createElement('div'); box.className='cm';
+    var bd=document.createElement('div'); bd.className='body';
+    var p=document.createElement('p'); p.textContent=c.text;
+    var tm=document.createElement('time'); tm.textContent=c.ts||'';
+    bd.appendChild(p); bd.appendChild(tm);
+    var d=document.createElement('div'); d.className='del'; d.textContent='🗑';
+    d.onclick=function(){
+      t.comments.splice(t.comments.indexOf(c),1);
+      touch(); cTouched=true; openTask(id);
+    };
+    box.appendChild(bd); box.appendChild(d);
+    sec.appendChild(box);
+  });
+
   b.appendChild(sec);
 
   $('modal').classList.add('on');
