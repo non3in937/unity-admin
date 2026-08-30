@@ -388,10 +388,10 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='44';
+var VERSION='45';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
-var data=null, dirty=false, openId=null, token=null, zoom=0;
+var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
 var F={stages:[], sections:[], backlog:false};
 var BACKLOG='Бэклог';
 
@@ -408,6 +408,49 @@ function say(t,c,fade){
 }
 function busy(on){ var b=$('reload'); b.disabled=!!on; b.className=on?'busy':'ready'; }
 function failed(){ $('reload').disabled=false; $('reload').className='fail'; }
+function snap(o){ return JSON.parse(JSON.stringify(o)); }
+
+// Гист один на двоих, и раньше сохранял его целиком тот, кто нажал последним —
+// чужие правки при этом молча пропадали. Теперь берём свежий гист и переносим
+// в него только то, что действительно изменили мы: сравниваем со снимком загрузки.
+function mergeOnto(remote){
+  if(!Array.isArray(remote.tasks)) return snap(data);
+  if(!Array.isArray(remote.notes)) remote.notes=[];
+  var rById={}, bById={};
+  remote.tasks.forEach(function(t){ rById[t.id]=t; });
+  (base.tasks||[]).forEach(function(t){ bById[t.id]=t; });
+
+  data.tasks.forEach(function(lt){
+    var rt=rById[lt.id], bt=bById[lt.id];
+    if(!rt){ remote.tasks.push(snap(lt)); return; }   // карточка, которой в свежем нет
+    if(!bt) return;                                    // не было на загрузке — не наше
+    if(lt.status!==bt.status) rt.status=lt.status;
+    (lt.checklist||[]).forEach(function(lc,i){
+      var bc=(bt.checklist||[])[i], rc=(rt.checklist||[])[i];
+      if(bc && rc && lc.done!==bc.done) rc.done=lc.done;
+    });
+    var lcm=lt.comments||[], bcm=bt.comments||[], rcm=rt.comments||[];
+    var bIds={}, rIds={}, lIds={};
+    bcm.forEach(function(c){ bIds[c.id]=1; });
+    rcm.forEach(function(c){ rIds[c.id]=1; });
+    lcm.forEach(function(c){ lIds[c.id]=1; });
+    lcm.forEach(function(c){ if(!bIds[c.id] && !rIds[c.id]) rcm.push(snap(c)); });
+    rt.comments=rcm.filter(function(c){ return !(bIds[c.id] && !lIds[c.id]); });
+  });
+
+  var ln=data.notes||[], bn=base.notes||[], rn=remote.notes;
+  var bn2={}, rn2={}, ln2={};
+  bn.forEach(function(n){ bn2[n.id]=n; });
+  rn.forEach(function(n){ rn2[n.id]=n; });
+  ln.forEach(function(n){ ln2[n.id]=1; });
+  ln.forEach(function(n){
+    if(!bn2[n.id] && !rn2[n.id]) rn.push(snap(n));
+    else if(rn2[n.id] && bn2[n.id] && n.done!==bn2[n.id].done) rn2[n.id].done=n.done;
+  });
+  remote.notes=rn.filter(function(n){ return !(bn2[n.id] && !ln2[n.id]); });
+  return remote;
+}
+
 function touch(){ dirty=true; $('save').disabled=false; $('nsave').disabled=false; }
 
 /* ─────────── данные */
@@ -437,6 +480,7 @@ function load(){
       if(txt===undefined) return;
       data=JSON.parse(txt);
       if(!Array.isArray(data.notes)) data.notes=[];
+      base=snap(data);                       // снимок на момент загрузки — основа для слияния
       dirty=false; $('save').disabled=true; $('nsave').disabled=true;
       $('gate').classList.remove('on');
       buildFilters(); render(); renderNotes(); busy(false); say('Обновлено','ok',true);
@@ -448,15 +492,31 @@ function load(){
 }
 
 function save(){
-  if(!data||!token) return;
+  if(!data||!token||!base) return;
   $('save').disabled=true; say('Сохраняю…');
-  var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
-  data.updated=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
-  var body={}; body[FILE_NAME]={content:JSON.stringify(data,null,2)+'\n'};
-  fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({files:body})})
-    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.message||('HTTP '+r.status)); return j; }); })
-    .then(function(){ dirty=false; $('save').disabled=true; $('nsave').disabled=true; say('Сохранено','ok',true); })
+  fetch(API+'?t='+Date.now(),{cache:'no-store',headers:{Authorization:'token '+token}})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(j){
+      var f=j.files[FILE_NAME];
+      if(f.truncated) return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.text(); });
+      return f.content;
+    })
+    .then(function(txt){
+      var merged=mergeOnto(JSON.parse(txt));
+      var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
+      merged.updated=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+      var body={}; body[FILE_NAME]={content:JSON.stringify(merged,null,2)+'\n'};
+      return fetch(API,{method:'PATCH',headers:{Authorization:'token '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({files:body})})
+        .then(function(r){ return r.json().then(function(x){ if(!r.ok) throw new Error(x.message||('HTTP '+r.status)); return merged; }); });
+    })
+    .then(function(merged){
+      data=merged; base=snap(merged);
+      dirty=false; $('save').disabled=true; $('nsave').disabled=true;
+      buildFilters(); render(); renderNotes();
+      if($('board2').classList.contains('on')) renderDash();
+      say('Сохранено','ok',true);
+    })
     .catch(function(e){
       if(/bad credentials|401|403/i.test(e.message)){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
       $('save').disabled=false; say('Не сохранилось: '+e.message,'err');
