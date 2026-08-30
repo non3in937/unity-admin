@@ -163,12 +163,12 @@ header button{flex:none; white-space:nowrap}
   display:flex; align-items:center; justify-content:center}
 #dash{border-color:var(--line)}
 #dash svg{width:19px; height:19px}
-#zoombtn{position:fixed; right:23px; z-index:45; width:46px; height:46px; padding:0;
-  bottom:calc(86px + env(safe-area-inset-bottom));
+#zoombtn{position:fixed; right:18px; z-index:45; width:56px; height:56px; padding:0;
+  bottom:calc(18px + env(safe-area-inset-bottom));
   border-radius:50%; background:var(--panel); border:1px solid var(--line);
-  color:var(--dim); box-shadow:0 6px 18px #0006;
+  color:var(--dim); box-shadow:0 8px 22px #0007;
   display:none; align-items:center; justify-content:center}
-#zoombtn svg{width:20px; height:20px}
+#zoombtn svg{width:23px; height:23px}
 #zoombtn.on{color:#fff; background:var(--acc); border-color:var(--acc)}
 @media (max-width:820px){ #zoombtn{display:flex} }
 
@@ -223,13 +223,13 @@ header button{flex:none; white-space:nowrap}
 .dnote{color:var(--dim); font-size:12.5px; line-height:1.5; margin-top:20px}
 
 /* круглая кнопка заметок */
-#fab{position:fixed; right:18px; z-index:45; width:56px; height:56px; padding:0;
-  bottom:calc(18px + env(safe-area-inset-bottom));
-  border-radius:50%; background:var(--acc); border:none; color:#fff; font-size:23px;
-  box-shadow:0 8px 22px #0007; display:flex; align-items:center; justify-content:center}
-#fab .dot{position:absolute; top:2px; right:2px; min-width:19px; height:19px; padding:0 5px;
-  border-radius:99px; background:var(--e1); color:#fff; font-size:11px; font-weight:700;
-  line-height:19px; display:none}
+#fab{position:fixed; right:23px; z-index:45; width:46px; height:46px; padding:0;
+  bottom:calc(86px + env(safe-area-inset-bottom));
+  border-radius:50%; background:var(--acc); border:none; color:#fff; font-size:19px;
+  box-shadow:0 6px 18px #0006; display:flex; align-items:center; justify-content:center}
+#fab .dot{position:absolute; top:-2px; right:-2px; min-width:18px; height:18px; padding:0 5px;
+  border-radius:99px; background:var(--e1); color:#fff; font-size:10.5px; font-weight:700;
+  line-height:18px; display:none}
 #fab .dot.on{display:block}
 
 /* экран заметок */
@@ -388,7 +388,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='43';
+var VERSION='44';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
