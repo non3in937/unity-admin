@@ -114,6 +114,23 @@ header button{flex:none; white-space:nowrap}
   padding:9px 12px; margin:0 0 10px 30px; display:none}
 .hint.on{display:block}
 .empty{color:var(--dim); font-size:12.5px; padding:6px 0}
+.csec{margin-top:18px; border-top:1px solid var(--line); padding-top:14px}
+.csec h4{margin:0 0 10px; font-size:12px; color:var(--dim); font-weight:600;
+  text-transform:uppercase; letter-spacing:.06em}
+.cm{display:flex; gap:9px; align-items:flex-start; padding:9px 11px; margin-bottom:8px;
+  background:var(--panel2); border:1px solid var(--line); border-radius:9px}
+.cm .body{flex:1; min-width:0}
+.cm p{margin:0; font-size:13.5px; line-height:1.45; white-space:pre-wrap; word-break:break-word}
+.cm time{display:block; margin-top:5px; font-size:11px; color:var(--dim)}
+.cm .del{flex:none; color:var(--dim); font-size:15px; line-height:1; cursor:pointer;
+  padding:1px 2px 1px 8px; opacity:.5}
+.cm .del:active{opacity:1; color:var(--e1)}
+.cadd{display:flex; gap:8px; margin-top:10px}
+.cadd textarea{flex:1; min-width:0; font:inherit; font-size:16px; color:var(--txt);
+  background:var(--panel2); border:1px solid var(--line); border-radius:9px;
+  padding:10px 12px; resize:vertical; min-height:44px; max-height:160px}
+.cadd textarea:focus{outline:none; border-color:var(--acc)}
+.cadd button{align-self:flex-end}
 
 /* полоса прогресса с кнопкой дашборда */
 .brow{display:flex; align-items:center; gap:10px; margin-top:6px}
@@ -336,7 +353,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='33';
+var VERSION='34';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -540,6 +557,11 @@ function card(t){
   t.disciplines.forEach(function(d){ var x=document.createElement('span'); x.className='tag'; x.textContent=d; m.appendChild(x); });
   el.appendChild(m);
 
+  if(t.comments && t.comments.length){
+    var cm=document.createElement('span'); cm.className='tag'; cm.textContent='💬 '+t.comments.length;
+    m.appendChild(cm);
+  }
+
   if(t.checklist.length){
     var p=document.createElement('div'); p.className='prog';
     var dn=t.checklist.filter(function(c){ return c.done; }).length;
@@ -676,19 +698,59 @@ function openTask(id){
     b.appendChild(row);
     if(hint) b.appendChild(hint);
   });
+
+  if(!Array.isArray(t.comments)) t.comments=[];
+  var sec=document.createElement('div'); sec.className='csec';
+  var h=document.createElement('h4');
+  h.textContent='Комментарии'+(t.comments.length?' · '+t.comments.length:'');
+  sec.appendChild(h);
+
+  t.comments.forEach(function(c){
+    var box=document.createElement('div'); box.className='cm';
+    var bd=document.createElement('div'); bd.className='body';
+    var p=document.createElement('p'); p.textContent=c.text;
+    var tm=document.createElement('time'); tm.textContent=c.ts||'';
+    bd.appendChild(p); bd.appendChild(tm);
+    var d=document.createElement('div'); d.className='del'; d.textContent='🗑';
+    d.onclick=function(){
+      t.comments.splice(t.comments.indexOf(c),1);
+      touch(); cTouched=true; openTask(id);
+    };
+    box.appendChild(bd); box.appendChild(d);
+    sec.appendChild(box);
+  });
+
+  var add=document.createElement('div'); add.className='cadd';
+  var ta=document.createElement('textarea'); ta.placeholder='Что заметил по этой задаче…';
+  var btn=document.createElement('button'); btn.className='primary'; btn.textContent='Добавить';
+  function post(){
+    var v=ta.value.trim(); if(!v) return;
+    var d=new Date(), p2=function(n){ return (n<10?'0':'')+n; };
+    t.comments.push({ id:'c'+Date.now(), text:v,
+      ts:p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+d.getFullYear()+' '+p2(d.getHours())+':'+p2(d.getMinutes()) });
+    ta.value=''; touch(); cTouched=true; openTask(id);
+  }
+  btn.onclick=post;
+  ta.addEventListener('keydown',function(e){ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) post(); });
+  add.appendChild(ta); add.appendChild(btn);
+  sec.appendChild(add);
+  b.appendChild(sec);
+
   $('modal').classList.add('on');
 }
 
-$('mclose').onclick=function(){
+function closeCard(){
   $('modal').classList.remove('on');
+  if(cTouched){ cTouched=false; if(dirty) save(); }
   if($('board2').classList.contains('on')) renderDash();
-};
-$('modal').onclick=function(e){ if(e.target===this) this.classList.remove('on'); };
+}
+$('mclose').onclick=closeCard;
+$('modal').onclick=function(e){ if(e.target===this) closeCard(); };
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
   if($('board2').classList.contains('on')){ $('board2').classList.remove('on'); return; }
   if($('notes').classList.contains('on')){ closeNotes(); return; }
-  $('modal').classList.remove('on');
+  closeCard();
 });
 
 /* ─────────── прочее */
@@ -752,6 +814,7 @@ function secColor(sec){
 }
 function taskColor(t){ return SYSCOL[SYS[t.section]||t.section] || '#6b7280'; }
 var dStage=null, dOpen=null, dMode='sys', dFocus=null;
+var cTouched=false;
 var SYS={
   'Арт':'Контент', 'Анимация':'Контент', 'Эффекты':'Контент', 'Нарратив':'Контент',
   'Геймплей':'Бой и мир', 'Противники':'Бой и мир', 'Мир':'Бой и мир',
