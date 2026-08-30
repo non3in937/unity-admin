@@ -82,6 +82,7 @@ header button{flex:none; white-space:nowrap}
 .tag{font-size:10.5px; padding:2px 7px; border-radius:99px; background:#00000038;
   color:var(--dim); border:1px solid var(--line)}
 .tag.stage{color:#c3cad8; border-color:#48506180; font-weight:600}
+.tag.warn{color:var(--e1); border-color:#e05c5c66; background:#e05c5c1a; font-weight:600}
 .tag.sec{color:#a9b2c4}
 .prog{font-size:11.5px; color:var(--dim); margin-top:7px; display:flex; align-items:center; gap:7px}
 .prog .bar{flex:1; margin:0; height:4px}
@@ -111,6 +112,27 @@ header button{flex:none; white-space:nowrap}
   border:1px solid var(--line); background:var(--bg); color:var(--dim);
   font-size:11px; font-weight:700; line-height:19px; text-align:center; cursor:pointer}
 .chk .info.on{color:#fff; background:var(--acc); border-color:var(--acc)}
+.chk .warn{flex:none; width:21px; height:21px; border-radius:50%; margin-left:6px;
+  border:1px solid #e05c5c66; background:#e05c5c1a; color:var(--e1);
+  font-size:12px; font-weight:700; line-height:19px; text-align:center; cursor:pointer}
+.chk .warn.ok{border-color:#3fbf6a66; background:#3fbf6a1a; color:var(--ok)}
+.chk .warn.on{background:var(--e1); color:#fff; border-color:var(--e1)}
+.chk .warn.ok.on{background:var(--ok); border-color:var(--ok)}
+.blk{font-size:12.5px; line-height:1.5; background:#e05c5c14;
+  border-left:2px solid var(--e1); border-radius:0 8px 8px 0;
+  padding:10px 12px; margin:0 0 10px 30px; display:none}
+.blk.on{display:block}
+.blk.done{background:#3fbf6a14; border-left-color:var(--ok)}
+.blk h5{margin:0 0 7px; font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--e1); font-weight:700}
+.blk.done h5{color:var(--ok)}
+.blk .bt{display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer}
+.blk .bt .st{flex:none; width:8px; height:8px; border-radius:50%}
+.blk .bt .tt{flex:1; color:var(--txt); font-size:13px; min-width:0}
+.blk .bt .sg{flex:none; font-size:10px; padding:1px 6px; border-radius:99px;
+  border:1px solid var(--line); color:var(--dim)}
+.blk .why{color:var(--dim); margin:6px 0 0}
+
 .hint{font-size:12.5px; line-height:1.5; color:var(--dim); background:#ffffff08;
   border-left:2px solid var(--acc); border-radius:0 8px 8px 0;
   padding:9px 12px; margin:0 0 10px 30px; display:none}
@@ -366,7 +388,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='39';
+var VERSION='40';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -570,6 +592,17 @@ function card(t){
   t.disciplines.forEach(function(d){ var x=document.createElement('span'); x.className='tag'; x.textContent=d; m.appendChild(x); });
   el.appendChild(m);
 
+  var blocked=t.checklist.some(function(c){
+    return c.blockedBy && c.blockedBy.some(function(b){
+      var bt=data.tasks.filter(function(x){ return x.id===b.id; })[0];
+      return bt && bt.status!=='done';
+    });
+  });
+  if(blocked){
+    var wt=document.createElement('span'); wt.className='tag warn'; wt.textContent='! блокер';
+    m.appendChild(wt);
+  }
+
   if(t.comments && t.comments.length){
     var cm=document.createElement('span'); cm.className='tag'; cm.textContent='💬 '+t.comments.length;
     m.appendChild(cm);
@@ -693,6 +726,46 @@ function openTask(id){
     var sp=document.createElement('span'); sp.textContent=c.text;
     row.appendChild(box); row.appendChild(sp);
 
+    // блокеры: чего не хватает, чтобы этот пункт вообще можно было закрыть
+    var blk=null;
+    if(c.blockedBy && c.blockedBy.length){
+      var deps=c.blockedBy.map(function(b){
+        var bt=data.tasks.filter(function(x){ return x.id===b.id; })[0];
+        return {t:bt, why:b.why};
+      }).filter(function(d){ return d.t; });
+      if(deps.length){
+        var solved=deps.every(function(d){ return d.t.status==='done'; });
+        var w=document.createElement('div');
+        w.className='warn'+(solved?' ok':''); w.textContent=solved?'✓':'!';
+        w.title=solved?'Блокер снят':'Есть блокер';
+        row.appendChild(w);
+
+        blk=document.createElement('div'); blk.className='blk'+(solved?' done':'');
+        var hh=document.createElement('h5');
+        hh.textContent=solved?'Блокер снят':'Сначала нужно закрыть';
+        blk.appendChild(hh);
+        deps.forEach(function(d){
+          var bt=document.createElement('div'); bt.className='bt';
+          var st=document.createElement('div'); st.className='st';
+          st.style.background='var('+STCOL[d.t.status]+')';
+          var tt=document.createElement('div'); tt.className='tt'; tt.textContent=d.t.title;
+          var sg=document.createElement('div'); sg.className='sg'; sg.textContent=d.t.stage;
+          bt.appendChild(st); bt.appendChild(tt); bt.appendChild(sg);
+          bt.onclick=function(ev){ ev.stopPropagation(); openTask(d.t.id); };
+          blk.appendChild(bt);
+          if(d.why){
+            var wy=document.createElement('p'); wy.className='why'; wy.textContent=d.why;
+            blk.appendChild(wy);
+          }
+        });
+        w.onclick=function(e){
+          e.stopPropagation();
+          var on=blk.classList.toggle('on');
+          w.classList.toggle('on', on);
+        };
+      }
+    }
+
     var hint=null;
     if(c.hint){
       var inf=document.createElement('div'); inf.className='info'; inf.textContent='i';
@@ -713,6 +786,7 @@ function openTask(id){
       render();
     };
     b.appendChild(row);
+    if(blk) b.appendChild(blk);
     if(hint) b.appendChild(hint);
   });
 
