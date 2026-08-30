@@ -135,7 +135,13 @@ header button{flex:none; white-space:nowrap}
 .seg div.on{background:var(--acc); color:#fff; font-weight:600}
 .lt .sc{flex:none; font-size:10px; padding:1px 6px; border-radius:99px;
   background:#00000038; border:1px solid var(--line); color:var(--dim)}
-.donut{display:block; margin:0 auto; width:min(70vw,260px); height:min(70vw,260px)}
+.donut{display:block; margin:0 auto; width:min(92vw,340px); height:min(74vw,272px)}
+.donut circle.sl{cursor:pointer}
+.donut .lbl{font-size:2.6px; font-weight:600}
+.donut .lead{stroke-width:.35; opacity:.65}
+.dback{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+.dback button{font-size:13px; padding:6px 12px}
+.dback b{font-size:15px}
 .dcap{text-align:center; color:var(--dim); font-size:13px; margin-top:10px}
 .dcap b{color:var(--txt); font-weight:600}
 .lrow.empty .lname, .lrow.empty .lpct{color:var(--dim); opacity:.55}
@@ -330,7 +336,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='30';
+var VERSION='31';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -743,7 +749,7 @@ function secColor(sec){
   return SECCOL[sec];
 }
 function taskColor(t){ return SYSCOL[SYS[t.section]||t.section] || '#6b7280'; }
-var dStage=null, dOpen=null, dMode='sys';
+var dStage=null, dOpen=null, dMode='sys', dFocus=null;
 var SYS={
   'Арт':'Контент', 'Анимация':'Контент', 'Эффекты':'Контент', 'Нарратив':'Контент',
   'Геймплей':'Бой и мир', 'Противники':'Бой и мир', 'Мир':'Бой и мир',
@@ -803,7 +809,7 @@ function renderDash(){
     var c=document.createElement('div');
     c.className='fbtn'+(dStage===v?' on':'');
     c.textContent=v||'Всё';
-    c.onclick=function(){ dStage=v; dOpen=null; renderDash(); };
+    c.onclick=function(){ dStage=v; dOpen=null; dFocus=null; renderDash(); };
     chips.appendChild(c);
   });
 
@@ -811,30 +817,59 @@ function renderDash(){
   [['sys','Системы'],['sec','Разделы']].forEach(function(m){
     var e=document.createElement('div');
     e.className=(dMode===m[0]?'on':''); e.textContent=m[1];
-    e.onclick=function(){ if(dMode===m[0]) return; dMode=m[0]; dOpen=null; renderDash(); };
+    e.onclick=function(){ if(dMode===m[0]) return; dMode=m[0]; dOpen=null; dFocus=null; renderDash(); };
     seg.appendChild(e);
   });
 
   var pct=d.all?Math.round(d.done/d.all*100):0;   // в центре — пройденный путь
-  var svg='<svg class="donut" viewBox="0 0 42 42">';
+  var svg='<svg class="donut" viewBox="-13 -3 68 48">';
   svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#232733" stroke-width="5.5"/>';
-  var off=0;
+  var off=0, labels='';
   d.rows.forEach(function(r){
     var len=r.share*100;
     if(len<=0) return;
-    svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="'+r.color+'" stroke-width="5.5"'
+    svg+='<circle class="sl" data-g="'+r.name.replace(/"/g,'')+'" cx="21" cy="21" r="15.915"'
+       +' fill="none" stroke="'+r.color+'" stroke-width="5.5"'
        +' stroke-dasharray="'+len.toFixed(2)+' '+(100-len).toFixed(2)+'"'
        +' stroke-dashoffset="'+(25-off).toFixed(2)+'"/>';
+    if(len>=6){                                  // мелкие не подписываем — иначе каша
+      var a=(-90+(off+len/2)*3.6)*Math.PI/180;
+      var cx=Math.cos(a), cy=Math.sin(a);
+      var right=cx>=0;
+      labels+='<line class="lead" x1="'+(21+cx*19).toFixed(2)+'" y1="'+(21+cy*19).toFixed(2)+'"'
+            +' x2="'+(21+cx*22.5).toFixed(2)+'" y2="'+(21+cy*22.5).toFixed(2)+'"'
+            +' stroke="'+r.color+'"/>';
+      labels+='<text class="lbl" x="'+(21+cx*22.5+(right?1:-1)).toFixed(2)+'"'
+            +' y="'+(21+cy*22.5).toFixed(2)+'" fill="'+r.color+'"'
+            +' text-anchor="'+(right?'start':'end')+'" dominant-baseline="middle">'
+            +r.name+' '+Math.round(r.share*100)+'%</text>';
+    }
     off+=len;
   });
+  svg+=labels;
   svg+='<text class="dmid" x="21" y="21" text-anchor="middle" dominant-baseline="central"'
      +' style="font-size:8.5px">'+pct+'%</text>';
   svg+='</svg>';
   svg+='<div class="dcap">осталось <b>'+d.left+'</b> из '+d.all+' подпунктов</div>';
   $('dchart').innerHTML=svg;
+  $('dchart').querySelectorAll('circle.sl').forEach(function(c){
+    c.onclick=function(){ dFocus=c.dataset.g; dOpen=c.dataset.g; renderDash(); };
+  });
 
   var lg=$('dlegend'); lg.innerHTML='';
-  d.rows.forEach(function(r){
+  var rows=d.rows;
+  if(dFocus){
+    var only=d.rows.filter(function(r){ return r.name===dFocus; });
+    if(only.length){
+      rows=only;
+      var back=document.createElement('div'); back.className='dback';
+      var b=document.createElement('button'); b.textContent='← Все системы';
+      b.onclick=function(){ dFocus=null; dOpen=null; renderDash(); };
+      back.appendChild(b);
+      lg.appendChild(back);
+    } else { dFocus=null; }
+  }
+  rows.forEach(function(r){
     var open=(dOpen===r.name);
     var row=document.createElement('div');
     row.className='lrow'+(open?' open':'')+(r.rest?'':' empty');
@@ -884,7 +919,7 @@ function renderDash(){
 
   $('dnote').textContent='В кольце — только оставшаяся работа: доля показывает, '+
     'какую часть остатка занимает система. Полоска и число справа — сколько '+
-    'в ней уже закрыто. Бэклог не учитывается. '+
+    'в ней уже закрыто. Нажми на сектор кольца, чтобы провалиться в его задачи. Бэклог не учитывается. '+
     (dMode==='sys'
       ? 'Системы — это склеенные разделы: так в кольце восемь долей вместо двадцати одной. Переключись на «Разделы» для полной картины.'
       : 'Полная разбивка по разделам. Переключись на «Системы», если долей слишком много.')+
@@ -904,7 +939,7 @@ function renderDash(){
   $('dashicon').innerHTML=svg;
 })();
 
-$('dash').onclick=function(){ if(!data) return; $('board2').classList.add('on'); renderDash(); };
+$('dash').onclick=function(){ if(!data) return; dFocus=null; dOpen=null; $('board2').classList.add('on'); renderDash(); };
 $('dclose').onclick=function(){ $('board2').classList.remove('on'); };
 
 /* ─────────── заметки */
