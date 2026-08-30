@@ -14,6 +14,7 @@
 body{margin:0; background:var(--bg); color:var(--txt); overscroll-behavior:none;
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body.dragging{overflow:hidden; touch-action:none; user-select:none}
+body.dragging .col{min-height:60vh; transition:min-height .15s}
 
 header{position:sticky; top:0; z-index:20; background:var(--panel);
   border-bottom:1px solid var(--line); padding:10px 14px;
@@ -388,7 +389,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='40';
+var VERSION='41';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -655,9 +656,21 @@ function begin(el,t,x,y,byHold){
   if(navigator.vibrate) try{ navigator.vibrate(12); }catch(err){}
 }
 
+// раньше искали колонку под точкой, и короткая колонка кончалась выше пальца —
+// уронить в неё было нельзя. Теперь смотрим только на горизонталь: вся полоса колонки ловит
 function colAt(x,y){
-  var el=document.elementFromPoint(x,y);
-  return el?el.closest('.col'):null;
+  var cols=document.querySelectorAll('.col');
+  if(!cols.length) return null;
+  var board=$('board').getBoundingClientRect();
+  if(y<board.top-40) return null;                   // выше доски — не бросаем
+  var best=null, dmin=Infinity;
+  for(var i=0;i<cols.length;i++){
+    var r=cols[i].getBoundingClientRect();
+    if(x>=r.left && x<=r.right) return cols[i];
+    var d=(x<r.left) ? r.left-x : x-r.right;        // между колонками — ближайшая
+    if(d<dmin){ dmin=d; best=cols[i]; }
+  }
+  return best;
 }
 
 function edgeScroll(x){
