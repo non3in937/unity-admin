@@ -366,7 +366,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='38';
+var VERSION='39';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -585,7 +585,7 @@ function card(t){
   }
 
   el.addEventListener('pointerdown',function(e){ grab(e,el,t); });
-  el.addEventListener('click',function(){ if(suppress){ suppress=false; return; } openTask(t.id); });
+  el.addEventListener('click',function(e){ cardTap(e,t.id); });
   return el;
 }
 
@@ -606,6 +606,7 @@ function grab(e,el,t){
 
 function begin(el,t,x,y,byHold){
   hold=null;
+  if(tapTimer){ clearTimeout(tapTimer); tapTimer=null; }
   var r=el.getBoundingClientRect();
   var k=(window.innerWidth<=820) ? curK : 1;
   var ghost=el.cloneNode(true);
@@ -1146,6 +1147,22 @@ function toggleZoom(){
   $('zoombtn').classList.toggle('on', !!zoom);
 }
 $('zoombtn').onclick=function(e){ e.stopPropagation(); toggleZoom(); };
+
+var tapT=0, tapX=0, tapY=0, tapTimer=null;
+function cardTap(e,id){
+  if(suppress){ suppress=false; return; }
+  if(window.innerWidth>820){ openTask(id); return; }   // мышью открываем сразу
+  var now=Date.now();
+  if(tapTimer && now-tapT<320 && Math.hypot(e.clientX-tapX,e.clientY-tapY)<40){
+    clearTimeout(tapTimer); tapTimer=null; tapT=0;
+    toggleZoom();                                       // второй тап — масштаб
+    return;
+  }
+  tapT=now; tapX=e.clientX; tapY=e.clientY;
+  if(tapTimer) clearTimeout(tapTimer);
+  // ждём, не придёт ли второй тап; иначе первый успел бы открыть карточку
+  tapTimer=setTimeout(function(){ tapTimer=null; openTask(id); },230);
+}
 
 var lastTap=0;
 $('board').addEventListener('click',function(e){
