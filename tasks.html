@@ -135,9 +135,9 @@ header button{flex:none; white-space:nowrap}
 .seg div.on{background:var(--acc); color:#fff; font-weight:600}
 .lt .sc{flex:none; font-size:10px; padding:1px 6px; border-radius:99px;
   background:#00000038; border:1px solid var(--line); color:var(--dim)}
-.donut{display:block; margin:0 auto; width:min(92vw,340px); height:min(74vw,272px)}
+.donut{display:block; margin:0 auto; width:min(96vw,360px); height:auto}
 .donut circle.sl{cursor:pointer}
-.donut .lbl{font-size:2.6px; font-weight:600}
+.donut .lbl{font-size:2.9px; font-weight:600}
 .donut .lead{stroke-width:.35; opacity:.65}
 .dback{display:flex; align-items:center; gap:8px; margin-bottom:6px}
 .dback button{font-size:13px; padding:6px 12px}
@@ -336,7 +336,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='31';
+var VERSION='32';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -738,6 +738,8 @@ function toHex(h,sa,l){
   }).join('');
 }
 var SECCOL={}, LSTEP=[0, 0.13, -0.09, 0.24, -0.16, 0.34];
+var SHORT={'Мета и деньги':'Мета', 'Бой и мир':'Бой', 'Производительность':'Кадры'};
+function shortName(n){ return SHORT[n] || n; }
 function secColor(sec){
   if(SECCOL[sec]) return SECCOL[sec];
   var sys=SYS[sec]||sec, base=SYSCOL[sys]||'#6b7280';
@@ -822,7 +824,7 @@ function renderDash(){
   });
 
   var pct=d.all?Math.round(d.done/d.all*100):0;   // в центре — пройденный путь
-  var svg='<svg class="donut" viewBox="-13 -3 68 48">';
+  var svg='<svg class="donut" viewBox="-15 -2 72 46">';
   svg+='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#232733" stroke-width="5.5"/>';
   var off=0, labels='';
   d.rows.forEach(function(r){
@@ -842,7 +844,7 @@ function renderDash(){
       labels+='<text class="lbl" x="'+(21+cx*22.5+(right?1:-1)).toFixed(2)+'"'
             +' y="'+(21+cy*22.5).toFixed(2)+'" fill="'+r.color+'"'
             +' text-anchor="'+(right?'start':'end')+'" dominant-baseline="middle">'
-            +r.name+' '+Math.round(r.share*100)+'%</text>';
+            +shortName(r.name)+'</text>';
     }
     off+=len;
   });
