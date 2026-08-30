@@ -259,10 +259,9 @@ header button{flex:none; white-space:nowrap}
     overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none;
     -webkit-overflow-scrolling:touch}
   #board::-webkit-scrollbar{display:none}
-  .col{flex:0 0 86%; scroll-snap-align:start; padding:9px; transition:flex-basis .2s}
+  .col{flex:0 0 300px; scroll-snap-align:start; padding:9px}
   body.dragging #board{scroll-snap-type:none}
-  #board.z1 .col{flex-basis:56%}
-  #board.z1 .card h3{font-size:12.5px}
+  #board.z1{zoom:.62}
 }
 </style>
 </head>
@@ -353,7 +352,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='34';
+var VERSION='35';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
@@ -590,14 +589,17 @@ function grab(e,el,t){
   }
 }
 
+var ZOOMK=0.62;
 function begin(el,t,x,y,byHold){
   hold=null;
   var r=el.getBoundingClientRect();
+  var k=(zoom && window.innerWidth<=820) ? ZOOMK : 1;
   var ghost=el.cloneNode(true);
   ghost.classList.add('ghost');
-  ghost.style.width=r.width+'px';
+  ghost.style.width=(r.width/k)+'px';
   ghost.style.left=r.left+'px';
   ghost.style.top=r.top+'px';
+  if(k!==1){ ghost.style.transformOrigin='0 0'; ghost.style.transform='scale('+k+') rotate(1.5deg)'; }
   document.body.appendChild(ghost);
   el.classList.add('dragging');
   document.body.classList.add('dragging');
