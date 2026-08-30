@@ -14,7 +14,7 @@
 body{margin:0; background:var(--bg); color:var(--txt); overscroll-behavior:none;
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body.dragging{overflow:hidden; touch-action:none; user-select:none}
-body.dragging .col{min-height:60vh; transition:min-height .15s}
+body.dragging .col{min-height:60vh}
 
 header{position:sticky; top:0; z-index:20; background:var(--panel);
   border-bottom:1px solid var(--line); padding:10px 14px;
@@ -389,7 +389,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='41';
+var VERSION='42';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
