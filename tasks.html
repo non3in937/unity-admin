@@ -14,7 +14,6 @@
 body{margin:0; background:var(--bg); color:var(--txt); overscroll-behavior:none;
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body.dragging{overflow:hidden; touch-action:none; user-select:none}
-body.dragging .col{min-height:60vh}
 
 header{position:sticky; top:0; z-index:20; background:var(--panel);
   border-bottom:1px solid var(--line); padding:10px 14px;
@@ -63,7 +62,7 @@ header button{flex:none; white-space:nowrap}
 .fclear .fopt{color:var(--dim); justify-content:center}
 
 #board{padding:14px}
-#binner{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start;
+#binner{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:stretch;
   transform-origin:0 0}
 .col{background:var(--panel); border:1px solid var(--line); border-radius:12px;
   padding:10px; min-height:120px}
@@ -291,7 +290,7 @@ header button{flex:none; white-space:nowrap}
   #board{padding:10px; overflow-x:auto; scroll-snap-type:x proximity;
     scrollbar-width:none; -webkit-overflow-scrolling:touch}
   #board::-webkit-scrollbar{display:none}
-  #binner{display:flex; grid-template-columns:none; gap:10px; align-items:flex-start}
+  #binner{display:flex; grid-template-columns:none; gap:10px; align-items:stretch}
   .col{flex:0 0 300px; scroll-snap-align:start; padding:9px}
   body.dragging #board, #board.scaled{scroll-snap-type:none}
   /* масштаб ведётся из кода: #binner.style.transform — вёрстка не пересобирается */
@@ -389,7 +388,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='42';
+var VERSION='43';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, dirty=false, openId=null, token=null, zoom=0;
