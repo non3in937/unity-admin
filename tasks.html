@@ -163,12 +163,14 @@ header button{flex:none; white-space:nowrap}
   display:flex; align-items:center; justify-content:center}
 #dash{border-color:var(--line)}
 #dash svg{width:19px; height:19px}
-#zoombtn{position:fixed; right:18px; z-index:45; width:56px; height:56px; padding:0;
-  bottom:calc(18px + env(safe-area-inset-bottom));
+/* Масштаб — вспомогательный, поэтому меньше заметок и стоит в самом углу.
+   Заметки крупнее и отцентрованы по его оси: 20+44/2 = 14+56/2 = 42 от края. */
+#zoombtn{position:fixed; right:20px; z-index:45; width:44px; height:44px; padding:0;
+  bottom:calc(20px + env(safe-area-inset-bottom));
   border-radius:50%; background:var(--panel); border:1px solid var(--line);
-  color:var(--dim); box-shadow:0 8px 22px #0007;
+  color:var(--dim); box-shadow:0 6px 16px #0006;
   display:none; align-items:center; justify-content:center}
-#zoombtn svg{width:23px; height:23px}
+#zoombtn svg{width:19px; height:19px}
 #zoombtn.on{color:#fff; background:var(--acc); border-color:var(--acc)}
 @media (max-width:820px){ #zoombtn{display:flex} }
 
@@ -223,10 +225,10 @@ header button{flex:none; white-space:nowrap}
 .dnote{color:var(--dim); font-size:12.5px; line-height:1.5; margin-top:20px}
 
 /* круглая кнопка заметок */
-#fab{position:fixed; right:23px; z-index:45; width:46px; height:46px; padding:0;
-  bottom:calc(86px + env(safe-area-inset-bottom));
-  border-radius:50%; background:var(--acc); border:none; color:#fff; font-size:19px;
-  box-shadow:0 6px 18px #0006; display:flex; align-items:center; justify-content:center}
+#fab{position:fixed; right:14px; z-index:45; width:56px; height:56px; padding:0;
+  bottom:calc(78px + env(safe-area-inset-bottom));
+  border-radius:50%; background:var(--acc); border:none; color:#fff; font-size:23px;
+  box-shadow:0 8px 22px #0007; display:flex; align-items:center; justify-content:center}
 #fab .dot{position:absolute; top:-2px; right:-2px; min-width:18px; height:18px; padding:0 5px;
   border-radius:99px; background:var(--e1); color:#fff; font-size:10.5px; font-weight:700;
   line-height:18px; display:none}
@@ -396,7 +398,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='46';
+var VERSION='47';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -446,6 +448,17 @@ function mergeOnto(remote){
     rt.comments=rcm.filter(function(c){ return !(bIds[c.id] && !lIds[c.id]); });
   });
 
+  // Порядок несёт смысл: перенесённая карточка лежит сверху. Слияние берёт
+  // задачи из свежего гиста, поэтому раскладываем их в нашем порядке.
+  var order={}; data.tasks.forEach(function(t,i){ order[t.id]=i; });
+  remote.tasks.sort(function(a,b){
+    var ai=order[a.id], bi=order[b.id];
+    if(ai===undefined && bi===undefined) return 0;
+    if(ai===undefined) return 1;
+    if(bi===undefined) return -1;
+    return ai-bi;
+  });
+
   var ln=data.notes||[], bn=base.notes||[], rn=remote.notes;
   var bn2={}, rn2={}, ln2={};
   bn.forEach(function(n){ bn2[n.id]=n; });
@@ -457,6 +470,13 @@ function mergeOnto(remote){
   });
   remote.notes=rn.filter(function(n){ return !(bn2[n.id] && !ln2[n.id]); });
   return remote;
+}
+
+// Порядок карточек в массиве — это и есть порядок на доске. Перенесённая
+// должна оказаться сверху, а не теряться в хвосте длинной колонки.
+function bump(t){
+  var i=data.tasks.indexOf(t);
+  if(i > 0){ data.tasks.splice(i,1); data.tasks.unshift(t); }
 }
 
 function touch(){ dirty=true; $('save').disabled=false; $('nsave').disabled=false; }
@@ -774,7 +794,7 @@ function drop(e){
   if(moved || (drag && drag.byHold)) suppress=true;   // зажал пальцем и передумал — не открываем
   if(!drag){ start=null; return; }
   var col=colAt(e.clientX,e.clientY);
-  if(col && drag.t.status!==col.dataset.st){ drag.t.status=col.dataset.st; touch(); }
+  if(col && drag.t.status!==col.dataset.st){ drag.t.status=col.dataset.st; bump(drag.t); touch(); }
   drag.ghost.remove();
   drag.el.classList.remove('dragging');
   document.body.classList.remove('dragging');
@@ -861,8 +881,8 @@ function openTask(id){
     row.onclick=function(){
       c.done=!c.done; touch();
       row.classList.toggle('done', c.done);
-      if(c.done && t.checklist.every(function(x){ return x.done; }) && !DONEST[t.status]) t.status='done';
-      else if(!c.done && DONEST[t.status]) t.status='doing';
+      if(c.done && t.checklist.every(function(x){ return x.done; }) && !DONEST[t.status]) { t.status='done'; bump(t); }
+      else if(!c.done && DONEST[t.status]) { t.status='doing'; bump(t); }
       render();
     };
     b.appendChild(row);
