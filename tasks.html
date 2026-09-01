@@ -398,7 +398,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='50';
+var VERSION='51';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -1166,7 +1166,12 @@ function renderDash(){
     var dot=document.createElement('div'); dot.className='ldot'; dot.style.background=r.color;
     var nm=document.createElement('div'); nm.className='lname'; nm.textContent=r.name;
     var sh=document.createElement('div'); sh.className='lpct';
-    sh.textContent=Math.round(r.share*100)+'%';
+    // Закрытая система показывает 100%, а не свои 0% доли остатка. Формально это
+    // другая величина, но ноль напротив полной полоски читается как «не сделано
+    // ничего», хотя всё ровно наоборот. Условие именно на rest, а не на округлённый
+    // процент: у системы с одним оставшимся пунктом доля тоже округлится в ноль,
+    // и она бы соврала, что закрыта.
+    sh.textContent = r.rest ? Math.round(r.share*100)+'%' : '100%';
     var bar=document.createElement('div'); bar.className='lbar';
     var fill=document.createElement('i');
     fill.style.width=(r.all?r.done/r.all*100:0)+'%';
@@ -1208,7 +1213,7 @@ function renderDash(){
   });
 
   $('dnote').textContent='В кольце — только оставшаяся работа: доля показывает, '+
-    'какую часть остатка занимает система. Полоска и число справа — сколько '+
+    'какую часть остатка занимает система, а закрытая показывает 100%. Полоска и число справа — сколько '+
     'в ней уже закрыто. Нажми на сектор кольца, чтобы провалиться в его задачи. Бэклог не учитывается. '+
     (dMode==='sys'
       ? 'Системы — это склеенные разделы: так в кольце восемь долей вместо двадцати одной. Переключись на «Разделы» для полной картины.'
