@@ -14,6 +14,7 @@
 body{margin:0; background:var(--bg); color:var(--txt); overscroll-behavior:none;
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body.dragging{overflow:hidden; touch-action:none; user-select:none}
+html,body{overscroll-behavior-y:contain}
 
 header{position:sticky; top:0; z-index:20; background:var(--panel);
   border-bottom:1px solid var(--line); padding:10px 14px;
@@ -45,6 +46,19 @@ button.primary:disabled{opacity:.45; cursor:default}
 #reload.fail{color:var(--e1); border-color:var(--e1); background:#e05c5c1f}
 #ver{font-size:11px; color:var(--dim); opacity:.65; white-space:nowrap; flex:none}
 .prow{margin-top:10px; position:relative}
+
+/* Потяни вниз — обновить. Лежит слоем НИЖЕ шапки (у той z-index 20) и непрозрачный
+   её фон служит шторкой: пока индикатор не вышел за нижний край шапки, его не видно,
+   и он словно выезжает из-под неё. */
+#ptr{position:fixed; z-index:19; left:50%;
+  display:flex; align-items:center; gap:8px;
+  background:var(--panel); border:1px solid var(--line); border-radius:99px;
+  padding:7px 14px; font-size:12.5px; color:var(--dim); white-space:nowrap;
+  box-shadow:0 6px 18px #0007; pointer-events:none; opacity:0}
+#ptr .sp{flex:none; width:13px; height:13px; border-radius:50%;
+  border:2px solid var(--line); border-top-color:var(--acc)}
+#ptr.spin .sp{animation:ptrspin .7s linear infinite}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
 header button{flex:none; white-space:nowrap}
 #status.err{color:var(--e1); border-color:var(--e1)}
 #status.ok{color:var(--ok); border-color:var(--ok)}
@@ -410,7 +424,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='54';
+var VERSION='55';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -502,8 +516,8 @@ function gate(msg){
   setTimeout(function(){ $('gtok').focus(); },50);
 }
 
-function load(){
-  if(!token){ gate(); return; }
+function load(done){
+  if(!token){ gate(); if(done) done(); return; }
   busy(true); say('Обновляю…');
   fetch(API+'?t='+Date.now(), {cache:'no-store', headers:{Authorization:'token '+token}})
     .then(function(r){
@@ -526,8 +540,10 @@ function load(){
       dirty=false; $('save').disabled=true; $('nsave').disabled=true;
       $('gate').classList.remove('on');
       buildFilters(); render(); renderNotes(); busy(false); say('Обновлено','ok',true);
+      if(done) done();
     })
     .catch(function(e){
+      if(done) done();
       if(e.message==='BADTOKEN'){ token=null; lsSet('gh_token',''); busy(false); gate('Токен не подошёл'); return; }
       failed(); say('Не загрузилось: '+e.message,'err');
     });
@@ -1413,6 +1429,68 @@ setInterval(autosave, AUTOSAVE_MS);
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='hidden') autosave();
 });
+
+/* ─────────── потяни вниз — обновить
+   Только когда доска в самом верху и никого не тащат: перетаскивание карточек
+   ловит те же касания. Порог с сопротивлением, чтобы жест не срабатывал случайно
+   при обычной прокрутке к началу списка. */
+(function(){
+  var el=null, y0=0, pull=0, armed=false, running=false;
+  var TRIG=68, MAX=96, RESIST=0.45;
+
+  function tip(){
+    if(el) return el;
+    el=document.createElement('div'); el.id='ptr';
+    el.innerHTML='<span class="sp"></span><span class="tx"></span>';
+    document.body.appendChild(el);
+    return el;
+  }
+  function place(p, text){
+    var e=tip();
+    e.style.top=document.querySelector('header').getBoundingClientRect().bottom+'px';
+    e.style.opacity=p>4?'1':'0';
+    e.style.transform='translate(-50%, calc(-100% + '+p+'px))';
+    e.querySelector('.tx').textContent = text || (p>=TRIG ? 'Отпусти — обновится' : 'Потяни, чтобы обновить');
+  }
+  function reset(){
+    if(!el) return;
+    el.classList.remove('spin');
+    el.style.transition='transform .2s, opacity .2s';
+    place(0, ' '); el.style.opacity='0';
+    setTimeout(function(){ if(el) el.style.transition=''; },220);
+  }
+  function busyNow(){ return document.body.classList.contains('dragging'); }
+
+  document.addEventListener('touchstart',function(e){
+    armed=false; pull=0;
+    if(running || busyNow() || e.touches.length!==1) return;
+    if(window.scrollY>0) return;
+    // панели поверх доски прокручиваются сами, жест им не нужен
+    if(e.target.closest('#modal,#notes,#board2,#gate,.fpop')) return;
+    y0=e.touches[0].clientY; armed=true;
+  },{passive:true});
+
+  document.addEventListener('touchmove',function(e){
+    if(!armed) return;
+    if(busyNow()){ armed=false; if(pull) reset(); pull=0; return; }   // потащили карточку
+    var d=e.touches[0].clientY-y0;
+    if(d<=0 || window.scrollY>0){ if(pull){ pull=0; reset(); } return; }
+    pull=Math.min(MAX, d*RESIST);
+    place(pull);
+  },{passive:true});
+
+  document.addEventListener('touchend',function(){
+    if(!armed) return;
+    armed=false;
+    if(pull<TRIG || running){ if(pull) reset(); pull=0; return; }
+    pull=0;
+    if(dirty && !confirm('Несохранённые правки пропадут. Обновить?')){ reset(); return; }
+    running=true;
+    tip().classList.add('spin');
+    place(TRIG, 'Обновляю…');
+    load(function(){ running=false; reset(); });
+  },{passive:true});
+})();
 
 $('ver').textContent='сборка '+VERSION;
 token=ls('gh_token')||null;
