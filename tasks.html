@@ -398,7 +398,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='48';
+var VERSION='49';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -881,7 +881,10 @@ function openTask(id){
     row.onclick=function(){
       c.done=!c.done; touch();
       row.classList.toggle('done', c.done);
+      // Галочки сами везут карточку: первая — в работу, последняя — в готово.
+      // Из «на ревью» первой галочкой не тянем назад — там карточка уже дальше по пути.
       if(c.done && t.checklist.every(function(x){ return x.done; }) && !DONEST[t.status]) { t.status='done'; bump(t); }
+      else if(c.done && t.status==='todo') { t.status='doing'; bump(t); }
       else if(!c.done && DONEST[t.status]) { t.status='doing'; bump(t); }
       render();
     };
