@@ -33,9 +33,9 @@ button.primary:disabled{opacity:.45; cursor:default}
    С автосейвом это стало происходить само каждую минуту.
    Абсолютное положение внутри .prow: место занято всегда, высота не меняется,
    и вертикальный отступ не надо подбирать числом — строка сама его задаёт. */
-#status{position:absolute; z-index:60; right:0; top:50%; transform:translateY(-50%);
-  max-width:calc(100% - 52px);
-  font-size:12.5px; color:var(--dim); text-align:right; line-height:1.35;
+#status{position:absolute; z-index:60; left:50%; top:50%; transform:translate(-50%,-50%);
+  max-width:calc(100% - 100px);          /* слева счётчик — оставляем ему место с запасом */
+  font-size:12.5px; color:var(--dim); text-align:center; line-height:1.35;
   background:var(--panel); border:1px solid var(--line); border-radius:99px;
   padding:5px 12px; box-shadow:0 6px 18px #0007;
   opacity:0; pointer-events:none; transition:opacity .18s}
@@ -424,7 +424,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='55';
+var VERSION='56';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
