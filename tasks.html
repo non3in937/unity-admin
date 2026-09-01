@@ -398,10 +398,11 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='49';
+var VERSION='50';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
+var saving=false;                                    // одно сохранение за раз: автосейв не лезет поверх ручного
 var F={stages:[], sections:[], backlog:false};
 var BACKLOG='Бэклог';
 
@@ -519,8 +520,13 @@ function load(){
     });
 }
 
-function save(){
+// reopen — id карточки, которую надо открыть заново после записи. Слияние возвращает
+// свежее дерево объектов, и открытое окно осталось бы привязано к выброшенному:
+// галочки в нём ставились бы в никуда.
+function save(reopen){
   if(!data||!token||!base) return;
+  if(saving) return;
+  saving=true;
   $('save').disabled=true; say('Сохраняю…');
   fetch(API+'?t='+Date.now(),{cache:'no-store',headers:{Authorization:'token '+token}})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -539,16 +545,33 @@ function save(){
         .then(function(r){ return r.json().then(function(x){ if(!r.ok) throw new Error(x.message||('HTTP '+r.status)); return merged; }); });
     })
     .then(function(merged){
+      saving=false;
       data=merged; base=snap(merged);
       dirty=false; $('save').disabled=true; $('nsave').disabled=true;
       buildFilters(); render(); renderNotes();
       if($('board2').classList.contains('on')) renderDash();
+      if(reopen && $('modal').classList.contains('on')) openTask(reopen);
       say('Сохранено','ok',true);
     })
     .catch(function(e){
+      saving=false;
       if(/bad credentials|401|403/i.test(e.message)){ token=null; lsSet('gh_token',''); gate('Токен не подошёл'); return; }
       $('save').disabled=false; say('Не сохранилось: '+e.message,'err');
     });
+}
+
+/* ─────────── автосохранение
+   Ручное «Сохранить» забывается: поработал, закрыл вкладку — и всё мимо гиста.
+   Раз в минуту дописываем сами. Слияние на записи то же самое, так что параллельная
+   работа с телефона по-прежнему не затирается. */
+var AUTOSAVE_MS=60000;
+
+function autosave(){
+  if(!dirty || saving || !data || !token || !base) return;
+  // Пока палец в поле ввода, набранного ещё нет в данных: перерисовка сотрёт текст
+  var el=document.activeElement;
+  if(el && (el.tagName==='INPUT' || el.tagName==='TEXTAREA')) return;
+  save($('modal').classList.contains('on') ? openId : null);
 }
 
 /* ─────────── фильтры */
@@ -956,8 +979,10 @@ $('reload').onclick=function(){
   if(dirty && !confirm('Несохранённые правки пропадут. Обновить?')) return;
   load();
 };
-$('save').onclick=save;
-window.addEventListener('beforeunload',function(e){ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+$('save').onclick=function(){ save(); };
+// Записать при самом закрытии браузер не даст — запрос оборвётся на полпути,
+// поэтому уход с несохранённым (и с недописанным) он у нас переспрашивает.
+window.addEventListener('beforeunload',function(e){ if(dirty||saving){ e.preventDefault(); e.returnValue=''; } });
 
 function enter(){
   var v=$('gtok').value.trim();
@@ -1284,7 +1309,7 @@ function closeNotes(){
   if(dirty) save();          // закрыл — сохранилось само
 }
 $('nclose').onclick=closeNotes;
-$('nsave').onclick=save;
+$('nsave').onclick=function(){ save(); };
 $('nadd').onclick=addNote;
 $('ntext').addEventListener('keydown',function(e){ if(e.key==='Enter') addNote(); });
 
@@ -1354,6 +1379,15 @@ $('board').addEventListener('click',function(e){
   var now=Date.now();
   if(now-lastTap<330){ toggleZoom(); lastTap=0; }
   else lastTap=now;
+});
+
+setInterval(autosave, AUTOSAVE_MS);
+
+// Уход со страницы. Вкладку прячут не только закрытием — переключение вкладки,
+// сворачивание, блокировка экрана телефона дают то же событие, и это единственный
+// момент, когда браузер ещё разрешает начать запрос.
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden') autosave();
 });
 
 $('ver').textContent='сборка '+VERSION;
