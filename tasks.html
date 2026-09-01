@@ -398,7 +398,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='51';
+var VERSION='52';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -1168,10 +1168,16 @@ function renderDash(){
     var sh=document.createElement('div'); sh.className='lpct';
     // Закрытая система показывает 100%, а не свои 0% доли остатка. Формально это
     // другая величина, но ноль напротив полной полоски читается как «не сделано
-    // ничего», хотя всё ровно наоборот. Условие именно на rest, а не на округлённый
-    // процент: у системы с одним оставшимся пунктом доля тоже округлится в ноль,
-    // и она бы соврала, что закрыта.
-    sh.textContent = r.rest ? Math.round(r.share*100)+'%' : '100%';
+    // ничего», хотя всё ровно наоборот.
+    //
+    // А у незакрытой ноль вообще не должен появляться: теперь он означает «готово»,
+    // и система с последним несделанным пунктом (при трёх сотнях остатка это 0.3%)
+    // выглядела бы закрытой. Поэтому там, где округление даёт ноль, показываем
+    // десятую долю процента, а совсем мелкое — как «меньше 0.1».
+    var p = r.share*100;
+    sh.textContent = !r.rest      ? '100%'
+                   : Math.round(p) ? Math.round(p)+'%'
+                   : (p>=0.05 ? p.toFixed(1) : '<0.1')+'%';
     var bar=document.createElement('div'); bar.className='lbar';
     var fill=document.createElement('i');
     fill.style.width=(r.all?r.done/r.all*100:0)+'%';
