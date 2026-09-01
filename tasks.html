@@ -26,7 +26,19 @@ button{font:inherit; color:var(--txt); background:var(--panel2);
 button:active{transform:translateY(1px)}
 button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
 button.primary:disabled{opacity:.45; cursor:default}
-#status{font-size:12.5px; color:var(--dim); margin-top:9px; display:none}
+/* Строка статуса плавает над доской, а не стоит в шапке.
+   В потоке она добавляла шапке строку на время сохранения и убирала обратно —
+   вся доска дёргалась вниз и вверх. С автосейвом это стало происходить само
+   каждую минуту, поэтому вынесена из потока: двигать теперь нечего.
+   Правее держатся кнопки заметок и масштаба, отсюда ограничение ширины. */
+#status{position:fixed; z-index:60; left:50%; transform:translateX(-50%);
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  max-width:min(520px, calc(100vw - 100px));
+  font-size:12.5px; color:var(--dim); text-align:center;
+  background:var(--panel); border:1px solid var(--line); border-radius:99px;
+  padding:8px 15px; box-shadow:0 8px 22px #0007;
+  opacity:0; pointer-events:none; transition:opacity .18s}
+#status.on{opacity:1}
 #reload{transition:color .2s, border-color .2s, background .2s}
 #reload.ready{color:var(--ok); border-color:var(--ok); background:#3fbf6a1f}
 #reload.busy{color:var(--dim); border-color:var(--line); background:var(--panel2); opacity:.6}
@@ -34,7 +46,8 @@ button.primary:disabled{opacity:.45; cursor:default}
 #ver{font-size:11px; color:var(--dim); opacity:.65; white-space:nowrap; flex:none}
 .prow{margin-top:10px}
 header button{flex:none; white-space:nowrap}
-#status.err{color:var(--e1)} #status.ok{color:var(--ok)}
+#status.err{color:var(--e1); border-color:var(--e1)}
+#status.ok{color:var(--ok); border-color:var(--ok)}
 .bar{height:5px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:6px}
 .bar>i{display:block; height:100%; background:var(--ok); width:0; transition:width .25s}
 
@@ -398,7 +411,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='52';
+var VERSION='53';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -413,9 +426,10 @@ var sayTimer=null;
 function say(t,c,fade){
   clearTimeout(sayTimer);
   var s=$('status');
-  s.textContent=t||''; s.className=c||'';
-  s.style.display=t?'block':'none';
-  if(t && fade) sayTimer=setTimeout(function(){ s.textContent=''; s.style.display='none'; },1600);
+  // Текст при скрытии не стираем: он должен дожить до конца затухания
+  if(t) s.textContent=t;
+  s.className=(t?'on ':'')+(c||'');
+  if(t && fade) sayTimer=setTimeout(function(){ s.className=c||''; },1600);
 }
 function busy(on){ var b=$('reload'); b.disabled=!!on; b.className=on?'busy':'ready'; }
 function failed(){ $('reload').disabled=false; $('reload').className='fail'; }
