@@ -26,17 +26,17 @@ button{font:inherit; color:var(--txt); background:var(--panel2);
 button:active{transform:translateY(1px)}
 button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
 button.primary:disabled{opacity:.45; cursor:default}
-/* Строка статуса плавает над доской, а не стоит в шапке.
-   В потоке она добавляла шапке строку на время сохранения и убирала обратно —
-   вся доска дёргалась вниз и вверх. С автосейвом это стало происходить само
-   каждую минуту, поэтому вынесена из потока: двигать теперь нечего.
-   Правее держатся кнопки заметок и масштаба, отсюда ограничение ширины. */
-#status{position:fixed; z-index:60; left:50%; transform:translateX(-50%);
-  bottom:calc(20px + env(safe-area-inset-bottom));
-  max-width:min(520px, calc(100vw - 100px));
-  font-size:12.5px; color:var(--dim); text-align:center;
+/* Статус висит в строке счётчика — она почти пустая, и это то самое место,
+   где он и был. Но не в потоке: раньше он включался через display, шапка
+   росла на строку, и вся доска дёргалась вниз и вверх на каждом сохранении.
+   С автосейвом это стало происходить само каждую минуту.
+   Абсолютное положение внутри .prow: место занято всегда, высота не меняется,
+   и вертикальный отступ не надо подбирать числом — строка сама его задаёт. */
+#status{position:absolute; z-index:60; right:0; top:50%; transform:translateY(-50%);
+  max-width:calc(100% - 52px);
+  font-size:12.5px; color:var(--dim); text-align:right; line-height:1.35;
   background:var(--panel); border:1px solid var(--line); border-radius:99px;
-  padding:8px 15px; box-shadow:0 8px 22px #0007;
+  padding:5px 12px; box-shadow:0 6px 18px #0007;
   opacity:0; pointer-events:none; transition:opacity .18s}
 #status.on{opacity:1}
 #reload{transition:color .2s, border-color .2s, background .2s}
@@ -44,7 +44,7 @@ button.primary:disabled{opacity:.45; cursor:default}
 #reload.busy{color:var(--dim); border-color:var(--line); background:var(--panel2); opacity:.6}
 #reload.fail{color:var(--e1); border-color:var(--e1); background:#e05c5c1f}
 #ver{font-size:11px; color:var(--dim); opacity:.65; white-space:nowrap; flex:none}
-.prow{margin-top:10px}
+.prow{margin-top:10px; position:relative}
 header button{flex:none; white-space:nowrap}
 #status.err{color:var(--e1); border-color:var(--e1)}
 #status.ok{color:var(--ok); border-color:var(--ok)}
@@ -322,8 +322,7 @@ header button{flex:none; white-space:nowrap}
     <button id="reload" class="busy" disabled>Обновить</button>
     <button id="save" class="primary" disabled>Сохранить</button>
   </div>
-  <div id="status"></div>
-  <div class="prow"><span class="count" id="total">—</span></div>
+  <div class="prow"><span class="count" id="total">—</span><div id="status"></div></div>
   <div class="brow">
     <div class="bar"><i id="gbar"></i></div>
     <button id="dash" title="Дашборд"><svg viewBox="0 0 42 42" id="dashicon"></svg></button>
@@ -411,7 +410,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='53';
+var VERSION='54';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
