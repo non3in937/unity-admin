@@ -14,6 +14,11 @@
 body{margin:0; background:var(--bg); color:var(--txt); overscroll-behavior:none;
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body.dragging{overflow:hidden; touch-action:none; user-select:none}
+/* Открытая карточка запирает страницу под собой. overflow:hidden на body в мобильной
+   Safari не держит — она всё равно тянет страницу, поэтому фиксируем и запоминаем
+   прокрутку. Доске отдельно запрещаем касания: она возит колонки по горизонтали. */
+body.locked{position:fixed; left:0; right:0; width:100%; overflow:hidden}
+body.locked #board{touch-action:none}
 html,body{overscroll-behavior-y:contain}
 
 header{position:sticky; top:0; z-index:20; background:var(--panel);
@@ -975,10 +980,26 @@ function openTask(id){
   b.appendChild(sec);
 
   $('modal').classList.add('on');
+  lockScroll();
+}
+
+var lockedY=0;
+function lockScroll(){
+  if(document.body.classList.contains('locked')) return;
+  lockedY=window.scrollY||window.pageYOffset||0;
+  document.body.style.top=(-lockedY)+'px';
+  document.body.classList.add('locked');
+}
+function unlockScroll(){
+  if(!document.body.classList.contains('locked')) return;
+  document.body.classList.remove('locked');
+  document.body.style.top='';
+  window.scrollTo(0,lockedY);
 }
 
 function closeCard(){
   $('modal').classList.remove('on');
+  unlockScroll();
   if(cTouched){ cTouched=false; if(dirty) save(); }
   if($('board2').classList.contains('on')) renderDash();
 }
