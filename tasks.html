@@ -417,7 +417,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='58';
+var VERSION='59';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -980,10 +980,19 @@ function openTask(id){
   b.appendChild(sec);
 
   $('modal').classList.add('on');
-  lockScroll();
+  syncScrollLock();
 }
 
 var lockedY=0;
+function anyOverlayOpen(){
+  return $('modal').classList.contains('on')
+      || $('board2').classList.contains('on')
+      || $('notes').classList.contains('on');
+}
+// Считаем по факту, а не парами вызовов: карточка открывается и поверх дашборда,
+// и её закрытие не должно отпирать страницу, пока тот ещё висит.
+function syncScrollLock(){ if(anyOverlayOpen()) lockScroll(); else unlockScroll(); }
+
 function lockScroll(){
   if(document.body.classList.contains('locked')) return;
   lockedY=window.scrollY||window.pageYOffset||0;
@@ -999,7 +1008,7 @@ function unlockScroll(){
 
 function closeCard(){
   $('modal').classList.remove('on');
-  unlockScroll();
+  syncScrollLock();
   if(cTouched){ cTouched=false; if(dirty) save(); }
   if($('board2').classList.contains('on')) renderDash();
 }
@@ -1007,7 +1016,7 @@ $('mclose').onclick=closeCard;
 $('modal').onclick=function(e){ if(e.target===this) closeCard(); };
 document.addEventListener('keydown',function(e){
   if(e.key!=='Escape') return;
-  if($('board2').classList.contains('on')){ $('board2').classList.remove('on'); return; }
+  if($('board2').classList.contains('on')){ $('board2').classList.remove('on'); syncScrollLock(); return; }
   if($('notes').classList.contains('on')){ closeNotes(); return; }
   closeCard();
 });
@@ -1278,8 +1287,8 @@ function renderDash(){
   $('dashicon').innerHTML=svg;
 })();
 
-$('dash').onclick=function(){ if(!data) return; dFocus=null; dOpen=null; $('board2').classList.add('on'); renderDash(); };
-$('dclose').onclick=function(){ $('board2').classList.remove('on'); };
+$('dash').onclick=function(){ if(!data) return; dFocus=null; dOpen=null; $('board2').classList.add('on'); renderDash(); syncScrollLock(); };
+$('dclose').onclick=function(){ $('board2').classList.remove('on'); syncScrollLock(); };
 
 /* ─────────── заметки */
 var archOpen=false, trash=null;
@@ -1350,10 +1359,11 @@ function addNote(){
 
 $('fab').onclick=function(){
   if(!data) return;
-  $('notes').classList.add('on'); renderNotes();
+  $('notes').classList.add('on'); renderNotes(); syncScrollLock();
 };
 function closeNotes(){
   $('notes').classList.remove('on');
+  syncScrollLock();
   trash=null;
   if(dirty) save();          // закрыл — сохранилось само
 }
