@@ -139,6 +139,7 @@
           border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:14px}
         .card-title{font-size:14.5px; font-weight:650; color:var(--txt); margin:0;
           display:flex; align-items:center; gap:8px}
+        .card-fold{flex:none; margin-right:8px; color:var(--dim); font-size:11px}
         .card-levels{display:grid; grid-template-columns:1fr 1fr; gap:10px}
         .card-levels .full-width{grid-column:span 2}
         .card-levels label{color:var(--dim)}
@@ -298,7 +299,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='8';
+        var VERSION='9';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1024,6 +1025,54 @@
             document.getElementById('tab-evos').innerHTML = evoHtml;
 
             try { updatePreviews(); } catch(e) {} 
+            try { makeCardsFoldable(); } catch(e) { console.error('Fold error:', e); }
+        }
+
+        /* Карточки сворачиваются так же, как волны и атаки. Делается это ПОСЛЕ отрисовки,
+           а не в самих шаблонах: карточек восемь видов — игрок, оружие, миниган, карты,
+           эволюции, — и у каждой своя разметка. Один проход по готовому дереву дешевле
+           и не трогает восемь мест, где эта разметка собирается. */
+        function makeCardsFoldable() {
+            let open = [];
+            try { open = JSON.parse(localStorage.getItem('expCard') || '[]'); } catch (e) {}
+
+            document.querySelectorAll('.tab-content .upgrade-card').forEach((card, i) => {
+                const head = card.querySelector(':scope > .card-header');
+                if (!head || card.querySelector(':scope > .card-body')) return;
+
+                const tab = card.closest('.tab-content');
+                const key = card.id || ((tab ? tab.id : 'x') + '_' + i);
+
+                const body = document.createElement('div');
+                body.className = 'card-body';
+                while (head.nextSibling) body.appendChild(head.nextSibling);
+                card.appendChild(body);
+
+                const on = open.includes(key);
+                body.style.display = on ? 'block' : 'none';
+
+                const ic = document.createElement('span');
+                ic.className = 'fold-icon card-fold';
+                ic.textContent = on ? '▼' : '▶';
+                head.insertBefore(ic, head.firstChild);
+
+                head.dataset.foldid = key;
+                head.style.cursor = 'pointer';
+                dressHead(head, on);
+
+                head.addEventListener('click', (e) => {
+                    // галки «ВКЛ» и прочие управляющие живут прямо в шапке — их не перехватываем
+                    if (e.target.closest('input, select, button, label')) return;
+                    togglePanelDisplay(head, 'expCard', true);
+                    dressHead(head, body.style.display !== 'none');
+                });
+            });
+
+            function dressHead(head, on) {
+                head.style.marginBottom = on ? '14px' : '0';
+                head.style.paddingBottom = on ? '' : '0';
+                head.style.borderBottom = on ? '' : 'none';
+            }
         }
 
         // idPrefix — только для кнопки отката, как и у атак боссов. Сохранение читает
