@@ -273,7 +273,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='3';
+        var VERSION='4';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1141,13 +1141,19 @@
                 </div>`;
             }
 
+            // Атака сворачивается своей шапкой. По умолчанию свёрнута: у лазера восемь
+            // полей, у ракет одиннадцать, и три атаки подряд разворачивались в простыню,
+            // где не видно ни фазы, ни соседей.
+            let atkOpen = (() => { try { return (JSON.parse(localStorage.getItem('expAtkBody') || '[]')).includes(idPrefix); } catch (e) { return false; } })();
+
             return `<div class="attack-card attack-panel">
-                <div class="row" style="margin-bottom: 15px;">
-                    <span style="color:#569cd6; font-size:18px;">⚔️</span>
-                    <select class="a-type" style="flex:1; margin:0;" onchange="syncData(); render();">${opts}</select>
-                    <button class="btn-remove" onclick="this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
+                <div class="row" data-foldid="${idPrefix}" onclick="togglePanelDisplay(this, 'expAtkBody', true)" style="cursor:pointer; margin-bottom:0; align-items:center;">
+                    <span class="fold-icon" style="color:var(--dim); font-size:12px;">${atkOpen ? '▼' : '▶'}</span>
+                    <span style="font-size:16px;">⚔️</span>
+                    <select class="a-type" style="flex:1; margin:0;" onclick="event.stopPropagation()" onchange="syncData(); render();">${opts}</select>
+                    <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
                 </div>
-                ${paramsHtml}
+                <div class="atk-body" style="display:${atkOpen ? 'block' : 'none'}; margin-top:14px;">${paramsHtml}</div>
             </div>`;
         }
 
