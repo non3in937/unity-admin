@@ -104,11 +104,16 @@ header button{flex:none; white-space:nowrap}
 .tag.stage{color:#c3cad8; border-color:#48506180; font-weight:600}
 .tag.warn{color:var(--e1); border-color:#e05c5c66; background:#e05c5c1a; font-weight:600}
 .tag.sec{color:#a9b2c4}
-/* Быстрый выбор колонки прямо в карточке. Ревью сюда не вынесено намеренно:
-   туда задача уезжает по ходу работы, а не выбором в один тап. */
-.stpick{display:flex; gap:4px; margin-left:auto}
-.stpick button{font-size:10.5px; padding:3px 9px; border-radius:99px; line-height:1.25;
-  background:#00000038; color:var(--dim); border:1px solid var(--line)}
+/* Быстрый выбор колонки прямо в карточке. Своя строка под метками, слева — где задача
+   лежит сейчас, справа кнопки. Ревью в кнопки не вынесено намеренно: туда задача уезжает
+   по ходу работы, а не выбором в один тап, — но в подписи слева оно показывается. */
+.strow{display:flex; align-items:center; gap:8px; flex-basis:100%; margin-top:10px}
+.stnow{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--dim)}
+.stnow i{width:9px; height:9px; border-radius:99px; display:block; flex:none}
+.stpick{display:flex; gap:6px; margin-left:auto}
+.stpick button{font-size:12px; font-weight:550; padding:8px 13px; border-radius:9px;
+  line-height:1; background:var(--panel2); color:#c3cad8; border:1px solid var(--line)}
+.stpick button:active{transform:scale(.96)}
 .stpick button.on{color:#0d1016; font-weight:650; border-color:transparent}
 .stpick button.on.todo{background:var(--bl)}
 .stpick button.on.doing{background:var(--warn)}
@@ -426,7 +431,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='60';
+var VERSION='61';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -870,6 +875,12 @@ function openTask(id){
   t.disciplines.forEach(function(d){ var x=document.createElement('span'); x.className='tag'; x.textContent=d; m.appendChild(x); });
 
   // Три кнопки вместо перетаскивания: на телефоне карточку через весь экран не дотащишь.
+  var row=document.createElement('div'); row.className='strow';
+  var now=document.createElement('div'); now.className='stnow';
+  var dot=document.createElement('i'); dot.style.background='var('+STCOL[t.status]+')';
+  var nm=document.createElement('span'); nm.textContent=STNAME[t.status];
+  now.appendChild(dot); now.appendChild(nm); row.appendChild(now);
+
   var pick=document.createElement('div'); pick.className='stpick';
   [['todo','к работе'],['doing','в работе'],['done','готово']].forEach(function(p){
     var btn=document.createElement('button');
@@ -883,7 +894,7 @@ function openTask(id){
     };
     pick.appendChild(btn);
   });
-  m.appendChild(pick);
+  row.appendChild(pick); m.appendChild(row);
 
   var b=$('m-body'); b.innerHTML='';
   if(!t.checklist.length){
