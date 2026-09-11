@@ -61,18 +61,14 @@
         .tab-content{display:none}
         .tab-content.active{display:block}
 
-        /* На телефоне вкладки уезжают вниз, под большой палец: сверху до них надо было
-           тянуться через весь экран. На широком экране остаются наверху — там нижняя
-           панель выглядит чужеродно и отъедает высоту у списков. */
+        /* На телефоне вкладки компактные: значок над подписью, все шесть в один ряд.
+           Стояли внизу — вернули наверх по просьбе автора, вид оставили этот. */
         @media (max-width: 700px) {
-            .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; margin:0;
-              gap:4px; padding:6px 8px; padding-bottom:calc(6px + env(safe-area-inset-bottom));
-              background:var(--panel); border-top:1px solid var(--line); flex-wrap:nowrap}
+            .tabs{gap:4px; flex-wrap:nowrap; margin-bottom:12px}
             .tab-btn{min-width:0; flex:1; padding:8px 2px; font-size:10.5px; line-height:1.2;
               display:flex; flex-direction:column; align-items:center; gap:3px;
               border-radius:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
             .tab-btn .ticon{font-size:16px; line-height:1}
-            body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
         }
 
         .row{display:flex; gap:10px; align-items:flex-start}
@@ -277,7 +273,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='2';
+        var VERSION='3';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -536,6 +532,7 @@
         // Нужно атакам босса — у них по умолчанию всё спрятано, иначе вкладка
         // разворачивается в простыню из десятков полей сразу при открытии.
         function togglePanelDisplay(headerEl, storageKey, storeOpen) {
+            if (justDragged) return;              // отпустили после перетаскивания
             let content = headerEl.nextElementSibling;
             if (!content) return;
             let icon = headerEl.querySelector('.fold-icon');
@@ -555,6 +552,7 @@
         }
 
         function toggleFolder(header) {
+            if (justDragged) return;              // отпустили после перетаскивания
             let content = header.nextElementSibling;
             let btnAdd = content.nextElementSibling;
             let icon = header.querySelector('.fold-icon');
@@ -1222,11 +1220,32 @@
 
         function addEnemy(btn) { let row = document.createElement('div'); row.className = 'row enemy-row'; let optionsHtml = ENEMY_IDS.map(id => '<option value="' + id + '">' + id + '</option>').join(''); row.innerHTML = '<select class="e-id" style="flex:2">' + optionsHtml + '</select><input type="number" step="0.1" class="e-w" value="100" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button>'; btn.previousElementSibling.appendChild(row); }
 
-        function initSortable() { 
+        // Тянуть — долгим нажатием, свернуть — коротким, и то и другое по всей шапке.
+        // Раньше тянули за значок ☰, а свернуть можно было мимо него; на телефоне попасть
+        // в значок трудно, и папки не двигались вовсе по другой причине: initSortable
+        // звался после КАЖДОЙ отрисовки и вешал на тот же список новый экземпляр поверх
+        // старых — они мешали друг другу. Теперь прежние сносим.
+        var sortables = [];
+        var justDragged = false;
+
+        function initSortable() {
+            sortables.forEach(s => { try { s.destroy(); } catch (e) {} });
+            sortables = [];
+
+            const base = {
+                animation: 150,
+                delay: 320, delayOnTouchOnly: true, touchStartThreshold: 6,
+                filter: 'input, select, button',       // по полям и кнопкам не таскаем
+                preventOnFilter: false,
+                onStart: () => { justDragged = true; },
+                onEnd: () => { setTimeout(() => { justDragged = false; }, 60); }
+            };
+
             let wl = document.getElementById('waves-list');
-            if(wl) new Sortable(wl, { handle: '.folder-drag', animation: 150 }); 
+            if (wl) sortables.push(new Sortable(wl, Object.assign({}, base, { handle: '.folder-container > .header-row' })));
+
             document.querySelectorAll('.folder-content').forEach(el => {
-                new Sortable(el, { group: 'waves', handle: '.drag-handle', animation: 150 });
+                sortables.push(new Sortable(el, Object.assign({}, base, { group: 'waves', handle: '.phase-panel > .header-row' })));
             });
         }
 
