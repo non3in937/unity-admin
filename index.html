@@ -1459,7 +1459,36 @@
             }
         }
 
-        function exportBackup() { try { syncData(); if(!currentData) return; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentData, null, 2)); const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "GameBalance_Backup_" + new Date().toISOString().slice(0,10) + ".json"); document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); dlAnchorElem.remove(); } catch(e){} }
+        async function exportBackup() {
+            // Раньше тут была ссылка с download и data:-адресом. На телефоне это молчит:
+            // мобильная Safari атрибут download не поддерживает, и нажатие не делало ничего.
+            // Поэтому сперва пробуем «Поделиться» — оттуда файл кладётся в «Файлы».
+            try {
+                syncData();
+                if (!currentData) return;
+                const name = "GameBalance_Backup_" + new Date().toISOString().slice(0, 10) + ".json";
+                const text = JSON.stringify(currentData, null, 2);
+                const blob = new Blob([text], { type: "application/json" });
+
+                if (navigator.canShare) {
+                    const file = new File([blob], name, { type: "application/json" });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: name });
+                        return;
+                    }
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = name;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (e) {
+                // Отмена в окне «Поделиться» прилетает сюда же — это не ошибка, молчим.
+                if (e && e.name === 'AbortError') return;
+                alert("Не вышло сохранить бэкап: " + (e && e.message ? e.message : e));
+            }
+        }
         function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { currentData = JSON.parse(e.target.result); render(); document.getElementById('status').innerText = "✅ Бэкап загружен в интерфейс! Нажмите СОХРАНИТЬ В GITHUB."; document.getElementById('status').style.color = "#4ec9b0"; event.target.value = ''; } catch (err) { alert("Ошибка чтения файла!"); } }; reader.readAsText(file); }
 
         async function load() { 
