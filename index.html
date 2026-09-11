@@ -920,6 +920,17 @@
 
         // idPrefix — только для кнопки отката, как и у атак боссов. Сохранение читает
         // классы, поэтому id ни на что больше не влияют.
+        // Параметры самого босса, а не его атаки. Лежит СНАРУЖИ generateAttackHtml:
+        // зовут её из render(), и вложенная была бы там не видна — вкладка боссов
+        // падала на ReferenceError и оставалась пустой.
+        function bossParam(label, key, val, tooltip, step="1") {
+            return `<div style="flex: 1; min-width: 150px; margin-bottom: 12px; display: flex; flex-direction: column;">
+                <label style="margin-bottom:6px; font-size:12px; color:#4ec9b0;">${label}</label>
+                <input type="number" step="${step}" class="b-param" data-key="${key}" value="${val}">
+                <div class="hint-text">💡 ${tooltip}</div>
+            </div>`;
+        }
+
         function generatePhaseHtml(p, idPrefix) {
             let idFor = k => idPrefix ? ` id="${idPrefix}_${k}"` : '';
             let start = p.startTime || 0; let end = p.endTime || 0;
@@ -938,16 +949,6 @@
             let opts = ATTACK_TYPES.map(t => `<option value="${t}" ${t===attack.attackType?'selected':''}>${t}</option>`).join('');
             let paramsHtml = '';
             
-            // Параметры самого босса, а не его атаки. Свой класс нужен, чтобы сохранение
-            // не путало их с параметрами атак: те собираются внутри блоков атак.
-            function bossParam(label, key, val, tooltip, step="1") {
-                return `<div style="flex: 1; min-width: 150px; margin-bottom: 12px; display: flex; flex-direction: column;">
-                    <label style="margin-bottom:6px; font-size:12px; color:#4ec9b0;">${label}</label>
-                    <input type="number" step="${step}" class="b-param" data-key="${key}" value="${val}">
-                    <div class="hint-text">💡 ${tooltip}</div>
-                </div>`;
-            }
-
             function makeParam(label, key, val, tooltip, type="number", step="0.1") {
                 let inputHtml = '';
                 if (type === "checkbox") {
