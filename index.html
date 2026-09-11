@@ -700,13 +700,17 @@
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid #3e3e42; padding-top:12px;">
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 <div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid #3e3e42; padding-top:12px;">
-                                    ${bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'Работает, только когда точек ноль. Есть точки — здоровье складывается из них, а тело неуязвимо.')}
-                                    ${bossParam('Точек', 'pointCount', boss.pointCount ?? 0, 'Сколько слабых сфер летает вокруг. Ноль — босса бьют прямо в тело.')}
-                                    ${bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, 'Здоровье одной сферы. Умножь на число точек — получишь живучесть босса.')}
-                                    ${bossParam('Радиус орбиты', 'pointRadius', boss.pointRadius ?? 3.5, 'Как далеко сферы от центра босса.', '0.1')}
-                                    ${bossParam('Высота орбиты', 'pointHeight', boss.pointHeight ?? 1.5, 'На какой высоте они летают.', '0.1')}
-                                    ${bossParam('Скорость орбиты', 'pointSpeed', boss.pointSpeed ?? 40, 'Градусов в секунду. Минус — в обратную сторону.')}
-                                    ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
+                                    ${bossParam('Точек', 'pointCount', boss.pointCount ?? 0, 'Сколько слабых сфер летает вокруг. Ноль — босса бьют прямо в тело.', '1', 'onchange="toggleBossFields(this)" oninput="toggleBossFields(this)"')}
+                                    <div class="body-fields" style="flex:1; min-width:150px; display:${(boss.pointCount ?? 0) > 0 ? 'none' : 'flex'};">
+                                        ${bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'Сколько держит сам босс. Нужно, только когда точек ноль.')}
+                                    </div>
+                                    <div class="point-fields" style="flex:5; min-width:150px; flex-wrap:wrap; gap:12px; display:${(boss.pointCount ?? 0) > 0 ? 'flex' : 'none'};">
+                                        ${bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, 'Здоровье одной сферы. Умножь на число точек — получишь живучесть босса.')}
+                                        ${bossParam('Радиус орбиты', 'pointRadius', boss.pointRadius ?? 3.5, 'Как далеко сферы от центра босса.', '0.1')}
+                                        ${bossParam('Высота орбиты', 'pointHeight', boss.pointHeight ?? 1.5, 'На какой высоте они летают.', '0.1')}
+                                        ${bossParam('Скорость орбиты', 'pointSpeed', boss.pointSpeed ?? 40, 'Градусов в секунду. Минус — в обратную сторону.')}
+                                        ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
+                                    </div>
                                 </div>
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:#2a1a1a; border-left:3px solid #f48771; color:#f48771; font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
@@ -923,12 +927,25 @@
         // Параметры самого босса, а не его атаки. Лежит СНАРУЖИ generateAttackHtml:
         // зовут её из render(), и вложенная была бы там не видна — вкладка боссов
         // падала на ReferenceError и оставалась пустой.
-        function bossParam(label, key, val, tooltip, step="1") {
+        function bossParam(label, key, val, tooltip, step="1", extra="") {
             return `<div style="flex: 1; min-width: 150px; margin-bottom: 12px; display: flex; flex-direction: column;">
                 <label style="margin-bottom:6px; font-size:12px; color:#4ec9b0;">${label}</label>
-                <input type="number" step="${step}" class="b-param" data-key="${key}" value="${val}">
+                <input type="number" step="${step}" class="b-param" data-key="${key}" value="${val}" ${extra}>
                 <div class="hint-text">💡 ${tooltip}</div>
             </div>`;
+        }
+
+        // Нет точек — незачем показывать их орбиту, и наоборот: при точках здоровье тела
+        // не участвует вовсе. Прячем сразу, без перерисовки всей вкладки, иначе поле
+        // теряло бы фокус на каждом набранном знаке.
+        function toggleBossFields(inp) {
+            const card = inp.closest('.boss-panel');
+            if (!card) return;
+            const on = (parseFloat(inp.value) || 0) > 0;
+            const pts = card.querySelector('.point-fields');
+            const body = card.querySelector('.body-fields');
+            if (pts) pts.style.display = on ? 'flex' : 'none';
+            if (body) body.style.display = on ? 'none' : 'flex';
         }
 
         function generatePhaseHtml(p, idPrefix) {
