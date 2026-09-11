@@ -33,6 +33,18 @@
         button{font:inherit}
         .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px;
           padding:14px; margin-bottom:12px; position:relative}
+        /* Долгое нажатие начинает перетаскивание, а браузер в тот же миг норовит выделить
+           текст и показать лупу. Запрещаем выделение в шапках, но не в полях внутри —
+           имя волны надо уметь править. */
+        .folder-container > .header-row,
+        .phase-panel > .header-row,
+        .attack-panel > .row[data-foldid]{
+          user-select:none; -webkit-user-select:none; -webkit-touch-callout:none}
+        .folder-container > .header-row input,
+        .phase-panel > .header-row input,
+        .attack-panel > .row[data-foldid] select{
+          user-select:auto; -webkit-user-select:auto; -webkit-touch-callout:default}
+
         /* Стрелка свёртки — такая же кнопка по размеру, как ручка перетаскивания рядом.
            Раньше это был значок в строку: попасть по нему пальцем можно было только
            точно, а вся остальная шапка занята полем имени, которое тап не пропускает. */
@@ -283,7 +295,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='6';
+        var VERSION='7';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1253,8 +1265,8 @@
                 delay: 320, delayOnTouchOnly: true, touchStartThreshold: 6,
                 filter: 'input, select, button',       // по полям и кнопкам не таскаем
                 preventOnFilter: false,
-                onStart: () => { justDragged = true; },
-                onEnd: () => { setTimeout(() => { justDragged = false; }, 60); }
+                onStart: () => { justDragged = true; document.body.style.userSelect = 'none'; },
+                onEnd: () => { document.body.style.userSelect = ''; setTimeout(() => { justDragged = false; }, 60); }
             };
 
             let wl = document.getElementById('waves-list');
