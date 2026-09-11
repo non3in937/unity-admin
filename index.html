@@ -61,6 +61,20 @@
         .tab-content{display:none}
         .tab-content.active{display:block}
 
+        /* На телефоне вкладки уезжают вниз, под большой палец: сверху до них надо было
+           тянуться через весь экран. На широком экране остаются наверху — там нижняя
+           панель выглядит чужеродно и отъедает высоту у списков. */
+        @media (max-width: 700px) {
+            .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; margin:0;
+              gap:4px; padding:6px 8px; padding-bottom:calc(6px + env(safe-area-inset-bottom));
+              background:var(--panel); border-top:1px solid var(--line); flex-wrap:nowrap}
+            .tab-btn{min-width:0; flex:1; padding:8px 2px; font-size:10.5px; line-height:1.2;
+              display:flex; flex-direction:column; align-items:center; gap:3px;
+              border-radius:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+            .tab-btn .ticon{font-size:16px; line-height:1}
+            body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+        }
+
         .row{display:flex; gap:10px; align-items:flex-start}
         .header-row{display:flex; align-items:center; gap:8px; margin-bottom:14px;
           border-bottom:1px solid var(--line); padding-bottom:10px}
@@ -217,12 +231,12 @@
     <div class="container">
         
         <div class="tabs">
-            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')">🌊 Волны</button>
-            <button class="tab-btn" id="btn-player" onclick="switchTab('player')">🏃 Игрок</button>
-            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')">🔫 Оружие</button>
-            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карты</button>
-            <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')" style="color:#c586c0;">🧬 EVO</button>
-            <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')" style="color:#f48771;">👹 Боссы</button>
+            <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')"><span class="ticon">🌊</span>Волны</button>
+            <button class="tab-btn" id="btn-player" onclick="switchTab('player')"><span class="ticon">🏃</span>Игрок</button>
+            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')"><span class="ticon">🔫</span>Оружие</button>
+            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="ticon">🃏</span>Карты</button>
+            <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')"><span class="ticon">🧬</span>EVO</button>
+            <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')"><span class="ticon">👹</span>Боссы</button>
         </div>
 
         <div id="tab-waves" class="tab-content active">
@@ -263,7 +277,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='1';
+        var VERSION='2';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
