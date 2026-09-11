@@ -33,6 +33,16 @@
         button{font:inherit}
         .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px;
           padding:14px; margin-bottom:12px; position:relative}
+        /* Стрелка свёртки — такая же кнопка по размеру, как ручка перетаскивания рядом.
+           Раньше это был значок в строку: попасть по нему пальцем можно было только
+           точно, а вся остальная шапка занята полем имени, которое тап не пропускает. */
+        .folder-container > .header-row > .fold-icon,
+        .phase-panel > .header-row > .fold-icon{
+          flex:none; width:34px; height:34px; margin:0 8px 0 0;
+          display:flex; align-items:center; justify-content:center;
+          background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+          color:var(--dim); font-size:11px}
+
         .drag-handle{cursor:grab; padding:8px 10px; color:var(--dim); font-size:18px;
           display:flex; align-items:center; justify-content:center; background:var(--panel2);
           border:1px solid var(--line); border-radius:8px; margin-right:12px}
@@ -273,7 +283,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='5';
+        var VERSION='6';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
