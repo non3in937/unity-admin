@@ -79,6 +79,7 @@
           font-size:13.5px}
         header button:active{transform:translateY(1px)}
         header button.primary{background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600}
+        header button.active{border-color:var(--acc); color:var(--txt)}
         .status{text-align:center; font-weight:600; font-size:12.5px; color:var(--dim); margin:8px 0 0}
         .status:empty{display:none}
 
@@ -207,8 +208,8 @@
             <h1>Remote Admin</h1>
             <span id="ver">баланс</span>
             <span class="spacer"></span>
-            <button id="reload" onclick="reloadFromGithub()">Обновить</button>
             <button class="primary" onclick="saveData()">Сохранить</button>
+            <button id="btn-backups" onclick="switchTab('backups')">Бэкапы</button>
         </div>
         <div id="status" class="status"></div>
     </header>
@@ -222,7 +223,6 @@
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')">🃏 Карты</button>
             <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')" style="color:#c586c0;">🧬 EVO</button>
             <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')" style="color:#f48771;">👹 Боссы</button>
-            <button class="tab-btn" id="btn-backups" onclick="switchTab('backups')" style="color:#ce9178;">🛡️ Бэкапы</button>
         </div>
 
         <div id="tab-waves" class="tab-content active">
@@ -997,13 +997,6 @@
             if (!box) return;
             const on = box.classList.toggle('on');
             btn.classList.toggle('on', on);
-        }
-
-        // Перезагрузка из облака затирает то, что набрано на экране: панель сохраняет
-        // файл целиком и слияния не делает. Поэтому спрашиваем.
-        function reloadFromGithub() {
-            if (!confirm('Загрузить свежее из GitHub? Несохранённые правки пропадут.')) return;
-            load();
         }
 
         function bossParam(label, key, val, tooltip, step="1", extra="") {
