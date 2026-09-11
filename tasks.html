@@ -104,6 +104,15 @@ header button{flex:none; white-space:nowrap}
 .tag.stage{color:#c3cad8; border-color:#48506180; font-weight:600}
 .tag.warn{color:var(--e1); border-color:#e05c5c66; background:#e05c5c1a; font-weight:600}
 .tag.sec{color:#a9b2c4}
+/* Быстрый выбор колонки прямо в карточке. Ревью сюда не вынесено намеренно:
+   туда задача уезжает по ходу работы, а не выбором в один тап. */
+.stpick{display:flex; gap:4px; margin-left:auto}
+.stpick button{font-size:10.5px; padding:3px 9px; border-radius:99px; line-height:1.25;
+  background:#00000038; color:var(--dim); border:1px solid var(--line)}
+.stpick button.on{color:#0d1016; font-weight:650; border-color:transparent}
+.stpick button.on.todo{background:var(--bl)}
+.stpick button.on.doing{background:var(--warn)}
+.stpick button.on.done{background:var(--ok)}
 .prog{font-size:11.5px; color:var(--dim); margin-top:7px; display:flex; align-items:center; gap:7px}
 .prog .bar{flex:1; margin:0; height:4px}
 
@@ -417,7 +426,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='59';
+var VERSION='60';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
@@ -859,6 +868,22 @@ function openTask(id){
   var s=document.createElement('span'); s.className='tag sec'; s.textContent=t.section; m.appendChild(s);
   if(t.stage!=='—'){ var g=document.createElement('span'); g.className='tag'; g.textContent=t.stage; m.appendChild(g); }
   t.disciplines.forEach(function(d){ var x=document.createElement('span'); x.className='tag'; x.textContent=d; m.appendChild(x); });
+
+  // Три кнопки вместо перетаскивания: на телефоне карточку через весь экран не дотащишь.
+  var pick=document.createElement('div'); pick.className='stpick';
+  [['todo','к работе'],['doing','в работе'],['done','готово']].forEach(function(p){
+    var btn=document.createElement('button');
+    btn.className=(t.status===p[0]?'on '+p[0]:'');
+    btn.textContent=p[1];
+    btn.onclick=function(ev){
+      ev.stopPropagation();
+      if(t.status===p[0]) return;
+      t.status=p[0]; bump(t); touch(); cTouched=true;
+      render(); openTask(t.id);
+    };
+    pick.appendChild(btn);
+  });
+  m.appendChild(pick);
 
   var b=$('m-body'); b.innerHTML='';
   if(!t.checklist.length){
