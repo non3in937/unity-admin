@@ -206,7 +206,7 @@
     <header>
         <div class="hrow">
             <h1>Remote Admin</h1>
-            <span id="ver">баланс</span>
+            <span id="ver"></span>
             <span class="spacer"></span>
             <button class="primary" onclick="saveData()">Сохранить</button>
             <button id="btn-backups" onclick="switchTab('backups')">Бэкапы</button>
@@ -261,6 +261,10 @@
         // запрещено (приватный режим, строгие настройки, data:-URL). Раньше исключение
         // летело на верхнем уровне скрипта и обрывало ВСЮ дальнейшую инициализацию —
         // выживали только объявления функций, а слушатели и константы молча пропадали.
+        // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
+        // догрузил свежий файл, а не показывает старый из кэша.
+        var VERSION='1';
+
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
         let undoStack = []; 
@@ -1653,6 +1657,7 @@
             } 
         }
 
+        document.getElementById('ver').textContent = 'сборка ' + VERSION;
         load();
     </script>
 </body>
