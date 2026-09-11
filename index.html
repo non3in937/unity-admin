@@ -730,10 +730,10 @@
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 <div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid #3e3e42; padding-top:12px;">
                                     ${bossParam('Точек', 'pointCount', boss.pointCount ?? 0, 'Сколько слабых сфер летает вокруг. Ноль — босса бьют прямо в тело.', '1', 'onchange="toggleBossFields(this)" oninput="toggleBossFields(this)"')}
-                                    <div class="body-fields" style="flex:1; min-width:150px; display:${(boss.pointCount ?? 0) > 0 ? 'none' : 'flex'};">
+                                    <div class="body-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'none' : 'contents'};">
                                         ${bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'Сколько держит сам босс. Нужно, только когда точек ноль.')}
                                     </div>
-                                    <div class="point-fields" style="flex:5; min-width:150px; flex-wrap:wrap; gap:12px; display:${(boss.pointCount ?? 0) > 0 ? 'flex' : 'none'};">
+                                    <div class="point-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'contents' : 'none'};">
                                         ${bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, 'Здоровье одной сферы. Умножь на число точек — получишь живучесть босса.')}
                                         ${bossParam('Радиус орбиты', 'pointRadius', boss.pointRadius ?? 3.5, 'Как далеко сферы от центра босса.', '0.1')}
                                         ${bossParam('Высота орбиты', 'pointHeight', boss.pointHeight ?? 1.5, 'На какой высоте они летают.', '0.1')}
@@ -973,8 +973,10 @@
             const on = (parseFloat(inp.value) || 0) > 0;
             const pts = card.querySelector('.point-fields');
             const body = card.querySelector('.body-fields');
-            if (pts) pts.style.display = on ? 'flex' : 'none';
-            if (body) body.style.display = on ? 'none' : 'flex';
+            // contents, а не flex: обёртка должна исчезнуть для раскладки, иначе поля
+            // внутри неё переносятся отдельным рядом и оставляют дыру слева.
+            if (pts) pts.style.display = on ? 'contents' : 'none';
+            if (body) body.style.display = on ? 'none' : 'contents';
         }
 
         function generatePhaseHtml(p, idPrefix) {
