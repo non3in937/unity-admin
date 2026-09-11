@@ -107,12 +107,17 @@ header button{flex:none; white-space:nowrap}
 /* Быстрый выбор колонки прямо в карточке. Своя строка под метками, слева — где задача
    лежит сейчас, справа кнопки. Ревью в кнопки не вынесено намеренно: туда задача уезжает
    по ходу работы, а не выбором в один тап, — но в подписи слева оно показывается. */
-.strow{display:flex; align-items:center; gap:8px; flex-basis:100%; margin-top:10px}
-.stnow{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--dim)}
+.strow{display:flex; align-items:center; gap:8px; row-gap:8px; flex-wrap:wrap;
+  flex-basis:100%; margin-top:10px}
+.stnow{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--dim);
+  white-space:nowrap}
 .stnow i{width:9px; height:9px; border-radius:99px; display:block; flex:none}
-.stpick{display:flex; gap:6px; margin-left:auto}
-.stpick button{font-size:12px; font-weight:550; padding:8px 13px; border-radius:9px;
-  line-height:1; background:var(--panel2); color:#c3cad8; border:1px solid var(--line)}
+.stpick{display:flex; gap:5px; margin-left:auto}
+/* nowrap обязателен: на узком экране «к работе» ломалось на две строки внутри кнопки,
+   и она переставала читаться кнопкой. Не влезло — переносим строкой весь ряд. */
+.stpick button{font-size:12px; font-weight:550; padding:8px 11px; border-radius:9px;
+  line-height:1; white-space:nowrap;
+  background:var(--panel2); color:#c3cad8; border:1px solid var(--line)}
 .stpick button:active{transform:scale(.96)}
 .stpick button.on{color:#0d1016; font-weight:650; border-color:transparent}
 .stpick button.on.todo{background:var(--bl)}
@@ -431,7 +436,7 @@ header button{flex:none; white-space:nowrap}
 </div>
 
 <script>
-var VERSION='61';
+var VERSION='62';
 var GIST_ID='aaac769d99c8e0106c01ee3763b9db36', FILE_NAME='tasks.json';
 var API='https://api.github.com/gists/'+GIST_ID;
 var data=null, base=null, dirty=false, openId=null, token=null, zoom=0;
