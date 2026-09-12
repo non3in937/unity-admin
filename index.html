@@ -323,7 +323,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='16';
+        var VERSION='17';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1823,7 +1823,7 @@
             } 
         }
 
-        document.getElementById('ver').textContent = 'баланс · сборка ' + VERSION;
+        document.getElementById('ver').textContent = 'сборка ' + VERSION;
         restorePanes();
         load();
     </script>
