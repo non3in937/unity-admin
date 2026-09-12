@@ -14,7 +14,10 @@
           --e1:#e05c5c; --e2:#4f8cff; --e3:#8b7fd6; --e4:#4fc1ff; --e5:#d8b86a;
         }
         *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-        html,body{overflow-x:hidden; overscroll-behavior-x:none}
+        /* clip, а не hidden: hidden делает из тела страницы контейнер прокрутки,
+           и position:sticky у шапки начинает липнуть к нему, то есть уезжает вместе
+           со страницей. clip просто обрезает лишнее и прокрутку не заводит. */
+        html,body{overflow-x:clip; overscroll-behavior-x:none}
         body{margin:0; padding:0; background:var(--bg); color:var(--txt);
           font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
         /* Отступы держит контейнер, а не тело. Пока их держало тело, шапке приходилось
@@ -320,7 +323,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='15';
+        var VERSION='16';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
