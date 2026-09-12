@@ -255,7 +255,7 @@
         <div class="tabs">
             <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')"><span class="ticon">🧟</span>Волны</button>
             <button class="tab-btn" id="btn-player" onclick="switchTab('player')"><span class="ticon">🏃</span>Игрок</button>
-            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="ticon">🃏</span>Карты</button>
+            <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="ticon">🃏</span>Прокачка</button>
             <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')"><span class="ticon">💀</span>Боссы</button>
         </div>
         <div id="status" class="status"></div>
@@ -311,7 +311,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='12';
+        var VERSION='13';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
