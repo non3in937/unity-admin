@@ -131,10 +131,13 @@
         .file-input-wrapper{background:var(--panel); border:1px dashed var(--line);
           padding:18px; text-align:center; border-radius:12px; margin-top:10px}
 
-        /* Разделитель между половинами объединённой вкладки */
-        .pane-sep{margin:18px 0 10px; padding-top:14px; border-top:1px solid var(--line);
-          font-size:12px; font-weight:650; letter-spacing:.04em; text-transform:uppercase;
-          color:var(--dim)}
+        /* Половины объединённой вкладки переключаются, а не идут одна за другой:
+           списком их пришлось бы прокручивать насквозь, чтобы добраться до второй. */
+        .subtabs{display:flex; gap:6px; margin:0 0 14px}
+        .sub-btn{flex:1; padding:8px 10px; border-radius:9px; cursor:pointer; font-size:13px;
+          background:var(--panel); color:var(--dim); border:1px solid var(--line)}
+        .sub-btn.active{background:var(--panel2); color:var(--txt); font-weight:600;
+          border-color:var(--acc)}
 
         .cards-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px}
         .upgrade-card{background:var(--panel); border:1px solid var(--line); border-radius:12px;
@@ -273,14 +276,20 @@
              живут вместе. Отдельного переключателя внутри нет нарочно — карточки теперь
              свёрнуты, и оба раздела помещаются одним списком, без лишнего касания. -->
         <div id="tab-player" class="tab-content">
-            <div id="pane-player"></div>
-            <div class="pane-sep">Оружие</div>
-            <div id="pane-weapons"></div>
+            <div class="subtabs">
+                <button class="sub-btn active" data-pane="pane-player">Игрок</button>
+                <button class="sub-btn" data-pane="pane-weapons">Оружие</button>
+            </div>
+            <div id="pane-player" class="pane"></div>
+            <div id="pane-weapons" class="pane" style="display:none"></div>
         </div>
         <div id="tab-upgrades" class="tab-content">
-            <div id="pane-upgrades"></div>
-            <div class="pane-sep">Эволюции</div>
-            <div id="pane-evos"></div>
+            <div class="subtabs">
+                <button class="sub-btn active" data-pane="pane-upgrades">Карты</button>
+                <button class="sub-btn" data-pane="pane-evos">Эволюции</button>
+            </div>
+            <div id="pane-upgrades" class="pane"></div>
+            <div id="pane-evos" class="pane" style="display:none"></div>
         </div>
         <div id="tab-bosses" class="tab-content"></div>
         
@@ -311,7 +320,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='13';
+        var VERSION='14';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -504,6 +513,35 @@
                 break;
             }
         }
+
+        // Выбор половины внутри объединённой вкладки. Помним его: возвращаться каждый раз
+        // к первой половине раздражает сильнее, чем лишняя кнопка.
+        function switchPane(btn) {
+            const bar = btn.closest('.subtabs');
+            const tab = btn.closest('.tab-content');
+            if (!bar || !tab) return;
+
+            bar.querySelectorAll('.sub-btn').forEach(b => b.classList.toggle('active', b === btn));
+            tab.querySelectorAll(':scope > .pane').forEach(p => {
+                p.style.display = (p.id === btn.dataset.pane) ? 'block' : 'none';
+            });
+            try { localStorage.setItem('pane_' + tab.id, btn.dataset.pane); } catch (e) {}
+        }
+
+        function restorePanes() {
+            document.querySelectorAll('.tab-content .subtabs').forEach(bar => {
+                const tab = bar.closest('.tab-content');
+                let want = null;
+                try { want = localStorage.getItem('pane_' + tab.id); } catch (e) {}
+                const btn = want ? bar.querySelector('.sub-btn[data-pane="' + want + '"]') : null;
+                if (btn) switchPane(btn);
+            });
+        }
+
+        document.addEventListener('click', e => {
+            const b = e.target.closest('.sub-btn');
+            if (b) switchPane(b);
+        });
 
         function switchTab(t) {
             try { syncData(); } catch(e) { console.error("Sync error:", e); }
@@ -1783,6 +1821,7 @@
         }
 
         document.getElementById('ver').textContent = 'сборка ' + VERSION;
+        restorePanes();
         load();
     </script>
 </body>
