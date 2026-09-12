@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unity Config Admin PRO</title>
+    <title>RunNShoot — баланс</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         /* Оболочка приведена к виду доски: те же цвета, шрифт и скругления.
@@ -249,7 +249,7 @@
 <body>
     <header>
         <div class="hrow">
-            <h1>Remote Admin</h1>
+            <h1>RunNShoot</h1>
             <span id="ver"></span>
             <span class="spacer"></span>
             <button class="primary" onclick="saveData()">Сохранить</button>
@@ -320,7 +320,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='14';
+        var VERSION='15';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -901,7 +901,7 @@
                             seq.forEach((attack, aIdx) => { bh += generateAttackHtml(attack, `a_${bIdx}_${pIdx}_${aIdx}`); });
 
                             bh += `</div>
-                                    <button class="btn-add" onclick="addAttack(this)" style="padding:6px; font-size:12px; margin-top:8px;">+ Ещё атака в этот же блок</button>
+                                    <button class="btn-add" onclick="addAttack(this)" style="padding:6px; font-size:12px; margin-top:8px;">Добавить атаку в блок</button>
                                 </div>
                             </div>`;
                         });
@@ -967,15 +967,15 @@
             let ph = '<div class="cards-grid">';
             if(currentData.playerStats) {
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Вперед</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скор. Стрейфа</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скор. Поворота (BodyTurn)</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Угол (MaxAngle)</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скорость бега</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скорость вбок</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скорость поворота</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Предел поворота, °</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
                     </div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Макс. Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Макс. Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Реген Щита (сек)</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Восстановление щита, сек</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🎯 Рикошет</div></div>
-                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Базовый Радиус</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Доп. Радиус/Ур.</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div><div style="flex:1"><label>Крит за ур. Рикошета (%)</label><input type="number" step="0.1" id="ps_critPerRico" value="${currentData.playerStats.critPerRicochetLevel !== undefined ? currentData.playerStats.critPerRicochetLevel : 6}" oninput="updatePreviews()"></div></div></div>`;
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Радиус подбора</label><input type="number" step="0.1" id="ps_rRadius" value="${currentData.playerStats.ricochetRadius}"></div><div style="flex:1"><label>Прибавка за уровень</label><input type="number" step="0.1" id="ps_rBonus" value="${currentData.playerStats.radiusBonusPerUpgrade}"></div></div><div class="row"><div style="flex:1"><label>Шанс Голова (%)</label><input type="number" step="0.1" id="ps_rHead" value="${currentData.playerStats.ricochetHeadChance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шанс Нога (%)</label><input type="number" step="0.1" id="ps_rLeg" value="${currentData.playerStats.ricochetLegChance}"></div><div style="flex:1"><label>Крит за уровень рикошета, %</label><input type="number" step="0.1" id="ps_critPerRico" value="${currentData.playerStats.critPerRicochetLevel !== undefined ? currentData.playerStats.critPerRicochetLevel : 6}" oninput="updatePreviews()"></div></div></div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🧠 Опыт и Уровни</div></div>
-                        <div class="row"><div style="flex:1"><label>Базовый Опыт (XP)</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Шаг Роста (XP)</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
+                        <div class="row"><div style="flex:1"><label>Опыт до второго уровня</label><input type="number" step="0.1" id="ps_bXP" value="${currentData.playerStats.baseXP || 5}" oninput="updatePreviews()"></div><div style="flex:1"><label>Прибавка опыта за уровень</label><input type="number" step="0.1" id="ps_gFactor" value="${currentData.playerStats.growthFactor || 10}" oninput="updatePreviews()"></div></div></div>`;
             }
             // Отладочная выдача эволюций на старте: проверить эволюцию на телефоне,
             // не наигрывая до неё. Живёт на вкладке Игрока, но это не баланс — отсюда
@@ -996,7 +996,7 @@
                 swOpts += `<option value="${escapeHtml(w.weaponName)}" ${curSW === w.weaponName ? 'selected' : ''}>${escapeHtml(w.weaponName)}</option>`;
             });
             ph += `<div class="upgrade-card" style="border-color:var(--e1)"><div class="card-header"><div class="card-title" style="color:var(--e1)">🧪 Старт забега (тесты)</div></div>
-                    <label>Начать с оружия</label><select id="dbg_weapon">${swOpts}</select>
+                    <label>Стартовое оружие</label><select id="dbg_weapon">${swOpts}</select>
                     <div style="color:var(--dim); font-size:11px; padding-bottom:10px;">Подменяет ствол в начале забега, в том числе поверх сейва. Пусто — как обычно.</div>
                     <div style="border-top:1px solid var(--line); padding-top:10px; margin-bottom:8px; color:var(--warn); font-size:12px;">Выдать EVO сразу</div>`;
             seRows.forEach(function(r) {
@@ -1012,7 +1012,7 @@
                 currentData.weapons.forEach((w, i) => {
                     let wIcon = '🔫'; if (w.weaponName === 'AssaultRifle') wIcon = '☄️'; if (w.weaponName === 'Shotgun') wIcon = '💥';
                     wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">${wIcon} ${escapeHtml(w.weaponName)}</div></div>
-                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
+                            <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="w_dmg_${i}" class="w-dmg" value="${w.damage}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстрела, сек</label><input type="number" step="0.01" id="w_fr_${i}" value="${w.fireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дальность</label><input type="number" step="0.1" id="w_dist_${i}" value="${w.maxDistance}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="w_spr_${i}" value="${w.spread}" oninput="updatePreviews()"></div></div></div>`;
                 });
             }
             // Миниган — не WeaponConfig, а подменённая моделью пушка Ураганного стрейфа,
@@ -1022,8 +1022,8 @@
             ensureEvoData();
             let mg = currentData.evos.hurricaneStrafe;
             wh += `<div class="upgrade-card weapon-card"><div class="card-header"><div class="card-title">🌪 Миниган</div></div>
-                    <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="mg_dmg" value="${mg.miniGunDamage !== undefined ? mg.miniGunDamage : 100}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстр.</label><input type="number" step="0.01" id="mg_fr" value="${mg.miniGunFireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дистанция</label><input type="number" step="0.1" id="mg_dist" value="${mg.miniGunMaxDistance !== undefined ? mg.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="mg_spr" value="${mg.miniGunSpread}" oninput="updatePreviews()"></div></div>
-                    <div class="row"><div style="flex:1"><label>Патронов за выстрел</label><input type="number" step="1" id="mg_bps" value="${mg.miniGunBulletsPerShot !== undefined ? mg.miniGunBulletsPerShot : 1}"></div><div style="flex:1"><label>Пауза в очереди</label><input type="number" step="0.01" id="mg_bd" value="${mg.miniGunBurstDelay !== undefined ? mg.miniGunBurstDelay : 0.05}"></div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Урон</label><input type="number" step="0.1" id="mg_dmg" value="${mg.miniGunDamage !== undefined ? mg.miniGunDamage : 100}" oninput="updatePreviews()"></div><div style="flex:1"><label>Задержка выстрела, сек</label><input type="number" step="0.01" id="mg_fr" value="${mg.miniGunFireRate}" oninput="updatePreviews()"></div></div><div class="row"><div style="flex:1"><label>Дальность</label><input type="number" step="0.1" id="mg_dist" value="${mg.miniGunMaxDistance !== undefined ? mg.miniGunMaxDistance : 50}" oninput="updatePreviews()"></div><div style="flex:1"><label>Разброс</label><input type="number" step="0.1" id="mg_spr" value="${mg.miniGunSpread}" oninput="updatePreviews()"></div></div>
+                    <div class="row"><div style="flex:1"><label>Пуль за выстрел</label><input type="number" step="1" id="mg_bps" value="${mg.miniGunBulletsPerShot !== undefined ? mg.miniGunBulletsPerShot : 1}"></div><div style="flex:1"><label>Пауза в очереди, сек</label><input type="number" step="0.01" id="mg_bd" value="${mg.miniGunBurstDelay !== undefined ? mg.miniGunBurstDelay : 0.05}"></div></div>
                     <label style="display:flex; align-items:center; gap:8px; white-space:normal; margin-bottom:10px; color:#d4d4d4; font-size:13px; cursor:pointer;"><input type="checkbox" id="mg_seq" ${mg.miniGunIsSequential ? 'checked' : ''} style="width:auto; margin:0; flex:0 0 auto;">Разносить патроны очереди по времени</label>
                     <div style="color:var(--dim); font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанция здесь базовые: карточки Урона и Дальности умножают их и дальше, причём уже накопленные уровни применяются сразу при выдаче минигана. Задержка выстрела фиксированная (Скорострельность после эволюции больше не выпадает), разброс тоже — карточка Дальности его намеренно не трогает.</div></div>`;
 
@@ -1047,29 +1047,29 @@
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
             
-            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Absolute Control</div></div>
-                <div class="recipe-badge"><b>Рецепт:</b> 💫 Stun + 🩸 Regeneration</div>
+            evoHtml += `<div class="upgrade-card evo-card evo-ac"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🧊 Абсолютный контроль</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> Стан + Регенерация</div>
                 <div style="color:var(--dim); font-size:12px; line-height:1.5; padding:6px 0;">Числовых параметров нет — эволюция даёт только заморозку.<br>Реген и длительность стана остаются за карточками.</div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Hurricane Strafe</div></div>
-                <div class="recipe-badge"><b>Рецепт:</b> 🔥 Fire Rate + 🔭 Distance</div>
+            evoHtml += `<div class="upgrade-card evo-card evo-hs"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🌪 Ураганный стрейф</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> Скорострельность + Дальность</div>
                 <div style="color:var(--dim); font-size:12px; line-height:1.5; padding:6px 0;">Числа этой эволюции — статы минигана, и живут они на вкладке <b>Оружие</b>, карточка «Миниган»: там урон, задержка, дистанция и разброс рядом с остальными стволами.</div>
                 </div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Lead Drill</div></div>
-                <div class="recipe-badge"><b>Рецепт:</b> 🏹 Piercing + 🍃 Bush Speed</div>
-                <div class="row"><div style="flex:1"><label>Бескон. Пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-ld"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🔩 Свинцовый бур</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> Пробитие + Скорость в кустах</div>
+                <div class="row"><div style="flex:1"><label>Бесконечное пробитие</label><input type="number" id="evo_ld_pierce" value="${eData.leadDrill.infinitePiercingValue}"></div></div>
                 <div style="color:var(--dim); font-size:11px; padding-top:6px;">Скорость в кустах — за карточкой состояния. Режим призрака встроен в эволюцию.</div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Homing</div></div>
-                <div class="recipe-badge"><b>Рецепт:</b> 🪃 Ricochet + ⚡ Speed</div>
-                <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div><div style="flex:1"><label>Крит (%)</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div></div>
+            evoHtml += `<div class="upgrade-card evo-card evo-hm"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">🎯 Самонаведение</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> Рикошет + Скорость</div>
+                <div class="row"><div style="flex:1"><label>Рикошетов</label><input type="number" id="evo_hm_rico" value="${eData.homing.evoRicochetCount}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_hm_rad" value="${eData.homing.evoRicochetRadius}"></div><div style="flex:1"><label>Крит, %</label><input type="number" step="0.1" id="evo_hm_crit" value="${eData.homing.evoBonusHeadChance}"></div></div>
                 <div style="color:var(--dim); font-size:11px; padding-top:6px;">Связка теперь Рикошет + Стрейф. Дистанция — за карточкой Дальности, разброс при собранном Ураганном стрейфе задаёт он.</div></div>`;
 
-            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Tank Breakthrough</div></div>
-                <div class="recipe-badge"><b>Рецепт:</b> ⚔️ Damage + ❤️ Health</div>
-                <div class="row"><div style="flex:1"><label>Урон Взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
-                <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div><div class="row"><div style="flex:1"><label>Пауза: Танк один</label><input type="number" step="0.01" id="evo_tk_solo" value="${eData.tank.soloDelay !== undefined ? eData.tank.soloDelay : 0}"></div><div style="flex:1"><label>Пауза: в связке</label><input type="number" step="0.01" id="evo_tk_combo" value="${eData.tank.comboDelay !== undefined ? eData.tank.comboDelay : 0.15}"></div><div style="flex:1"><label>Шаг цепочки</label><input type="number" step="0.01" id="evo_tk_step" value="${eData.tank.chainStepDelay !== undefined ? eData.tank.chainStepDelay : 0.05}"></div></div><div style="color:var(--dim); font-size:11px; padding-top:6px;">Взрыв идёт по прилёту пули. Пауза добавляется только когда до взрыва есть что посмотреть — враг замерзает от Абсолютного контроля либо пуля прошивает и отскакивает; если Танк собран один, работает первое поле (по умолчанию 0 — рвёт сразу). Шаг цепочки разносит взрывы по точкам траектории, иначе они срабатывают одновременно.</div></div>`;
+            evoHtml += `<div class="upgrade-card evo-card evo-tk"><div class="card-header" style="margin-bottom:5px;"><div class="card-title">💥 Прорыв танка</div></div>
+                <div class="recipe-badge"><b>Рецепт:</b> Урон + Здоровье</div>
+                <div class="row"><div style="flex:1"><label>Урон взрыва</label><input type="number" id="evo_tk_dmg" value="${eData.tank.explosionDamage}"></div><div style="flex:1"><label>Радиус</label><input type="number" step="0.1" id="evo_tk_rad" value="${eData.tank.explosionRadius}"></div></div>
+                <div class="row"><div style="flex:1"><label>Сила тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время тряски, сек</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div><div class="row"><div style="flex:1"><label>Пауза, танк один</label><input type="number" step="0.01" id="evo_tk_solo" value="${eData.tank.soloDelay !== undefined ? eData.tank.soloDelay : 0}"></div><div style="flex:1"><label>Пауза в связке</label><input type="number" step="0.01" id="evo_tk_combo" value="${eData.tank.comboDelay !== undefined ? eData.tank.comboDelay : 0.15}"></div><div style="flex:1"><label>Шаг цепочки, сек</label><input type="number" step="0.01" id="evo_tk_step" value="${eData.tank.chainStepDelay !== undefined ? eData.tank.chainStepDelay : 0.05}"></div></div><div style="color:var(--dim); font-size:11px; padding-top:6px;">Взрыв идёт по прилёту пули. Пауза добавляется только когда до взрыва есть что посмотреть — враг замерзает от Абсолютного контроля либо пуля прошивает и отскакивает; если Танк собран один, работает первое поле (по умолчанию 0 — рвёт сразу). Шаг цепочки разносит взрывы по точкам траектории, иначе они срабатывают одновременно.</div></div>`;
 
             evoHtml += '</div>';
             document.getElementById('pane-evos').innerHTML = evoHtml;
@@ -1168,9 +1168,9 @@
             // Волна сворачивается так же, как папка вокруг неё: внутри четыре поля и список
             // врагов, и развёрнутыми пять волн подряд не помещаются на экран телефона.
             let folded = (() => { try { return (JSON.parse(localStorage.getItem('colWave') || '[]')).includes(idPrefix); } catch(e){ return false; } })();
-            let h = `<div class="panel phase-panel"><div class="header-row" data-foldid="${idPrefix}" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="togglePanelDisplay(this, 'colWave')"><div class="drag-handle" onclick="event.stopPropagation()">☰</div><span class="fold-icon" style="color:var(--dim); margin-right:8px; font-size:12px;">${folded ? '▶' : '▼'}</span><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:var(--dim); margin-bottom:3px; font-weight:600;">00:00 - 00:00</span><input type="text" class="p-name"${idFor("name")} value="${escapeHtml(p.phaseName)}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="event.stopPropagation(); removePhase(this)" style="margin-left:10px">✖</button></div><div class="phase-body" style="display:${folded ? 'none' : 'block'}; margin-top:12px;"><div class="row"><div style="flex:1"><label>Start (sec)</label><input type="number" step="0.1" class="p-start"${idFor("start")} value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>End (sec)</label><input type="number" step="0.1" class="p-end"${idFor("end")} value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Interval</label><input type="number" step="0.1" class="p-int"${idFor("int")} value="${p.spawnInterval}"></div><div style="flex:1"><label>Batch</label><input type="number" class="p-batch"${idFor("batch")} value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
+            let h = `<div class="panel phase-panel"><div class="header-row" data-foldid="${idPrefix}" style="cursor:pointer; border-bottom:none; margin-bottom:0; padding-bottom:0;" onclick="togglePanelDisplay(this, 'colWave')"><div class="drag-handle" onclick="event.stopPropagation()">☰</div><span class="fold-icon" style="color:var(--dim); margin-right:8px; font-size:12px;">${folded ? '▶' : '▼'}</span><div style="flex:1; display:flex; flex-direction:column;"><span class="phase-time" style="font-size:11px; color:var(--dim); margin-bottom:3px; font-weight:600;">00:00 - 00:00</span><input type="text" class="p-name"${idFor("name")} value="${escapeHtml(p.phaseName)}" onclick="event.stopPropagation()" style="margin:0; font-weight:bold;"></div><button class="btn-remove" onclick="event.stopPropagation(); removePhase(this)" style="margin-left:10px">✖</button></div><div class="phase-body" style="display:${folded ? 'none' : 'block'}; margin-top:12px;"><div class="row"><div style="flex:1"><label>Начало, сек</label><input type="number" step="0.1" class="p-start"${idFor("start")} value="${start}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Конец, сек</label><input type="number" step="0.1" class="p-end"${idFor("end")} value="${end}" oninput="updatePhaseTime(this)"></div><div style="flex:1"><label>Интервал, сек</label><input type="number" step="0.1" class="p-int"${idFor("int")} value="${p.spawnInterval}"></div><div style="flex:1"><label>За раз</label><input type="number" class="p-batch"${idFor("batch")} value="${p.enemiesPerBatch}"></div></div><div class="enemies-list">`;
             if (p.enemies) { p.enemies.forEach((e, eIdx) => { let optionsHtml = ""; let isKnown = false; ENEMY_IDS.forEach(id => { let selected = (id === e.enemyID) ? "selected" : ""; if (selected) isKnown = true; optionsHtml += `<option value="${id}" ${selected}>${id}</option>`; }); if (!isKnown) optionsHtml += `<option value="${escapeHtml(e.enemyID)}" selected>${escapeHtml(e.enemyID)} (Неизвестный)</option>`; h += `<div class="row enemy-row"><select class="e-id" style="flex:2">${optionsHtml}</select><input type="number" step="0.1" class="e-w"${idFor('e' + eIdx + '_w')} value="${e.weight}" style="flex:1"><button class="btn-remove" onclick="this.parentElement.remove()">✖</button></div>`; }); }
-            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px;">+ Враг</button></div></div>`;
+            h += `</div><button class="btn-add" onclick="addEnemy(this)" style="font-size:12px;">Добавить врага</button></div></div>`;
             return h;
         }
 
@@ -1201,67 +1201,67 @@
 
             if (attack.attackType === 'Laser') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Prep Time', 'laserPreparationTime', attack.laserPreparationTime ?? 1.5, 'Сколько секунд показывается красная линия до выстрела.')}
-                    ${makeParam('Duration', 'laserDuration', attack.laserDuration ?? 5.0, 'Как долго лазер сжигает арену (в секундах).')}
-                    ${makeParam('Rot. Speed', 'laserRotationSpeed', attack.laserRotationSpeed ?? 45, 'Скорость поворота луча (в градусах за секунду).')}
-                    ${makeParam('Beam Width', 'laserBeamWidth', attack.laserBeamWidth ?? 3.0, 'Толщина лазерного луча.')}
-                    ${makeParam('Beam Length', 'laserBeamLength', attack.laserBeamLength ?? 40.0, 'Длина луча (обычно 40 хватает до края арены).')}
-                    ${makeParam('Beam Count', 'laserBeamCount', attack.laserBeamCount ?? 1, 'Сколько лучей крутится (1=линия, 2=пропеллер, 4=крест).', 'number', '')}
-                    ${makeParam('Dmg / Tick', 'laserDamagePerTick', attack.laserDamagePerTick ?? 1, 'Сколько урона наносит одно касание лазера.', 'number', '')}
-                    ${makeParam('Tick Rate', 'laserTickRate', attack.laserTickRate ?? 0.5, 'Если игрок стоит в лазере, как часто (в сек) он получает урон.')}
+                    ${makeParam('Подготовка, сек', 'laserPreparationTime', attack.laserPreparationTime ?? 1.5, 'Сколько секунд показывается красная линия до выстрела.')}
+                    ${makeParam('Длительность, сек', 'laserDuration', attack.laserDuration ?? 5.0, 'Как долго лазер сжигает арену (в секундах).')}
+                    ${makeParam('Скорость вращения, °/сек', 'laserRotationSpeed', attack.laserRotationSpeed ?? 45, 'Скорость поворота луча (в градусах за секунду).')}
+                    ${makeParam('Ширина луча', 'laserBeamWidth', attack.laserBeamWidth ?? 3.0, 'Толщина лазерного луча.')}
+                    ${makeParam('Длина луча', 'laserBeamLength', attack.laserBeamLength ?? 40.0, 'Длина луча (обычно 40 хватает до края арены).')}
+                    ${makeParam('Лучей', 'laserBeamCount', attack.laserBeamCount ?? 1, 'Сколько лучей крутится (1=линия, 2=пропеллер, 4=крест).', 'number', '')}
+                    ${makeParam('Урон за касание', 'laserDamagePerTick', attack.laserDamagePerTick ?? 1, 'Сколько урона наносит одно касание лазера.', 'number', '')}
+                    ${makeParam('Частота урона, сек', 'laserTickRate', attack.laserTickRate ?? 0.5, 'Если игрок стоит в лазере, как часто (в сек) он получает урон.')}
                 </div>`;
             } 
             else if (attack.attackType === 'Rift') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Prep Time', 'riftPreparationTime', attack.riftPreparationTime ?? 2.0, 'Задержка перед появлением шипов.')}
-                    ${makeParam('Path Width', 'riftPathWidth', attack.riftPathWidth ?? 4.0, 'Ширина опасной зоны (красной линии).')}
-                    ${makeParam('Path Count', 'riftPathCount', attack.riftPathCount ?? 3, 'Количество направлений, куда ударят шипы.', 'number', '')}
-                    ${makeParam('Angle Offset', 'riftAngleBetweenPaths', attack.riftAngleBetweenPaths ?? 45, 'Угол между линиями, если Path Count больше 1.')}
-                    ${makeParam('Max Distance', 'riftMaxDistance', attack.riftMaxDistance ?? 30.0, 'Как далеко от босса улетят шипы.')}
-                    ${makeParam('Spike Speed', 'riftSpikeSpeed', attack.riftSpikeSpeed ?? 20.0, 'С какой скоростью шипы ползут вперед.')}
-                    ${makeParam('Lifetime', 'riftSpikeLifetime', attack.riftSpikeLifetime ?? 4.0, 'Сколько секунд шипы торчат из земли.')}
-                    ${makeParam('Spacing', 'riftSpikeSpacing', attack.riftSpikeSpacing ?? 1.5, 'Расстояние между рядами шипов.')}
-                    ${makeParam('Spikes Per Row', 'riftSpikesPerRow', attack.riftSpikesPerRow ?? 3, 'Сколько шипов в ширину (3 = куст, 1 = узкая тропа).', 'number', '')}
-                    ${makeParam('Scatter', 'riftRandomScatter', attack.riftRandomScatter ?? 0.5, 'Сила случайного хаоса (кривизна линии шипов).')}
+                    ${makeParam('Подготовка, сек', 'riftPreparationTime', attack.riftPreparationTime ?? 2.0, 'Задержка перед появлением шипов.')}
+                    ${makeParam('Ширина дорожки', 'riftPathWidth', attack.riftPathWidth ?? 4.0, 'Ширина опасной зоны (красной линии).')}
+                    ${makeParam('Дорожек', 'riftPathCount', attack.riftPathCount ?? 3, 'Количество направлений, куда ударят шипы.', 'number', '')}
+                    ${makeParam('Угол между дорожками, °', 'riftAngleBetweenPaths', attack.riftAngleBetweenPaths ?? 45, 'Угол между линиями, если Path Count больше 1.')}
+                    ${makeParam('Дальность', 'riftMaxDistance', attack.riftMaxDistance ?? 30.0, 'Как далеко от босса улетят шипы.')}
+                    ${makeParam('Скорость шипов', 'riftSpikeSpeed', attack.riftSpikeSpeed ?? 20.0, 'С какой скоростью шипы ползут вперед.')}
+                    ${makeParam('Время жизни, сек', 'riftSpikeLifetime', attack.riftSpikeLifetime ?? 4.0, 'Сколько секунд шипы торчат из земли.')}
+                    ${makeParam('Шаг между шипами', 'riftSpikeSpacing', attack.riftSpikeSpacing ?? 1.5, 'Расстояние между рядами шипов.')}
+                    ${makeParam('Шипов в ряду', 'riftSpikesPerRow', attack.riftSpikesPerRow ?? 3, 'Сколько шипов в ширину (3 = куст, 1 = узкая тропа).', 'number', '')}
+                    ${makeParam('Разброс', 'riftRandomScatter', attack.riftRandomScatter ?? 0.5, 'Сила случайного хаоса (кривизна линии шипов).')}
                 </div>`;
             } 
             else if (attack.attackType === 'EarthThrow') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Stone Count', 'stonesCount', attack.stonesCount ?? 3, 'Сколько камней бросит босс.', 'number', '')}
-                    ${makeParam('Delay Btw', 'stonesDelayBetween', attack.stonesDelayBetween ?? 2.0, 'Задержка между бросками камней.')}
-                    ${makeParam('Track Dur.', 'stonesTrackingDuration', attack.stonesTrackingDuration ?? 1.5, 'Сколько секунд камень держит игрока на прицеле.')}
-                    ${makeParam('Lead Strength', 'stonesLeadStrength', attack.stonesLeadStrength ?? 1.2, 'Насколько далеко вперед по курсу бега кидать камень (1.0 = точно в цель).')}
-                    ${makeParam('Expl. Radius', 'stonesIndicatorSize', attack.stonesIndicatorSize ?? 3.0, 'Радиус красного круга на земле (взрыв камня).')}
-                    ${makeParam('Fly Speed', 'stonesSpeed', attack.stonesSpeed ?? 25.0, 'Скорость полета камня к цели.')}
-                    ${makeParam('Damage', 'stonesDamage', attack.stonesDamage ?? 2, 'Урон при прямом попадании камня.', 'number', '')}
+                    ${makeParam('Камней', 'stonesCount', attack.stonesCount ?? 3, 'Сколько камней бросит босс.', 'number', '')}
+                    ${makeParam('Пауза между, сек', 'stonesDelayBetween', attack.stonesDelayBetween ?? 2.0, 'Задержка между бросками камней.')}
+                    ${makeParam('Ведёт цель, сек', 'stonesTrackingDuration', attack.stonesTrackingDuration ?? 1.5, 'Сколько секунд камень держит игрока на прицеле.')}
+                    ${makeParam('Упреждение', 'stonesLeadStrength', attack.stonesLeadStrength ?? 1.2, 'Насколько далеко вперед по курсу бега кидать камень (1.0 = точно в цель).')}
+                    ${makeParam('Радиус взрыва', 'stonesIndicatorSize', attack.stonesIndicatorSize ?? 3.0, 'Радиус красного круга на земле (взрыв камня).')}
+                    ${makeParam('Скорость полёта', 'stonesSpeed', attack.stonesSpeed ?? 25.0, 'Скорость полета камня к цели.')}
+                    ${makeParam('Урон', 'stonesDamage', attack.stonesDamage ?? 2, 'Урон при прямом попадании камня.', 'number', '')}
                 </div>`;
             } 
             else if (attack.attackType === 'Rockets') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Launch Count', 'rocketsLaunchCount', attack.rocketsLaunchCount ?? 5, 'Сколько ракет вылетает за один залп.', 'number', '')}
-                    ${makeParam('Launch Speed', 'rocketsLaunchSpeed', attack.rocketsLaunchSpeed ?? 30.0, 'Как быстро ракеты выстреливают вверх.')}
-                    ${makeParam('Launch Delay', 'rocketsLaunchDelay', attack.rocketsLaunchDelay ?? 0.2, 'Задержка между вылетами ракет (эффект пулемета).')}
-                    ${makeParam('Scatter', 'rocketsLaunchScatter', attack.rocketsLaunchScatter ?? 20.0, 'Ширина разброса при запуске вверх (угол).')}
-                    ${makeParam('Warn Count', 'rocketsWarningCount', attack.rocketsWarningCount ?? 5, 'Сколько красных кругов бомбардировки появится на земле.', 'number', '')}
-                    ${makeParam('Warn Dur.', 'rocketsWarningDuration', attack.rocketsWarningDuration ?? 2.5, 'Как долго круг мигает до падения ракеты.')}
-                    ${makeParam('Expl. Radius', 'rocketsExplosionRadius', attack.rocketsExplosionRadius ?? 6.0, 'Радиус урона (и размера круга) при взрыве.')}
-                    ${makeParam('Fall Speed', 'rocketsFallSpeed', attack.rocketsFallSpeed ?? 50.0, 'С какой скоростью ракета падает с небес.')}
-                    ${makeParam('Fall Delay', 'rocketsFallDelay', attack.rocketsFallDelay ?? 0.2, 'Задержка между падением ракет (ковровая бомбардировка).')}
-                    ${makeParam('Damage', 'rocketsDamage', attack.rocketsDamage ?? 2, 'Урон от взрыва ракеты.', 'number', '')}
-                    ${makeParam('Show Sphere', 'rocketsShowDebug', attack.rocketsShowDebug, 'Показывать полупрозрачную сферу взрыва (полезно для настройки радиуса).', 'checkbox')}
+                    ${makeParam('Ракет', 'rocketsLaunchCount', attack.rocketsLaunchCount ?? 5, 'Сколько ракет вылетает за один залп.', 'number', '')}
+                    ${makeParam('Скорость взлёта', 'rocketsLaunchSpeed', attack.rocketsLaunchSpeed ?? 30.0, 'Как быстро ракеты выстреливают вверх.')}
+                    ${makeParam('Пауза между пусками, сек', 'rocketsLaunchDelay', attack.rocketsLaunchDelay ?? 0.2, 'Задержка между вылетами ракет (эффект пулемета).')}
+                    ${makeParam('Разброс', 'rocketsLaunchScatter', attack.rocketsLaunchScatter ?? 20.0, 'Ширина разброса при запуске вверх (угол).')}
+                    ${makeParam('Меток', 'rocketsWarningCount', attack.rocketsWarningCount ?? 5, 'Сколько красных кругов бомбардировки появится на земле.', 'number', '')}
+                    ${makeParam('Метка видна, сек', 'rocketsWarningDuration', attack.rocketsWarningDuration ?? 2.5, 'Как долго круг мигает до падения ракеты.')}
+                    ${makeParam('Радиус взрыва', 'rocketsExplosionRadius', attack.rocketsExplosionRadius ?? 6.0, 'Радиус урона (и размера круга) при взрыве.')}
+                    ${makeParam('Скорость падения', 'rocketsFallSpeed', attack.rocketsFallSpeed ?? 50.0, 'С какой скоростью ракета падает с небес.')}
+                    ${makeParam('Пауза перед падением, сек', 'rocketsFallDelay', attack.rocketsFallDelay ?? 0.2, 'Задержка между падением ракет (ковровая бомбардировка).')}
+                    ${makeParam('Урон', 'rocketsDamage', attack.rocketsDamage ?? 2, 'Урон от взрыва ракеты.', 'number', '')}
+                    ${makeParam('Показывать метку', 'rocketsShowDebug', attack.rocketsShowDebug, 'Показывать полупрозрачную сферу взрыва (полезно для настройки радиуса).', 'checkbox')}
                 </div>`;
             } 
             else if (attack.attackType === 'SummonHorde') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Enemy Count', 'hordeEnemyCount', attack.hordeEnemyCount ?? 4, 'Сколько врагов вылезет из-под земли.', 'number', '')}
-                    ${makeParam('Lifetime', 'hordeEnemyLifetime', attack.hordeEnemyLifetime ?? 12.0, 'Через сколько секунд призванные враги умрут сами.')}
-                    ${makeParam('Delay Btw', 'hordeDelayBetweenSpawns', attack.hordeDelayBetweenSpawns ?? 0.5, 'Пауза между появлением каждого следующего врага.')}
-                    ${makeParam('Emerge Time', 'hordeEmergeTime', attack.hordeEmergeTime ?? 1.5, 'Скорость анимации вылезания врага из земли.')}
-                    ${makeParam('Ambush Chance', 'hordeAmbushChance', attack.hordeAmbushChance ?? 0.6, 'Шанс (от 0 до 1), что враг вылезет прямо перед лицом бегущего игрока.')}
-                    ${makeParam('Main Shake Int.', 'hordeShakeIntensity', attack.hordeShakeIntensity ?? 0.15, 'Сила сильного землетрясения при начале призыва.')}
-                    ${makeParam('Main Shake Dur.', 'hordeShakeDuration', attack.hordeShakeDuration ?? 0.4, 'Как долго трясет арену (основной толчок).')}
-                    ${makeParam('Micro Shake Int.', 'hordeMicroShakeIntensity', attack.hordeMicroShakeIntensity ?? 0.05, 'Сила слабой тряски, когда вылезает отдельный враг.')}
-                    ${makeParam('Micro Shake Dur.', 'hordeMicroShakeDuration', attack.hordeMicroShakeDuration ?? 0.1, 'Длительность тряски от вылезания одного врага.')}
+                    ${makeParam('Врагов', 'hordeEnemyCount', attack.hordeEnemyCount ?? 4, 'Сколько врагов вылезет из-под земли.', 'number', '')}
+                    ${makeParam('Время жизни, сек', 'hordeEnemyLifetime', attack.hordeEnemyLifetime ?? 12.0, 'Через сколько секунд призванные враги умрут сами.')}
+                    ${makeParam('Пауза между, сек', 'hordeDelayBetweenSpawns', attack.hordeDelayBetweenSpawns ?? 0.5, 'Пауза между появлением каждого следующего врага.')}
+                    ${makeParam('Время вылезания, сек', 'hordeEmergeTime', attack.hordeEmergeTime ?? 1.5, 'Скорость анимации вылезания врага из земли.')}
+                    ${makeParam('Шанс засады', 'hordeAmbushChance', attack.hordeAmbushChance ?? 0.6, 'Шанс (от 0 до 1), что враг вылезет прямо перед лицом бегущего игрока.')}
+                    ${makeParam('Сила тряски', 'hordeShakeIntensity', attack.hordeShakeIntensity ?? 0.15, 'Сила сильного землетрясения при начале призыва.')}
+                    ${makeParam('Время тряски, сек', 'hordeShakeDuration', attack.hordeShakeDuration ?? 0.4, 'Как долго трясет арену (основной толчок).')}
+                    ${makeParam('Сила мелкой тряски', 'hordeMicroShakeIntensity', attack.hordeMicroShakeIntensity ?? 0.05, 'Сила слабой тряски, когда вылезает отдельный враг.')}
+                    ${makeParam('Время мелкой тряски, сек', 'hordeMicroShakeDuration', attack.hordeMicroShakeDuration ?? 0.1, 'Длительность тряски от вылезания одного врага.')}
                 </div>`;
             }
 
@@ -1517,7 +1517,7 @@
                             turnSteps.push(currentTurn.toFixed(1));
                         }
                         
-                        text = "<b><span style='color:#72ebd1'>Скор. Стрейфа</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
+                        text = "<b><span style='color:#72ebd1'>Скорость вбок</span> (База " + baseSpdValue + ")</b>:<br>" + strafeSteps.join(" ➔ ") +
                                "<br><br><b><span style='color:var(--warn)'>Скор. Прицела</span> (Бонус)</b>:<br>" + turnSteps.join(" ➔ ");
                     }
                     else if (u.type === "Shield") {
@@ -1820,7 +1820,7 @@
             } 
         }
 
-        document.getElementById('ver').textContent = 'сборка ' + VERSION;
+        document.getElementById('ver').textContent = 'баланс · сборка ' + VERSION;
         restorePanes();
         load();
     </script>
