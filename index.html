@@ -131,6 +131,11 @@
         .file-input-wrapper{background:var(--panel); border:1px dashed var(--line);
           padding:18px; text-align:center; border-radius:12px; margin-top:10px}
 
+        /* Разделитель между половинами объединённой вкладки */
+        .pane-sep{margin:18px 0 10px; padding-top:14px; border-top:1px solid var(--line);
+          font-size:12px; font-weight:650; letter-spacing:.04em; text-transform:uppercase;
+          color:var(--dim)}
+
         .cards-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px}
         .upgrade-card{background:var(--panel); border:1px solid var(--line); border-radius:12px;
           padding:14px; display:flex; flex-direction:column}
@@ -250,9 +255,7 @@
         <div class="tabs">
             <button class="tab-btn active" id="btn-waves" onclick="switchTab('waves')"><span class="ticon">🧟</span>Волны</button>
             <button class="tab-btn" id="btn-player" onclick="switchTab('player')"><span class="ticon">🏃</span>Игрок</button>
-            <button class="tab-btn" id="btn-weapons" onclick="switchTab('weapons')"><span class="ticon">🔫</span>Оружие</button>
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="ticon">🃏</span>Карты</button>
-            <button class="tab-btn" id="btn-evos" onclick="switchTab('evos')"><span class="ticon">🧬</span>EVO</button>
             <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')"><span class="ticon">💀</span>Боссы</button>
         </div>
         <div id="status" class="status"></div>
@@ -266,10 +269,19 @@
             <div id="waves-list"></div>
             <button class="btn-add" onclick="addFolder()" style="margin-top:20px; font-size:15px;">Добавить папку</button>
         </div>
-        <div id="tab-player" class="tab-content"></div>
-        <div id="tab-weapons" class="tab-content"></div>
-        <div id="tab-upgrades" class="tab-content"></div>
-        <div id="tab-evos" class="tab-content"></div>
+        <!-- Вкладок четыре, а разделов внутри шесть: игрок с оружием и карты с эволюциями
+             живут вместе. Отдельного переключателя внутри нет нарочно — карточки теперь
+             свёрнуты, и оба раздела помещаются одним списком, без лишнего касания. -->
+        <div id="tab-player" class="tab-content">
+            <div id="pane-player"></div>
+            <div class="pane-sep">Оружие</div>
+            <div id="pane-weapons"></div>
+        </div>
+        <div id="tab-upgrades" class="tab-content">
+            <div id="pane-upgrades"></div>
+            <div class="pane-sep">Эволюции</div>
+            <div id="pane-evos"></div>
+        </div>
         <div id="tab-bosses" class="tab-content"></div>
         
         <div id="tab-backups" class="tab-content">
@@ -299,7 +311,7 @@
         // выживали только объявления функций, а слушатели и константы молча пропадали.
         // Номер сборки панели. Поднимается КАЖДОЙ правкой: по нему видно, что телефон
         // догрузил свежий файл, а не показывает старый из кэша.
-        var VERSION='11';
+        var VERSION='12';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -955,7 +967,7 @@
             ph += `<div style="color:var(--dim); font-size:11px; padding-top:6px;">Отмеченные эволюции выдаются игроку сразу при старте забега, минуя карточки. Обычные условия — докачать модификатор и держать нужное состояние — при этом не проверяются. <b style="color:var(--e1)">Перед сборкой снять все галки.</b></div></div>`;
 
             ph += '</div>';
-            document.getElementById('tab-player').innerHTML = ph;
+            document.getElementById('pane-player').innerHTML = ph;
 
             let wh = '<div class="cards-grid">';
             if (currentData.weapons) {
@@ -978,7 +990,7 @@
                     <div style="color:var(--dim); font-size:11px; padding-top:6px;">Выдаётся Ураганным стрейфом и заменяет собой всё остальное оружие. Урон и дистанция здесь базовые: карточки Урона и Дальности умножают их и дальше, причём уже накопленные уровни применяются сразу при выдаче минигана. Задержка выстрела фиксированная (Скорострельность после эволюции больше не выпадает), разброс тоже — карточка Дальности его намеренно не трогает.</div></div>`;
 
             wh += '</div>';
-            document.getElementById('tab-weapons').innerHTML = wh;
+            document.getElementById('pane-weapons').innerHTML = wh;
 
             let uh = '<div class="cards-grid">';
             if (currentData.upgrades) {
@@ -992,7 +1004,7 @@
                 });
             }
             uh += '</div>';
-            document.getElementById('tab-upgrades').innerHTML = uh;
+            document.getElementById('pane-upgrades').innerHTML = uh;
             
             let evoHtml = '<div class="cards-grid">';
             const eData = currentData.evos;
@@ -1022,7 +1034,7 @@
                 <div class="row"><div style="flex:1"><label>Сила Тряски</label><input type="number" step="0.1" id="evo_tk_shake_mag" value="${eData.tank.explosionShakeMagnitude}"></div><div style="flex:1"><label>Время Тряски</label><input type="number" step="0.1" id="evo_tk_shake_dur" value="${eData.tank.explosionShakeDuration}"></div></div><div class="row"><div style="flex:1"><label>Пауза: Танк один</label><input type="number" step="0.01" id="evo_tk_solo" value="${eData.tank.soloDelay !== undefined ? eData.tank.soloDelay : 0}"></div><div style="flex:1"><label>Пауза: в связке</label><input type="number" step="0.01" id="evo_tk_combo" value="${eData.tank.comboDelay !== undefined ? eData.tank.comboDelay : 0.15}"></div><div style="flex:1"><label>Шаг цепочки</label><input type="number" step="0.01" id="evo_tk_step" value="${eData.tank.chainStepDelay !== undefined ? eData.tank.chainStepDelay : 0.05}"></div></div><div style="color:var(--dim); font-size:11px; padding-top:6px;">Взрыв идёт по прилёту пули. Пауза добавляется только когда до взрыва есть что посмотреть — враг замерзает от Абсолютного контроля либо пуля прошивает и отскакивает; если Танк собран один, работает первое поле (по умолчанию 0 — рвёт сразу). Шаг цепочки разносит взрывы по точкам траектории, иначе они срабатывают одновременно.</div></div>`;
 
             evoHtml += '</div>';
-            document.getElementById('tab-evos').innerHTML = evoHtml;
+            document.getElementById('pane-evos').innerHTML = evoHtml;
 
             try { updatePreviews(); } catch(e) {} 
             try { makeCardsFoldable(); } catch(e) { console.error('Fold error:', e); }
