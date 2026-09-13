@@ -1,0 +1,32 @@
+{
+  "generated": "2026-09-14 00:21",
+  "bosses": [
+    {
+      "id": "Boss_1",
+      "title": "Мутант с рюкзаком",
+      "builtInPoints": 1,
+      "canSpawnPoints": false,
+      "turns": true,
+      "rages": true,
+      "wakes": true
+    },
+    {
+      "id": "Boss_2",
+      "title": "Зомби на куче",
+      "builtInPoints": 0,
+      "canSpawnPoints": true,
+      "turns": false,
+      "rages": false,
+      "wakes": false
+    },
+    {
+      "id": "Boss_3",
+      "title": "Дерево с глазами",
+      "builtInPoints": 4,
+      "canSpawnPoints": false,
+      "turns": false,
+      "rages": false,
+      "wakes": false
+    }
+  ]
+}

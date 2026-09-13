@@ -316,6 +316,32 @@
         const ENEMY_IDS = ["Enemy_Standard", "Enemy_Runner", "Enemy_armor", "Enemy_Tank_Explotion", "Enemy_Tank_Toxic", "Enemy_Drone", "Helth", "Weapon"];
         const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde"];
 
+        // Справочник боссов: что за префабы есть в проекте и что каждый из них умеет.
+        // Генерируется скриптом ExportBossCatalog прямо из префабов и лежит рядом с
+        // этой страницей. Панель внутрь префаба заглянуть не может, а без этого она
+        // показывала всем подряд все поля: настройки орбиты висели даже у боссов,
+        // у которых точки прибиты к модели и никуда не летают.
+        //
+        // Пустой справочник — не поломка: тогда показываем всё, как раньше. Лучше
+        // лишние поля, чем панель, в которой ничего не настроить.
+        // var, а не let: так справочник виден в консоли браузера, и его можно
+        // подменить руками, когда надо проверить панель без свежей выгрузки.
+        var BOSS_CATALOG = [];
+
+        async function loadBossCatalog() {
+            try {
+                const res = await fetch('bosses.json?v=' + VERSION, { cache: 'no-store' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && Array.isArray(data.bosses)) BOSS_CATALOG = data.bosses;
+            } catch (e) { /* справочника нет — работаем без него */ }
+        }
+
+        function bossInfo(id) {
+            for (const b of BOSS_CATALOG) if (b.id === id) return b;
+            return null;
+        }
+
         let currentData = null;
         // Чтение обёрнуто не для красоты: браузер бросает SecurityError, если хранилище
         // запрещено (приватный режим, строгие настройки, data:-URL). Раньше исключение
@@ -325,7 +351,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='108';
+        var VERSION='109';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -853,34 +879,13 @@
                             <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colBoss')">
                                 <span class="fold-icon" style="color:var(--e1); font-size:14px;">${bIcon}</span>
                                 <span style="font-size:20px;">👹</span>
-                                <input type="text" class="b-id" value="${escapeHtml(boss.bossID)}" onclick="event.stopPropagation()" placeholder="ID префаба" style="flex:1; min-width:80px; font-weight:bold; color:var(--e1); margin:0;">
+                                ${bossPicker(boss.bossID)}
                                 <span style="font-size:11px; color:var(--dim); white-space:nowrap;">#${bIdx + 1} · ${attackTotal} атак</span>
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
                             </div>
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
-                                <div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid var(--line); padding-top:12px;">
-                                    ${bossParam('Точек', 'pointCount', boss.pointCount ?? 0, 'Сколько слабых сфер летает вокруг. Ноль — босса бьют прямо в тело.', '1', 'onchange="toggleBossFields(this)" oninput="toggleBossFields(this)"')}
-                                    <div class="body-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'none' : 'contents'};">
-                                        ${bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'Сколько держит сам босс. Нужно, только когда точек ноль.')}
-                                    </div>
-                                    <div class="point-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'contents' : 'none'};">
-                                        ${bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, 'Здоровье одной сферы. Умножь на число точек — получишь живучесть босса.')}
-                                        ${bossParam('Радиус орбиты', 'pointRadius', boss.pointRadius ?? 3.5, 'Как далеко сферы от центра босса.', '0.1')}
-                                        ${bossParam('Высота орбиты', 'pointHeight', boss.pointHeight ?? 1.5, 'На какой высоте они летают.', '0.1')}
-                                        ${bossParam('Скорость орбиты', 'pointSpeed', boss.pointSpeed ?? 40, 'Градусов в секунду. Минус — в обратную сторону.')}
-                                        ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
-                                    </div>
-                                </div>
-                                <div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid var(--line); padding-top:12px;">
-                                    ${bossParam('Разворот, град/с', 'turnSpeed', boss.turnSpeed ?? 0, 'Скорость спокойного доворота. Игрок обегает арену примерно за пятьдесят градусов в секунду, так что всё, что заметно ниже, оставляет возможность зайти боссу за спину. Ноль — босс не поворачивается вовсе.', '1')}
-                                    ${bossParam('Порог остановки, град', 'turnStopAngle', boss.turnStopAngle ?? 0, 'Расхождение, на котором босс считает, что уже смотрит на игрока, и встаёт. Должен быть заметно меньше порога доворота, иначе он дёргается туда-сюда на самой границе.', '1')}
-                                    ${bossParam('Рывок, град', 'turnSnapAngle', boss.turnSnapAngle ?? 0, 'На сколько градусов босс доворачивается, когда его разозлили попаданием по уязвимой точке.', '1')}
-                                    ${bossParam('Время рывка, сек', 'turnSnapTime', boss.turnSnapTime ?? 0, 'Длина рывка. Сделай его быстрее, чем игрок обегает арену, и окно урона будет закрываться само.', '0.05')}
-                                    ${bossParam('Порог доворота, град', 'turnNoticeAngle', boss.turnNoticeAngle ?? 0, 'Расхождение, ниже которого босс считает, что уже смотрит на игрока, и шагать перестаёт. Слишком мало — он качается вокруг игрока без остановки.', '1')}
-                                    ${bossParam('Урона до ответа', 'damageToProvoke', boss.damageToProvoke ?? 0, 'Сколько урона по уязвимым точкам надо накопить, чтобы босс огрызнулся ответной атакой. Ноль — не огрызается.', '1')}
-                                    ${bossParam('Обход до пробуждения, град', 'wakeArc', boss.wakeArc ?? 0, 'Босс появляется спиной и спит. Обойди его на столько градусов, и он заметит. Выстрел по уязвимой точке будит его сразу, не дожидаясь обхода.', '1')}
-                                </div>
+                                ${bossSettings(boss)}
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--e1); color:var(--e1); font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
@@ -1151,6 +1156,78 @@
             if (!box) return;
             const on = box.classList.toggle('on');
             btn.classList.toggle('on', on);
+        }
+
+        // Настройки самого босса. Какие из них показывать, решает справочник: у первого
+        // точка одна и прибита к модели, у второго точек нет вовсе, у третьего их четыре
+        // и они тоже не летают. Показывать всем одинаковый набор — значит врать.
+        //
+        // Справочника нет или босс в нём не найден — показываем всё. Лишнее поле
+        // раздражает, отсутствующее поле лишает возможности что-то настроить.
+        function bossSettings(boss) {
+            const info = bossInfo(boss.bossID);
+            const all = !info;
+            const built = info ? (info.builtInPoints || 0) : 0;
+            const spawns = info ? !!info.canSpawnPoints : false;
+
+            const row = inner => inner.trim()
+                ? `<div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid var(--line); padding-top:12px;">${inner}</div>`
+                : '';
+
+            let health = '';
+
+            if (all || spawns) {
+                health += bossParam('Точек', 'pointCount', boss.pointCount ?? 0, 'Сколько слабых сфер рождается вокруг босса. Ноль — босса бьют прямо в тело.', '1', 'onchange="toggleBossFields(this)" oninput="toggleBossFields(this)"');
+                health += `<div class="body-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'none' : 'contents'};">
+                        ${bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'Сколько держит сам босс. Нужно, только когда точек ноль.')}
+                    </div>
+                    <div class="point-fields" style="display:${(boss.pointCount ?? 0) > 0 ? 'contents' : 'none'};">
+                        ${bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, 'Здоровье одной сферы. Умножь на число точек — получишь живучесть босса.')}
+                        ${bossParam('Радиус орбиты', 'pointRadius', boss.pointRadius ?? 3.5, 'Как далеко сферы от центра босса.', '0.1')}
+                        ${bossParam('Высота орбиты', 'pointHeight', boss.pointHeight ?? 1.5, 'На какой высоте они летают.', '0.1')}
+                        ${bossParam('Скорость орбиты', 'pointSpeed', boss.pointSpeed ?? 40, 'Градусов в секунду. Минус — в обратную сторону.')}
+                        ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
+                    </div>`;
+            } else if (built > 0) {
+                health += bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, `У этого босса уязвимых мест ${built}, они стоят в самой модели. Здесь задаётся прочность каждого, всё здоровье босса — их сумма.`);
+            } else {
+                health += bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'У этого босса уязвимых мест нет, его бьют прямо в тело. Здесь его живучесть.');
+            }
+
+            let temper = '';
+            if (all || info.turns) {
+                temper += bossParam('Разворот, град/с', 'turnSpeed', boss.turnSpeed ?? 0, 'Скорость спокойного доворота. Игрок обегает арену примерно за пятьдесят градусов в секунду, так что всё, что заметно ниже, оставляет возможность зайти боссу за спину. Ноль — босс не поворачивается вовсе.', '1');
+                temper += bossParam('Порог доворота, град', 'turnNoticeAngle', boss.turnNoticeAngle ?? 0, 'Расхождение, с которого босс начинает доворачиваться.', '1');
+                temper += bossParam('Порог остановки, град', 'turnStopAngle', boss.turnStopAngle ?? 0, 'Расхождение, на котором он считает, что уже смотрит на игрока, и встаёт. Должен быть заметно меньше порога доворота, иначе он дёргается туда-сюда на самой границе.', '1');
+                temper += bossParam('Рывок, град', 'turnSnapAngle', boss.turnSnapAngle ?? 0, 'На сколько градусов босс доворачивается рывком, когда его разозлили попаданием по уязвимому месту.', '1');
+                temper += bossParam('Время рывка, сек', 'turnSnapTime', boss.turnSnapTime ?? 0, 'Длина рывка. Сделай его быстрее, чем игрок обегает арену, и окно урона будет закрываться само.', '0.05');
+            }
+            if (all || info.rages)
+                temper += bossParam('Урона до ответа', 'damageToProvoke', boss.damageToProvoke ?? 0, 'Сколько урона по уязвимым местам надо накопить, чтобы босс огрызнулся ответной атакой. Ноль — не огрызается.', '1');
+            if (all || info.wakes)
+                temper += bossParam('Обход до пробуждения, град', 'wakeArc', boss.wakeArc ?? 0, 'Босс появляется спиной и спит. Обойди его на столько градусов, и он заметит. Выстрел по уязвимому месту будит его сразу, не дожидаясь обхода.', '1');
+
+            return row(health) + row(temper);
+        }
+
+        // Выбор босса из тех, что реально есть в проекте. Раньше идентификатор вводился
+        // руками, и опечатка в нём означала бой, который молча не запускался.
+        // Справочник пуст — оставляем поле ввода, иначе босса не завести вовсе.
+        function bossPicker(id) {
+            const common = 'class="b-id" onclick="event.stopPropagation()" style="flex:1; min-width:110px; font-weight:bold; color:var(--e1); margin:0;"';
+            if (!BOSS_CATALOG.length)
+                return `<input type="text" ${common} value="${escapeHtml(id)}" placeholder="ID префаба">`;
+
+            let opts = '', known = false;
+            BOSS_CATALOG.forEach(b => {
+                const sel = b.id === id;
+                if (sel) known = true;
+                opts += `<option value="${escapeHtml(b.id)}" ${sel ? 'selected' : ''}>${escapeHtml(b.title)}</option>`;
+            });
+            if (!known)
+                opts += `<option value="${escapeHtml(id)}" selected>${escapeHtml(id)} — нет в проекте</option>`;
+
+            return `<select ${common} onchange="syncData(); render();">${opts}</select>`;
         }
 
         function bossParam(label, key, val, tooltip, step="1", extra="") {
@@ -1808,6 +1885,7 @@
                 if(!res.ok) throw new Error("Ошибка доступа"); 
                 const gist = await res.json(); 
                 currentData = JSON.parse(gist.files[FILE_NAME].content); 
+                await loadBossCatalog();   // до отрисовки: от него зависит, какие поля показывать
                 render(); 
                 try { promoteLastCard(); } catch(e) {}
                 try { snapshotBaseline(); } catch(e) {} 
