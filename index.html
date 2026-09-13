@@ -325,7 +325,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='104';
+        var VERSION='105';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -872,6 +872,12 @@
                                         ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
                                     </div>
                                 </div>
+                                <div class="row" style="flex-wrap:wrap; margin-bottom:4px; border-top:1px solid var(--line); padding-top:12px;">
+                                    ${bossParam('Разворот спокойный', 'turnSpeed', boss.turnSpeed ?? 0, 'Градусов в секунду. Игрок обегает арену примерно за пятьдесят, так что медленный разворот — это и есть возможность зайти боссу за спину. Ноль — босс не поворачивается вовсе.', '1')}
+                                    ${bossParam('Разворот в злости', 'angryTurnSpeed', boss.angryTurnSpeed ?? 0, 'Градусов в секунду после попадания по уязвимой точке. Выше пятидесяти — босс успевает довернуться, и окно урона закрывается само.', '1')}
+                                    ${bossParam('Злость держится, сек', 'angerTime', boss.angerTime ?? 0, 'Сколько секунд босс разворачивается рывком, прежде чем снова обмякнет.', '0.1')}
+                                    ${bossParam('Урона до ответа', 'damageToProvoke', boss.damageToProvoke ?? 0, 'Сколько урона по уязвимым точкам надо накопить, чтобы босс огрызнулся ответной атакой. Ноль — не огрызается.', '1')}
+                                </div>
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--e1); color:var(--e1); font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
@@ -1282,7 +1288,12 @@
                     <select class="a-type" style="flex:1; margin:0;" onclick="event.stopPropagation()" onchange="syncData(); render();">${opts}</select>
                     <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.attack-panel').remove(); syncData(); render();">✖</button>
                 </div>
-                <div class="atk-body" style="display:${atkOpen ? 'block' : 'none'}; margin-top:14px;">${paramsHtml}</div>
+                <div class="atk-body" style="display:${atkOpen ? 'block' : 'none'}; margin-top:14px;">
+                    <div class="row" style="flex-wrap: wrap;">
+                        ${makeParam('В ответ на урон', 'onDamage', attack.onDamage ?? false, 'Атака уходит из расписания и срабатывает, только когда игрок накопит урон по уязвимой точке. Так залп становится ответом на смелость, а не случайностью по таймеру.', 'checkbox')}
+                    </div>
+                    ${paramsHtml}
+                </div>
             </div>`;
         }
 
