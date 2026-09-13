@@ -325,7 +325,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='107';
+        var VERSION='108';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1230,7 +1230,7 @@
                     ${makeParam('Прицеливание, сек', 'riftPreparationTime', attack.riftPreparationTime ?? 2.0, 'Сколько секунд красная разметка ведёт игрока. Всё это время она ползёт за ним, и только в конце застывает.')}
                     ${makeParam('Замах, сек', 'riftStrikeDelay', attack.riftStrikeDelay ?? 0.5, 'Пауза от начала анимации удара до момента, когда из земли лезут шипы. Подгони под тот кадр, где кулак встречает землю.')}
                     ${makeParam('Ширина дорожки', 'riftPathWidth', attack.riftPathWidth ?? 4.0, 'Ширина опасной зоны (красной линии).')}
-                    ${makeParam('Дорожек', 'riftPathCount', attack.riftPathCount ?? 3, 'Количество направлений, куда ударят шипы.', 'number', '')}
+                    ${makeParam('Дорожек', 'riftPathCount', attack.riftPathCount ?? 3, 'Сколько трещин уходит от босса. Только нечётное: первая всегда идёт ровно в игрока, остальные расходятся от неё парами. Чётное значение игра сама поднимет до ближайшего нечётного, иначе веер перекосит на одну сторону.', 'number', '2')}
                     ${makeParam('Угол между дорожками, °', 'riftAngleBetweenPaths', attack.riftAngleBetweenPaths ?? 45, 'Угол между линиями, если Path Count больше 1.')}
                     ${makeParam('Дальность', 'riftMaxDistance', attack.riftMaxDistance ?? 30.0, 'Как далеко от босса улетят шипы.')}
                     ${makeParam('Скорость шипов', 'riftSpikeSpeed', attack.riftSpikeSpeed ?? 20.0, 'С какой скоростью шипы ползут вперед.')}
