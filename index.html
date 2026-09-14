@@ -351,7 +351,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='111';
+        var VERSION='112';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -779,6 +779,9 @@
                     currentData.playerStats.bossMaxYaw = getVal('ps_bossYaw', currentData.playerStats.bossMaxYaw || 25);
                     currentData.playerStats.bossMaxLookUp = getVal('ps_bossUp', currentData.playerStats.bossMaxLookUp || 20);
                     currentData.playerStats.bossMaxLookDown = getVal('ps_bossDown', currentData.playerStats.bossMaxLookDown || 15);
+                    currentData.playerStats.bossOrbitDeadzone = getVal('ps_bossDead', currentData.playerStats.bossOrbitDeadzone || 0.15);
+                    currentData.playerStats.bossOrbitSlowUntil = getVal('ps_bossSlowUntil', currentData.playerStats.bossOrbitSlowUntil || 0.5);
+                    currentData.playerStats.bossOrbitSlowFactor = getVal('ps_bossSlowFactor', currentData.playerStats.bossOrbitSlowFactor || 0.35);
                     currentData.playerStats.maxHealth = parseInt(getVal('ps_mHealth', currentData.playerStats.maxHealth));
                     currentData.playerStats.maxShields = parseInt(getVal('ps_mShields', currentData.playerStats.maxShields));
                     currentData.playerStats.shieldRegenTime = getVal('ps_sRegen', currentData.playerStats.shieldRegenTime);
@@ -1006,8 +1009,9 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🌀 Движение на боссфайте</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скорость обхода</label><input type="number" step="0.1" id="ps_bossOrbit" value="${currentData.playerStats.bossOrbitSpeed || 40}"></div><div style="flex:1"><label>Сглаживание тела</label><input type="number" step="0.1" id="ps_bossSmooth" value="${currentData.playerStats.bossSmoothness || 10}"></div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Чувствительность вбок</label><input type="number" step="0.1" id="ps_bossAimX" value="${currentData.playerStats.bossAimSensitivityX || 40}"></div><div style="flex:1"><label>Чувствительность вверх-вниз</label><input type="number" step="0.1" id="ps_bossAimY" value="${currentData.playerStats.bossAimSensitivityY || 30}"></div><div style="flex:1"><label>Сглаживание прицела</label><input type="number" step="0.1" id="ps_bossLookSmooth" value="${currentData.playerStats.bossLookSmooth || 10}"></div></div>
+                        <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Мёртвая зона</label><input type="number" step="0.01" id="ps_bossDead" value="${currentData.playerStats.bossOrbitDeadzone || 0.15}"></div><div style="flex:1"><label>Край медленной ступени</label><input type="number" step="0.01" id="ps_bossSlowUntil" value="${currentData.playerStats.bossOrbitSlowUntil || 0.5}"></div><div style="flex:1"><label>Доля скорости на ней</label><input type="number" step="0.01" id="ps_bossSlowFactor" value="${currentData.playerStats.bossOrbitSlowFactor || 0.35}"></div></div>
                         <div class="row"><div style="flex:1"><label>Предел вбок, °</label><input type="number" step="0.1" id="ps_bossYaw" value="${currentData.playerStats.bossMaxYaw || 25}"></div><div style="flex:1"><label>Предел вверх, °</label><input type="number" step="0.1" id="ps_bossUp" value="${currentData.playerStats.bossMaxLookUp || 20}"></div><div style="flex:1"><label>Предел вниз, °</label><input type="number" step="0.1" id="ps_bossDown" value="${currentData.playerStats.bossMaxLookDown || 15}"></div></div>
-                        <div style="margin-top:10px; font-size:11px; color:var(--dim); line-height:1.5; white-space:normal;">Скорость обхода — то самое число, с которым сравнивается разворот босса. Сорок на радиусе сорок пять дают примерно пятьдесят градусов в секунду, то есть полный круг за семь секунд. Сделаешь медленнее, чем поворачивается босс, — зайти ему за спину станет невозможно.</div>
+                        <div style="margin-top:10px; font-size:11px; color:var(--dim); line-height:1.5; white-space:normal;">Скорость по кругу ступенчатая, а не плавная. До мёртвой зоны игрок стоит, до края медленной ступени крадётся с указанной долей скорости, дальше идёт на полной. Резкий уход от ракет порог проскакивает сам и сразу даёт полный ход. Скорость обхода — то самое число, с которым сравнивается разворот босса. Сорок на радиусе сорок пять дают примерно пятьдесят градусов в секунду, то есть полный круг за семь секунд. Сделаешь медленнее, чем поворачивается босс, — зайти ему за спину станет невозможно.</div>
                     </div>`;
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">❤️ Выживаемость</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Здоровье</label><input type="number" id="ps_mHealth" value="${currentData.playerStats.maxHealth}" oninput="updatePreviews()"></div><div style="flex:1"><label>Щиты</label><input type="number" id="ps_mShields" value="${currentData.playerStats.maxShields}"></div></div><div class="row"><div style="flex:1"><label>Восстановление щита, сек</label><input type="number" step="0.1" id="ps_sRegen" value="${currentData.playerStats.shieldRegenTime}"></div></div></div>`;
