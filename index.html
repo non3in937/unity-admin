@@ -351,7 +351,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='115';
+        var VERSION='116';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1337,6 +1337,7 @@
                     ${makeParam('Скорость шипов', 'riftSpikeSpeed', attack.riftSpikeSpeed ?? 20.0, 'С какой скоростью шипы ползут вперед.')}
                     ${makeParam('Время жизни, сек', 'riftSpikeLifetime', attack.riftSpikeLifetime ?? 4.0, 'Сколько секунд шипы торчат из земли.')}
                     ${makeParam('Шаг между шипами', 'riftSpikeSpacing', attack.riftSpikeSpacing ?? 1.5, 'Расстояние между рядами шипов.')}
+                    ${makeParam('Урон шипов', 'riftSpikeDamage', attack.riftSpikeDamage ?? 8, 'Сколько снимает одно касание. Промежуток между касаниями общий для всех шипов сразу и задан в самом префабе, так что пробежка сквозь разлом стоит примерно одного такого удара.', 'number', '')}
                     ${makeParam('Шипов в ряду', 'riftSpikesPerRow', attack.riftSpikesPerRow ?? 3, 'Сколько шипов в ширину (3 = куст, 1 = узкая тропа).', 'number', '')}
                     ${makeParam('Разброс', 'riftRandomScatter', attack.riftRandomScatter ?? 0.5, 'Сила случайного хаоса (кривизна линии шипов).')}
                 </div>`;
