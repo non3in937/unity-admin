@@ -351,7 +351,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='118';
+        var VERSION='119';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -784,6 +784,7 @@
                     currentData.playerStats.bossOrbitSlowFactor = getVal('ps_bossSlowFactor', currentData.playerStats.bossOrbitSlowFactor || 0.35);
                     currentData.playerStats.bossFieldOfView = getVal('ps_bossFov', currentData.playerStats.bossFieldOfView || 38);
                     currentData.playerStats.bossFovBlend = getVal('ps_bossFovBlend', currentData.playerStats.bossFovBlend || 0.6);
+                    currentData.playerStats.eyeHeight = getVal('ps_eyeHeight', currentData.playerStats.eyeHeight || 1.66);
                     currentData.playerStats.maxHealth = parseInt(getVal('ps_mHealth', currentData.playerStats.maxHealth));
                     currentData.playerStats.maxShields = parseInt(getVal('ps_mShields', currentData.playerStats.maxShields));
                     currentData.playerStats.shieldRegenTime = getVal('ps_sRegen', currentData.playerStats.shieldRegenTime);
@@ -1002,6 +1003,21 @@
                 ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🏃 Движение</div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скорость бега</label><input type="number" step="0.1" id="ps_fSpeed" value="${currentData.playerStats.forwardSpeed}" oninput="updatePreviews()"></div><div style="flex:1"><label>Скорость вбок</label><input type="number" step="0.1" id="ps_sSpeed" value="${currentData.playerStats.strafeSpeed}" oninput="updatePreviews()"></div></div>
                         <div class="row" style="margin-bottom:10px;"><div style="flex:1"><label>Скорость поворота</label><input type="number" step="0.1" id="ps_bTurn" value="${currentData.playerStats.bodyTurnSpeed || 10}" oninput="updatePreviews()"></div><div style="flex:1"><label>Предел поворота, °</label><input type="number" step="0.1" id="ps_mAng" value="${currentData.playerStats.maxBodyTurnAngle || 45}"></div></div>
+                    </div>`;
+
+                // Обзор отдельной карточкой, а не строкой в движении: высота глаз
+                // ничего не меняет в том, как игрок бежит, зато задаёт масштаб всего
+                // мира на экране. Рядом со скоростями её принимали бы за настройку
+                // камеры при беге, а это не она.
+                ph += `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">👁 Обзор</div></div>
+                        <div class="row" style="margin-bottom:10px;">
+                            <div style="flex:1; display:flex; flex-direction:column;">
+                                <div class="lrow"><label>Высота глаз, м</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                                <input type="number" step="0.01" id="ps_eyeHeight" value="${currentData.playerStats.eyeHeight || 1.66}">
+                                <div class="hint-text">Откуда игрок смотрит на мир — метры от земли, а не рост персонажа: от первого лица тело роли не играет.<br><br>1.66 — глаза взрослого человека ростом 1.80. Меньше — кажешься себе низким, а мир вокруг крупнее задуманного; больше — смотришь на мир сверху.<br><br>Число сравнивается с врагом: он ростом 1.8 метра, и масштаб всего мира построен по нему. Долго стояло 1.14 — отсюда и было ощущение, что игрок ребёнок.</div>
+                            </div>
+                            <div style="flex:1"></div>
+                        </div>
                     </div>`;
 
                 // Движение на арене вынесено отдельной карточкой нарочно. Там игрок не
