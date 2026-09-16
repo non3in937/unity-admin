@@ -263,6 +263,7 @@
             <button class="tab-btn" id="btn-player" onclick="switchTab('player')"><span class="ticon">🏃</span>Игрок</button>
             <button class="tab-btn" id="btn-upgrades" onclick="switchTab('upgrades')"><span class="ticon">🃏</span>Прокачка</button>
             <button class="tab-btn" id="btn-bosses" onclick="switchTab('bosses')"><span class="ticon">💀</span>Боссы</button>
+            <button class="tab-btn" id="btn-world" onclick="switchTab('world')"><span class="ticon">🌍</span>Мир</button>
         </div>
         <div id="status" class="status"></div>
     </header>
@@ -272,10 +273,6 @@
 
         <div id="tab-waves" class="tab-content active">
             <button class="btn-undo" id="btn-undo" onclick="undo()">Отменить удаление</button>
-            <!-- Смена биомов живёт тут, а не у игрока: биомы сменяются по тому же
-                 времени забега, что и волны. Отдельным блоком, а не внутри списка папок —
-                 список перерисовывается и перетаскивается, и поле терялось бы в нём. -->
-            <div id="world-settings" style="margin-bottom:16px;"></div>
             <div id="waves-list"></div>
             <button class="btn-add" onclick="addFolder()" style="margin-top:20px; font-size:15px;">Добавить папку</button>
         </div>
@@ -299,6 +296,13 @@
             <div id="pane-evos" class="pane" style="display:none"></div>
         </div>
         <div id="tab-bosses" class="tab-content"></div>
+        <!-- Мир — смена биомов по времени забега. Своя вкладка, а не угол «Волн»: сначала
+             буфер лежал там, но к нему добавилось время каждого биома, и это уже отдельная
+             тема — какой мир вокруг игрока, а не кто на него бежит. Порядок биомов и их
+             тайлы остаются в сцене: это префабы, в JSON их не передать. -->
+        <div id="tab-world" class="tab-content">
+            <div id="world-settings"></div>
+        </div>
         
         <div id="tab-backups" class="tab-content">
             <div class="panel">
@@ -355,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='123';
+        var VERSION='124';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -592,6 +596,28 @@
             try { refreshRevertButtons(); } catch(e) { console.error("Revert error:", e); }
         }
 
+        // Что во времени биомов сломает забег. Проверяем прямо в поле, пока вводишь, а не
+        // только на сохранении: ошибка во времени глазами не видна, игра просто молча
+        // пропустит биом. Возвращает текст проблемы или пустую строку.
+        function worldProblem() {
+            let e0 = document.getElementById('w_bEnd0'), e1 = document.getElementById('w_bEnd1'), b = document.getElementById('w_biomeBuffer');
+            if (!e0 || !e1 || !b) return '';
+            let t0 = clean(e0.value), t1 = clean(e1.value), buf = clean(b.value);
+            if (t0 <= 0) return 'Время поля должно быть больше нуля.';
+            if (t1 <= t0) return 'Город должен кончаться позже поля — иначе он выпадет из забега целиком.';
+            if (buf > 0 && t0 < buf) return `Поле короче буферной зоны (${buf} с): тихий старт и тихий конец наложатся, и застроенного поля не будет вовсе.`;
+            if (buf > 0 && t1 - t0 < buf) return `Город идёт ${t1 - t0} с — меньше буферной зоны (${buf} с): его тихие половины наложатся, и застроенного города не будет.`;
+            return '';
+        }
+
+        function validateWorld() {
+            let msg = worldProblem();
+            let w = document.getElementById('w_warn');
+            if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer'].forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            return msg;
+        }
+
         function clean(val) { let parsed = parseFloat(String(val).replace(',', '.')); return isNaN(parsed) ? 0 : parsed; }
 
         // ФИКС (XSS): все текстовые поля ниже (bossID, phaseName, weaponName, enemyID,
@@ -764,8 +790,18 @@
                     });
                     currentData.phases = newPhases;
                 }
+            } catch(e) {}
+
+            try {
                 let wb = document.getElementById('w_biomeBuffer');
                 if (wb) currentData.biomeBufferDuration = clean(wb.value);
+                let e0 = document.getElementById('w_bEnd0'), e1 = document.getElementById('w_bEnd1');
+                if (e0 && e1) {
+                    // Третье число — лес — ни на что не влияет, но храним его, чтобы список
+                    // совпадал со слотами сцены и не сдвигался при добавлении биома.
+                    const prev = Array.isArray(currentData.biomeEndTimes) ? currentData.biomeEndTimes : [];
+                    currentData.biomeEndTimes = [clean(e0.value), clean(e1.value), prev[2] || 900];
+                }
             } catch(e) {}
             
             try {
@@ -1001,16 +1037,31 @@
             }
             document.getElementById('waves-list').innerHTML = h;
 
-            document.getElementById('world-settings').innerHTML = `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🌍 Смена биомов</div></div>
-                    <div class="row" style="margin-bottom:10px;">
-                        <div style="flex:1; display:flex; flex-direction:column;">
-                            <div class="lrow"><label>Буферная зона, с</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
-                            <input type="number" step="1" id="w_biomeBuffer" value="${currentData.biomeBufferDuration || 15}">
-                            <div class="hint-text">Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Окно делится пополам: первая половина — пустой старый биом, вторая — пустой новый (для города это окраина), и только за ними город целиком. Без перемешивания: пятна двух биомов вперемешку читались кашей.<br><br>Начало забега тоже тихое — первые полокна идёт пустое поле. Иначе игрок мог появиться прямо внутри ангара: ферма ставит его в центр клетки, а забег начинается в центре.<br><br>Клетка — 100 единиц, так что 15 секунд дают две-три тихие клетки на бегу. Меньше — переход станет резче; больше — длиннее пустырь между биомами.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.</div>
-                        </div>
-                        <div style="flex:1"></div>
+            {
+                const et = Array.isArray(currentData.biomeEndTimes) ? currentData.biomeEndTimes : [];
+                const t0 = et[0] || 60, t1 = et[1] || 120;
+                const buf = currentData.biomeBufferDuration || 15;
+                const fld = (id, val, label, hint) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
+                        <div class="lrow"><label>${label}</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                        <input type="number" step="1" id="${id}" value="${val}" oninput="validateWorld()">
+                        <div class="hint-text">${hint}</div>
+                    </div>`;
+                document.getElementById('world-settings').innerHTML = `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Биомы по времени</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_bEnd0', t0, 'Поле — до секунды', 'Секунда забега, на которой поле сменяется городом. Время то же, что у волн врагов.<br><br>На боссе время стоит: смена, назначенная на секунду боя, случится только после него — это не баг.')}
+                        ${fld('w_bEnd1', t1, 'Город — до секунды', 'Секунда, на которой город сменяется лесом. Должна быть больше, чем у поля: менеджер берёт первый биом, чьё время ещё не прошло, и город с меньшим числом просто выпал бы.')}
+                    </div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Лес — до конца забега. Последний биом играет, пока идёт уровень, своего времени у него нет.</div></div>
+                    <div id="w_warn" style="display:none; color:var(--e1); font-size:12.5px; margin-bottom:6px;"></div>
+                </div>
+                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Переход между биомами</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_biomeBuffer', buf, 'Буферная зона, с', 'Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Окно делится пополам: первая половина — пустой старый биом, вторая — пустой новый (для города это окраина), и только за ними новый биом целиком. Без перемешивания: пятна двух биомов вперемешку читались кашей.<br><br>Начало забега тоже тихое — первые полокна идёт пустое поле. Иначе игрок мог появиться прямо внутри ангара: ферма ставит его в центр клетки, а забег начинается в центре.<br><br>Клетка — 100 единиц, игрок бежит 15 единиц в секунду, так что 15 секунд — это около двух тихих клеток. Меньше — переход резче; больше — длиннее пустырь.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.')}
+                        <div style="flex:1; min-width:150px;"></div>
                     </div>
                 </div>`;
+                validateWorld();
+            }
             
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
@@ -1961,7 +2012,14 @@
         }
 
         async function saveData() { 
-            syncData(); 
+            syncData();
+            let worldMsg = '';
+            try { worldMsg = validateWorld(); } catch(e) {}
+            if (worldMsg) {
+                document.getElementById('status').innerText = "❌ НЕ СОХРАНЕНО — вкладка «Мир»: " + worldMsg;
+                document.getElementById('status').style.color = "var(--e1)";
+                return;
+            } 
             document.getElementById('status').innerText = "⏳ Сохранение..."; 
             document.getElementById('status').style.color = "var(--warn)"; 
             try { 
