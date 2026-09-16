@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='124';
+        var VERSION='125';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -603,6 +603,8 @@
             let e0 = document.getElementById('w_bEnd0'), e1 = document.getElementById('w_bEnd1'), b = document.getElementById('w_biomeBuffer');
             if (!e0 || !e1 || !b) return '';
             let t0 = clean(e0.value), t1 = clean(e1.value), buf = clean(b.value);
+            let g = document.getElementById('w_groundBlend');
+            if (g) { let gv = clean(g.value); if (gv < 0.05 || gv > 1) return 'Переход земли — от 0.05 до 1: это доля клетки.'; }
             if (t0 <= 0) return 'Время поля должно быть больше нуля.';
             if (t1 <= t0) return 'Город должен кончаться позже поля — иначе он выпадет из забега целиком.';
             if (buf > 0 && t0 < buf) return `Поле короче буферной зоны (${buf} с): тихий старт и тихий конец наложатся, и застроенного поля не будет вовсе.`;
@@ -614,7 +616,7 @@
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer'].forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -795,6 +797,8 @@
             try {
                 let wb = document.getElementById('w_biomeBuffer');
                 if (wb) currentData.biomeBufferDuration = clean(wb.value);
+                let wg = document.getElementById('w_groundBlend');
+                if (wg) currentData.biomeGroundBlend = clean(wg.value);
                 let e0 = document.getElementById('w_bEnd0'), e1 = document.getElementById('w_bEnd1');
                 if (e0 && e1) {
                     // Третье число — лес — ни на что не влияет, но храним его, чтобы список
@@ -1041,6 +1045,7 @@
                 const et = Array.isArray(currentData.biomeEndTimes) ? currentData.biomeEndTimes : [];
                 const t0 = et[0] || 60, t1 = et[1] || 120;
                 const buf = currentData.biomeBufferDuration || 15;
+                const gb = currentData.biomeGroundBlend || 1;
                 const fld = (id, val, label, hint) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
                         <div class="lrow"><label>${label}</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
                         <input type="number" step="1" id="${id}" value="${val}" oninput="validateWorld()">
@@ -1057,7 +1062,7 @@
                 <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Переход между биомами</div></div>
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_biomeBuffer', buf, 'Буферная зона, с', 'Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Окно делится пополам: первая половина — пустой старый биом, вторая — пустой новый (для города это окраина), и только за ними новый биом целиком. Без перемешивания: пятна двух биомов вперемешку читались кашей.<br><br>Начало забега тоже тихое — первые полокна идёт пустое поле. Иначе игрок мог появиться прямо внутри ангара: ферма ставит его в центр клетки, а забег начинается в центре.<br><br>Клетка — 100 единиц, игрок бежит 15 единиц в секунду, так что 15 секунд — это около двух тихих клеток. Меньше — переход резче; больше — длиннее пустырь.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.')}
-                        <div style="flex:1; min-width:150px;"></div>
+                        ${fld('w_groundBlend', gb, 'Переход земли, доля клетки', 'Насколько плавно земля одного биома перетекает в землю другого — например, сухое поле в тёмный город. 1 — градиентом от центра одной клетки до центра соседней, это самый мягкий переход. 0.3 — узкая полоса у самого стыка. Меньше 0.05 не бывает: получилась бы ступенька, от которой переход и делался.<br><br>Работает на земле и заплатках между клетками. Трава, кусты и пропсы привязаны к своей клетке и не смешиваются — на стыке их прикрывает буферная зона.')}
                     </div>
                 </div>`;
                 validateWorld();
