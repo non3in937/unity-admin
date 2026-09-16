@@ -272,6 +272,10 @@
 
         <div id="tab-waves" class="tab-content active">
             <button class="btn-undo" id="btn-undo" onclick="undo()">Отменить удаление</button>
+            <!-- Смена биомов живёт тут, а не у игрока: биомы сменяются по тому же
+                 времени забега, что и волны. Отдельным блоком, а не внутри списка папок —
+                 список перерисовывается и перетаскивается, и поле терялось бы в нём. -->
+            <div id="world-settings" style="margin-bottom:16px;"></div>
             <div id="waves-list"></div>
             <button class="btn-add" onclick="addFolder()" style="margin-top:20px; font-size:15px;">Добавить папку</button>
         </div>
@@ -351,7 +355,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='120';
+        var VERSION='121';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -760,6 +764,8 @@
                     });
                     currentData.phases = newPhases;
                 }
+                let wb = document.getElementById('w_biomeBuffer');
+                if (wb) currentData.biomeBufferDuration = clean(wb.value);
             } catch(e) {}
             
             try {
@@ -994,6 +1000,17 @@
                 h += `</div><button class="btn-add folder-add-btn" onclick="addPhaseToFolder(this)" style="display:${displayStyle};">Добавить волну</button></div>`;
             }
             document.getElementById('waves-list').innerHTML = h;
+
+            document.getElementById('world-settings').innerHTML = `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">🌍 Смена биомов</div></div>
+                    <div class="row" style="margin-bottom:10px;">
+                        <div style="flex:1; display:flex; flex-direction:column;">
+                            <div class="lrow"><label>Буферная зона, с</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                            <input type="number" step="1" id="w_biomeBuffer" value="${currentData.biomeBufferDuration || 15}">
+                            <div class="hint-text">Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Половина окна до смены, половина после, и доля нового биома в нём растёт от нуля до единицы: сначала пустое поле, потом вперемешку с пустой окраиной, и только за ней город целиком.<br><br>Клетка — 100 единиц, так что 15 секунд дают две-три тихие клетки на бегу. Меньше — переход станет резче; больше — длиннее пустырь между биомами.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.</div>
+                        </div>
+                        <div style="flex:1"></div>
+                    </div>
+                </div>`;
             
             document.querySelectorAll('.p-start').forEach(el => updatePhaseTime(el));
             initSortable();
