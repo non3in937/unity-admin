@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='125';
+        var VERSION='126';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -605,6 +605,20 @@
             let t0 = clean(e0.value), t1 = clean(e1.value), buf = clean(b.value);
             let g = document.getElementById('w_groundBlend');
             if (g) { let gv = clean(g.value); if (gv < 0.05 || gv > 1) return 'Переход земли — от 0.05 до 1: это доля клетки.'; }
+            let fv = id => { let el = document.getElementById(id); return el ? clean(el.value) : null; };
+            let fs = fv('w_fogStart'), fe = fv('w_fogEnd');
+            if (fs !== null && fe !== null) {
+                if (fs < 0) return 'Начало тумана не может быть меньше нуля.';
+                if (fe > 225) return 'Глухой туман дальше 225 не бывает: за ним край построенных клеток, и станет видно, как появляется мир.';
+                if (fe < fs + 20) return 'Глухой туман должен быть хотя бы на 20 единиц дальше начала — иначе туман становится стеной.';
+                for (const [id, name] of [['w_mistCurve', 'Форма тумана'], ['w_mistTopClear', 'Чистый верх'], ['w_mistPatch', 'Клочья'], ['w_gm0', 'Пелена в поле'], ['w_gm1', 'Пелена в городе'], ['w_gm2', 'Пелена в лесу']]) {
+                    let v = fv(id); if (v !== null && (v < 0 || v > 1)) return name + ' — от 0 до 1.';
+                }
+                if (fv('w_mistHeight') <= 0) return 'Высота дымки должна быть больше нуля.';
+                if (fv('w_mistPatchSize') < 10) return 'Размер клочьев — не меньше 10 единиц, мельче туман рябит.';
+                if (fv('w_gmHeight') < 0) return 'Высота пелены не может быть меньше нуля.';
+                if (fv('w_gmStart') < 0) return 'Начало пелены не может быть меньше нуля.';
+            }
             if (t0 <= 0) return 'Время поля должно быть больше нуля.';
             if (t1 <= t0) return 'Город должен кончаться позже поля — иначе он выпадет из забега целиком.';
             if (buf > 0 && t0 < buf) return `Поле короче буферной зоны (${buf} с): тихий старт и тихий конец наложатся, и застроенного поля не будет вовсе.`;
@@ -612,11 +626,13 @@
             return '';
         }
 
+        const FOG_IDS = ['w_fogStart', 'w_fogEnd', 'w_mistCurve', 'w_mistHeight', 'w_mistTopClear', 'w_mistPatch', 'w_mistPatchSize', 'w_gm0', 'w_gm1', 'w_gm2', 'w_gmHeight', 'w_gmStart'];
+
         function validateWorld() {
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -799,6 +815,16 @@
                 if (wb) currentData.biomeBufferDuration = clean(wb.value);
                 let wg = document.getElementById('w_groundBlend');
                 if (wg) currentData.biomeGroundBlend = clean(wg.value);
+                let fv = id => clean(document.getElementById(id).value);
+                if (document.getElementById('w_fogStart')) {
+                    currentData.fog = {
+                        fogStart: fv('w_fogStart'), fogEnd: fv('w_fogEnd'),
+                        mistCurve: fv('w_mistCurve'), mistHeight: fv('w_mistHeight'), mistTopClear: fv('w_mistTopClear'),
+                        mistPatch: fv('w_mistPatch'), mistPatchSize: fv('w_mistPatchSize'),
+                        groundMist: [fv('w_gm0'), fv('w_gm1'), fv('w_gm2')],
+                        groundMistHeight: fv('w_gmHeight'), groundMistStart: fv('w_gmStart')
+                    };
+                }
                 let e0 = document.getElementById('w_bEnd0'), e1 = document.getElementById('w_bEnd1');
                 if (e0 && e1) {
                     // Третье число — лес — ни на что не влияет, но храним его, чтобы список
@@ -1046,9 +1072,15 @@
                 const t0 = et[0] || 60, t1 = et[1] || 120;
                 const buf = currentData.biomeBufferDuration || 15;
                 const gb = currentData.biomeGroundBlend || 1;
-                const fld = (id, val, label, hint) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
+                // Туман: то, что стоит в сцене сейчас, — пока из админки ничего не сохраняли.
+                const fog = Object.assign({ fogStart: 25, fogEnd: 225, mistCurve: 1, mistHeight: 22, mistTopClear: 0.45, mistPatch: 0.45, mistPatchSize: 140, groundMist: [], groundMistHeight: 0.8, groundMistStart: 45 },
+                    currentData.fog || {});
+                const fogDefGm = [0.45, 0.38, 0.45];
+                const fgv = (k, def) => (typeof fog[k] === 'number' && fog[k] >= 0) ? fog[k] : def;
+                const gmv = i => (Array.isArray(fog.groundMist) && typeof fog.groundMist[i] === 'number' && fog.groundMist[i] >= 0) ? fog.groundMist[i] : fogDefGm[i];
+                const fld = (id, val, label, hint, step = 1) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
                         <div class="lrow"><label>${label}</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
-                        <input type="number" step="1" id="${id}" value="${val}" oninput="validateWorld()">
+                        <input type="number" step="${step}" id="${id}" value="${val}" oninput="validateWorld()">
                         <div class="hint-text">${hint}</div>
                     </div>`;
                 document.getElementById('world-settings').innerHTML = `<div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Биомы по времени</div></div>
@@ -1063,6 +1095,31 @@
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_biomeBuffer', buf, 'Буферная зона, с', 'Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Окно делится пополам: первая половина — пустой старый биом, вторая — пустой новый (для города это окраина), и только за ними новый биом целиком. Без перемешивания: пятна двух биомов вперемешку читались кашей.<br><br>Начало забега тоже тихое — первые полокна идёт пустое поле. Иначе игрок мог появиться прямо внутри ангара: ферма ставит его в центр клетки, а забег начинается в центре.<br><br>Клетка — 100 единиц, игрок бежит 15 единиц в секунду, так что 15 секунд — это около двух тихих клеток. Меньше — переход резче; больше — длиннее пустырь.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.')}
                         ${fld('w_groundBlend', gb, 'Переход земли, доля клетки', 'Насколько плавно земля одного биома перетекает в землю другого — например, сухое поле в тёмный город. 1 — градиентом от центра одной клетки до центра соседней, это самый мягкий переход. 0.3 — узкая полоса у самого стыка. Меньше 0.05 не бывает: получилась бы ступенька, от которой переход и делался.<br><br>Работает на земле и заплатках между клетками. Трава, кусты и пропсы привязаны к своей клетке и не смешиваются — на стыке их прикрывает буферная зона.')}
+                    </div>
+                </div>
+                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Туман и дымка</div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Туман мира: как далеко видно и как лежит дымка. Цвет тумана не здесь — он свой у каждого биома и совпадает с небом. Единица мира — 1/3.66 метра: зомби ростом 6.6 единиц, клетка — 100.</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_fogStart', fgv('fogStart', 25), 'Туман начинается, ед.', 'Ближе этого расстояния воздух чистый. Больше — зомби вблизи чётче, но глубина сжимается к дальней стене.')}
+                        ${fld('w_fogEnd', fgv('fogEnd', 225), 'Глухой туман, ед.', 'Где туман закрывает всё. Больше 225 нельзя: там кончаются построенные клетки, и стало бы видно, как появляется мир. Меньше — мир теснее и мрачнее, но зомби выныривают из тумана позже.')}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_mistCurve', fgv('mistCurve', 1), 'Форма тумана, 0..1', '0 — туман густеет ровно с расстоянием. 1 — как в природе: вблизи чище, на среднем плане быстро густеет, к концу мягко упирается в стену.', 0.05)}
+                        ${fld('w_mistHeight', fgv('mistHeight', 22), 'Высота дымки, ед.', 'На какой высоте дымка слабеет вдвое. Меньше — дымка ниже, верхушки деревьев и ветряков торчат из неё. Больше — туман ровный по высоте.')}
+                        ${fld('w_mistTopClear', fgv('mistTopClear', 0.45), 'Чистый верх, 0..1', 'Насколько верх высоких вещей чище их низа на среднем плане. 0 — одинаково, 1 — верх почти без тумана.', 0.05)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_mistPatch', fgv('mistPatch', 0.45), 'Клочья, 0..1', 'Туман не ровный, а клочьями и просветами, которые медленно ползут по ветру. 0 — ровный, 1 — сильные клочья.', 0.05)}
+                        ${fld('w_mistPatchSize', fgv('mistPatchSize', 140), 'Размер клочьев, ед.', 'Один клочок с просветом — столько единиц мира. 140 — чуть больше клетки. Меньше 10 нельзя: туман начинает рябить.', 10)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_gm0', gmv(0), 'Пелена у земли — поле', 'Стелющийся туман у ступней, плотность 0..1. Под ногами игрока его нет — он начинается дальше, см. «Пелена начинается». 0 — пелены нет.', 0.05)}
+                        ${fld('w_gm1', gmv(1), 'Пелена — город', 'То же для города. В городе нарочно слабее: между домами пелена читается грязью.', 0.05)}
+                        ${fld('w_gm2', gmv(2), 'Пелена — лес', 'То же для леса.', 0.05)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_gmHeight', fgv('groundMistHeight', 0.8), 'Высота пелены, ед.', 'Как высоко поднимается пелена. 0.8 — у ступней. Выше 2 — осветляет ноги зомби, и они теряются на фоне.', 0.1)}
+                        ${fld('w_gmStart', fgv('groundMistStart', 45), 'Пелена начинается, ед.', 'С какого расстояния от игрока появляется пелена: ближе её нет, чтобы не лезла под ноги. Полностью набирается к тройному расстоянию.', 5)}
                     </div>
                 </div>`;
                 validateWorld();
