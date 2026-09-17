@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='126';
+        var VERSION='127';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -609,7 +609,7 @@
             let fs = fv('w_fogStart'), fe = fv('w_fogEnd');
             if (fs !== null && fe !== null) {
                 if (fs < 0) return 'Начало тумана не может быть меньше нуля.';
-                if (fe > 225) return 'Глухой туман дальше 225 не бывает: за ним край построенных клеток, и станет видно, как появляется мир.';
+                if (fe > 320) return 'Глухой туман дальше 320 не бывает: за ним край построенных клеток, и станет видно, как появляется мир.';
                 if (fe < fs + 20) return 'Глухой туман должен быть хотя бы на 20 единиц дальше начала — иначе туман становится стеной.';
                 for (const [id, name] of [['w_mistCurve', 'Форма тумана'], ['w_mistTopClear', 'Чистый верх'], ['w_mistPatch', 'Клочья'], ['w_gm0', 'Пелена в поле'], ['w_gm1', 'Пелена в городе'], ['w_gm2', 'Пелена в лесу']]) {
                     let v = fv(id); if (v !== null && (v < 0 || v > 1)) return name + ' — от 0 до 1.';
@@ -1073,7 +1073,7 @@
                 const buf = currentData.biomeBufferDuration || 15;
                 const gb = currentData.biomeGroundBlend || 1;
                 // Туман: то, что стоит в сцене сейчас, — пока из админки ничего не сохраняли.
-                const fog = Object.assign({ fogStart: 25, fogEnd: 225, mistCurve: 1, mistHeight: 22, mistTopClear: 0.45, mistPatch: 0.45, mistPatchSize: 140, groundMist: [], groundMistHeight: 0.8, groundMistStart: 45 },
+                const fog = Object.assign({ fogStart: 25, fogEnd: 300, mistCurve: 1, mistHeight: 22, mistTopClear: 0.45, mistPatch: 0.45, mistPatchSize: 140, groundMist: [], groundMistHeight: 0.8, groundMistStart: 45 },
                     currentData.fog || {});
                 const fogDefGm = [0.45, 0.38, 0.45];
                 const fgv = (k, def) => (typeof fog[k] === 'number' && fog[k] >= 0) ? fog[k] : def;
@@ -1101,7 +1101,7 @@
                     <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Туман мира: как далеко видно и как лежит дымка. Цвет тумана не здесь — он свой у каждого биома и совпадает с небом. Единица мира — 1/3.66 метра: зомби ростом 6.6 единиц, клетка — 100.</div></div>
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_fogStart', fgv('fogStart', 25), 'Туман начинается, ед.', 'Ближе этого расстояния воздух чистый. Больше — зомби вблизи чётче, но глубина сжимается к дальней стене.')}
-                        ${fld('w_fogEnd', fgv('fogEnd', 225), 'Глухой туман, ед.', 'Где туман закрывает всё. Больше 225 нельзя: там кончаются построенные клетки, и стало бы видно, как появляется мир. Меньше — мир теснее и мрачнее, но зомби выныривают из тумана позже.')}
+                        ${fld('w_fogEnd', fgv('fogEnd', 300), 'Глухой туман, ед.', 'Где туман закрывает всё. Больше 320 нельзя: там кончаются построенные клетки, и стало бы видно, как появляется мир. Меньше — мир теснее и мрачнее, но зомби выныривают из тумана позже.<br><br>Мир строится кольцом клеток вокруг игрока плюс ряд по ходу бега, поэтому вперёд видно дальше, чем вбок.')}
                     </div>
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_mistCurve', fgv('mistCurve', 1), 'Форма тумана, 0..1', '0 — туман густеет ровно с расстоянием. 1 — как в природе: вблизи чище, на среднем плане быстро густеет, к концу мягко упирается в стену.', 0.05)}
