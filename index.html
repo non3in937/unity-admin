@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='128';
+        var VERSION='129';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -619,6 +619,13 @@
                 if (fv('w_gmHeight') < 0) return 'Высота пелены не может быть меньше нуля.';
                 if (fv('w_gmStart') < 0) return 'Начало пелены не может быть меньше нуля.';
             }
+            let gh = fv('w_glowHeight');
+            if (gh !== null) {
+                if (gh < 0.02 || gh > 0.5) return 'Высота свечения — от 0.02 до 0.5: это синус угла над горизонтом.';
+                for (const [id, name] of [['w_glowS0', 'Свечение в поле'], ['w_glowS1', 'Свечение в городе'], ['w_glowS2', 'Свечение в лесу']]) {
+                    let v = fv(id); if (v !== null && (v < 0 || v > 1)) return name + ' — от 0 до 1.';
+                }
+            }
             let lf = fv('w_lodFull'), ls = fv('w_lodSimple'), lc = fv('w_lodCull');
             if (lf !== null && ls !== null && lc !== null) {
                 if (lf < 50) return 'Полная детализация — не ближе 50: враги спавнятся на 195, их окружение должно быть видно целиком.';
@@ -636,6 +643,7 @@
             return '';
         }
 
+        const GLOW_IDS = ['w_glowHeight', 'w_glowS0', 'w_glowS1', 'w_glowS2'];
         const LOD_IDS = ['w_lodFull', 'w_lodSimple', 'w_lodCull', 'w_lodFade', 'w_lodBias', 'w_lodDetail'];
         const FOG_IDS = ['w_fogStart', 'w_fogEnd', 'w_mistCurve', 'w_mistHeight', 'w_mistTopClear', 'w_mistPatch', 'w_mistPatchSize', 'w_gm0', 'w_gm1', 'w_gm2', 'w_gmHeight', 'w_gmStart'];
 
@@ -643,7 +651,7 @@
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).concat(LOD_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).concat(LOD_IDS).concat(GLOW_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -827,6 +835,14 @@
                 let wg = document.getElementById('w_groundBlend');
                 if (wg) currentData.biomeGroundBlend = clean(wg.value);
                 let fv = id => clean(document.getElementById(id).value);
+                if (document.getElementById('w_glowHeight')) {
+                    const hex = id => (document.getElementById(id).value || '').replace('#', '').toUpperCase();
+                    currentData.glow = {
+                        height: fv('w_glowHeight'),
+                        strength: [fv('w_glowS0'), fv('w_glowS1'), fv('w_glowS2')],
+                        color: [hex('w_glowC0'), hex('w_glowC1'), hex('w_glowC2')]
+                    };
+                }
                 if (document.getElementById('w_lodFull')) {
                     currentData.lod = {
                         fullDetail: fv('w_lodFull'), simplified: fv('w_lodSimple'), cull: fv('w_lodCull'),
@@ -1096,6 +1112,17 @@
                 // Дальность пропсов: то, что стоит в префабах, пока из админки ничего не сохраняли.
                 const lod = Object.assign({ fullDetail: 200, simplified: 350, cull: 480, fade: 0.5, bias: 1, detail: 260 }, currentData.lod || {});
                 const lv = (k, def) => (typeof lod[k] === 'number' && lod[k] > 0) ? lod[k] : def;
+                // Свечение у горизонта: то, что стоит в сцене, пока из админки ничего не сохраняли.
+                const glow = currentData.glow || {};
+                const glowDefS = [0.5, 0.45, 0.5], glowDefC = ['A79B84', '9AA3AD', '5A6880'];
+                const gs = i => (Array.isArray(glow.strength) && typeof glow.strength[i] === 'number' && glow.strength[i] >= 0) ? glow.strength[i] : glowDefS[i];
+                const gc = i => '#' + ((Array.isArray(glow.color) && typeof glow.color[i] === 'string' && /^[0-9a-fA-F]{6}$/.test(glow.color[i])) ? glow.color[i] : glowDefC[i]);
+                const gh = (typeof glow.height === 'number' && glow.height > 0) ? glow.height : 0.1;
+                const colorFld = (id, val, label, hint) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
+                        <div class="lrow"><label>${label}</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                        <input type="color" id="${id}" value="${val}" style="height:36px; padding:2px;">
+                        <div class="hint-text">${hint}</div>
+                    </div>`;
                 const fgv = (k, def) => (typeof fog[k] === 'number' && fog[k] >= 0) ? fog[k] : def;
                 const gmv = i => (Array.isArray(fog.groundMist) && typeof fog.groundMist[i] === 'number' && fog.groundMist[i] >= 0) ? fog.groundMist[i] : fogDefGm[i];
                 const fld = (id, val, label, hint, step = 1) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
@@ -1140,6 +1167,22 @@
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_gmHeight', fgv('groundMistHeight', 0.8), 'Высота пелены, ед.', 'Как высоко поднимается пелена. 0.8 — у ступней. Выше 2 — осветляет ноги зомби, и они теряются на фоне.', 0.1)}
                         ${fld('w_gmStart', fgv('groundMistStart', 45), 'Пелена начинается, ед.', 'С какого расстояния от игрока появляется пелена: ближе её нет, чтобы не лезла под ноги. Полностью набирается к тройному расстоянию.', 5)}
+                    </div>
+                </div>
+                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Свечение у горизонта</div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Светлая полоса там, где земля сходится с небом. Дальние вещи стоят в ней и читаются тёмными силуэтами — это и даёт глубину. Туман подхватывает свечение, поэтому дальняя земля тоже в нём.</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_glowHeight', gh, 'Высота полосы', 'На какой высоте свечение слабеет вдвое — синус угла над горизонтом. 0.1 — около 6°, узкая полоса у самой земли. 0.25 — широкое зарево на полнеба.', 0.01)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${colorFld('w_glowC0', gc(0), 'Цвет — поле', 'Цвет свечения в поле. Сейчас тёплый песочный: утро над выжженным полем.')}
+                        ${colorFld('w_glowC1', gc(1), 'Цвет — город', 'Цвет свечения в городке. Сейчас холодный серо-голубой: пасмурный день.')}
+                        ${colorFld('w_glowC2', gc(2), 'Цвет — лес', 'Цвет свечения в лесу. Сейчас синий: луна за облаками.')}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_glowS0', gs(0), 'Сила — поле', 'Насколько свечение перекрывает небо у горизонта, 0..1. 0 — свечения нет. Больше — светлее горизонт и темнее на его фоне дальние силуэты.', 0.05)}
+                        ${fld('w_glowS1', gs(1), 'Сила — город', 'То же для городка.', 0.05)}
+                        ${fld('w_glowS2', gs(2), 'Сила — лес', 'То же для леса.', 0.05)}
                     </div>
                 </div>
                 <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Дальность пропсов</div></div>
