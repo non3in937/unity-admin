@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='127';
+        var VERSION='128';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -619,6 +619,16 @@
                 if (fv('w_gmHeight') < 0) return 'Высота пелены не может быть меньше нуля.';
                 if (fv('w_gmStart') < 0) return 'Начало пелены не может быть меньше нуля.';
             }
+            let lf = fv('w_lodFull'), ls = fv('w_lodSimple'), lc = fv('w_lodCull');
+            if (lf !== null && ls !== null && lc !== null) {
+                if (lf < 50) return 'Полная детализация — не ближе 50: враги спавнятся на 195, их окружение должно быть видно целиком.';
+                if (ls <= lf) return 'Упрощение должно начинаться дальше полной детализации.';
+                if (lc <= ls) return 'Отсечение должно быть дальше упрощения.';
+                if (lc > 600) return 'Отсечение дальше 600 бессмысленно: сетка клеток кончается раньше, дальше пропсов просто нет.';
+                let lfd = fv('w_lodFade'); if (lfd < 0 || lfd > 1) return 'Растворение — от 0 до 1.';
+                let lb = fv('w_lodBias'); if (lb < 0.25 || lb > 4) return 'Множитель дальности — от 0.25 до 4.';
+                let ld = fv('w_lodDetail'); if (ld < 50) return 'Трава гаснет не ближе 50, иначе у ног будет голая земля.';
+            }
             if (t0 <= 0) return 'Время поля должно быть больше нуля.';
             if (t1 <= t0) return 'Город должен кончаться позже поля — иначе он выпадет из забега целиком.';
             if (buf > 0 && t0 < buf) return `Поле короче буферной зоны (${buf} с): тихий старт и тихий конец наложатся, и застроенного поля не будет вовсе.`;
@@ -626,13 +636,14 @@
             return '';
         }
 
+        const LOD_IDS = ['w_lodFull', 'w_lodSimple', 'w_lodCull', 'w_lodFade', 'w_lodBias', 'w_lodDetail'];
         const FOG_IDS = ['w_fogStart', 'w_fogEnd', 'w_mistCurve', 'w_mistHeight', 'w_mistTopClear', 'w_mistPatch', 'w_mistPatchSize', 'w_gm0', 'w_gm1', 'w_gm2', 'w_gmHeight', 'w_gmStart'];
 
         function validateWorld() {
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).concat(LOD_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -816,6 +827,12 @@
                 let wg = document.getElementById('w_groundBlend');
                 if (wg) currentData.biomeGroundBlend = clean(wg.value);
                 let fv = id => clean(document.getElementById(id).value);
+                if (document.getElementById('w_lodFull')) {
+                    currentData.lod = {
+                        fullDetail: fv('w_lodFull'), simplified: fv('w_lodSimple'), cull: fv('w_lodCull'),
+                        fade: fv('w_lodFade'), bias: fv('w_lodBias'), detail: fv('w_lodDetail')
+                    };
+                }
                 if (document.getElementById('w_fogStart')) {
                     currentData.fog = {
                         fogStart: fv('w_fogStart'), fogEnd: fv('w_fogEnd'),
@@ -1076,6 +1093,9 @@
                 const fog = Object.assign({ fogStart: 25, fogEnd: 300, mistCurve: 1, mistHeight: 22, mistTopClear: 0.45, mistPatch: 0.45, mistPatchSize: 140, groundMist: [], groundMistHeight: 0.8, groundMistStart: 45 },
                     currentData.fog || {});
                 const fogDefGm = [0.45, 0.38, 0.45];
+                // Дальность пропсов: то, что стоит в префабах, пока из админки ничего не сохраняли.
+                const lod = Object.assign({ fullDetail: 200, simplified: 350, cull: 480, fade: 0.5, bias: 1, detail: 260 }, currentData.lod || {});
+                const lv = (k, def) => (typeof lod[k] === 'number' && lod[k] > 0) ? lod[k] : def;
                 const fgv = (k, def) => (typeof fog[k] === 'number' && fog[k] >= 0) ? fog[k] : def;
                 const gmv = i => (Array.isArray(fog.groundMist) && typeof fog.groundMist[i] === 'number' && fog.groundMist[i] >= 0) ? fog.groundMist[i] : fogDefGm[i];
                 const fld = (id, val, label, hint, step = 1) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
@@ -1120,6 +1140,19 @@
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_gmHeight', fgv('groundMistHeight', 0.8), 'Высота пелены, ед.', 'Как высоко поднимается пелена. 0.8 — у ступней. Выше 2 — осветляет ноги зомби, и они теряются на фоне.', 0.1)}
                         ${fld('w_gmStart', fgv('groundMistStart', 45), 'Пелена начинается, ед.', 'С какого расстояния от игрока появляется пелена: ближе её нет, чтобы не лезла под ноги. Полностью набирается к тройному расстоянию.', 5)}
+                    </div>
+                </div>
+                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Дальность пропсов</div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Кольца вокруг игрока, в единицах мира: в каком виде пропсы рисуются вблизи, где упрощаются и где исчезают. Одинаковые для всех пропсов — дом и гидрант меняются на одних расстояниях. Враги спавнятся на 195.</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_lodFull', lv('fullDetail', 200), 'Полная детализация до, ед.', 'До этого расстояния пропс в полном виде (LOD0). Держи не ближе спавна врагов — 195: всё, что рядом с ними, должно быть видно целиком.', 10)}
+                        ${fld('w_lodSimple', lv('simplified', 350), 'Упрощение до, ед.', 'До этого расстояния — первое упрощение (LOD1), дальше второе (LOD2).<br><br>Пока LOD1 и LOD2 — копии полного вида, и это число на картинку не влияет. Заработает, когда в уровни лягут облегчённые модели.', 10)}
+                        ${fld('w_lodCull', lv('cull', 480), 'Отсечение, ед.', 'Дальше этого пропс не рисуется. Сетка клеток кончается на 400–570 единицах, так что дальше 600 ставить бессмысленно: там пропсов просто нет.<br><br>Ближе — дешевле и мир теснее; дальше — пропсы выходят из тумана раньше.', 10)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_lodFade', lv('fade', 0.5), 'Растворение, 0..1', 'На какой доле последнего кольца пропс проявляется из пустоты. 0 — появляется разом, 1 — растворяется на всём кольце.', 0.05)}
+                        ${fld('w_lodBias', lv('bias', 1), 'Множитель дальности', 'Сдвигает все кольца разом: 1 — как задано выше, 1.5 — всё в полтора раза дальше, 0.75 — ближе. Быстрый рычаг, если на телефоне тяжело или, наоборот, мир кажется пустым.', 0.05)}
+                        ${fld('w_lodDetail', lv('detail', 260), 'Трава гаснет на, ед.', 'Трава, подстилка и бурьян гаснут отдельно и раньше пропсов: вдали их не разобрать в тумане, а рисуется их много.', 10)}
                     </div>
                 </div>`;
                 validateWorld();
