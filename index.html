@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='130';
+        var VERSION='131';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1630,9 +1630,9 @@
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Крик, сек', 'burrowScreamTime', attack.burrowScreamTime ?? 0.8, 'Сколько босс кричит перед нырком. Всё это время он ещё снаружи, и его можно бить.')}
                     ${makeParam('Нырок, сек', 'burrowHideTime', attack.burrowHideTime ?? 0.5, 'За сколько босс уходит в кучу.')}
-                    ${makeParam('Зомби', 'burrowEnemyCount', attack.burrowEnemyCount ?? 5, 'Сколько зомби вылезет перед игроком.', 'number', '')}
-                    ${makeParam('Дистанция', 'burrowSpawnDistance', attack.burrowSpawnDistance ?? 10, 'На сколько метров перед игроком — в сторону кучи — вылезают зомби.')}
-                    ${makeParam('Разброс вбок', 'burrowSpawnSpread', attack.burrowSpawnSpread ?? 9, 'Как широко зомби расходятся влево и вправо от линии «игрок — куча».')}
+                    ${makeParam('Зомби', 'burrowEnemyCount', attack.burrowEnemyCount ?? 5, 'Сколько зомби вылезет кольцом вокруг кучи. Один всегда встаёт на стороне игрока, остальные делят круг поровну.', 'number', '')}
+                    ${makeParam('Радиус кольца', 'burrowRingRadius', attack.burrowRingRadius ?? 28, 'На каком расстоянии от центра кучи вылезают зомби. Игрок бегает по кругу в 45 м, так что 28 — примерно посередине между ним и кучей. Ближе 13 не встанут — там сама куча.')}
+                    ${makeParam('Разброс по радиусу', 'burrowRingJitter', attack.burrowRingJitter ?? 4, 'Насколько каждый зомби может встать ближе или дальше кольца, чтобы оно не читалось строем.')}
                     ${makeParam('Вылезают, сек', 'burrowEmergeTime', attack.burrowEmergeTime ?? 1, 'Сколько зомби лезет из земли.')}
                     ${makeParam('Ждёт, сек', 'burrowTimeout', attack.burrowTimeout ?? 10, 'Если за это время зомби не перебили, они закапываются, и босс вылезает сам. Перебили раньше — вылезает сразу. Дольше 13 не ставь: атаку, идущую дольше 20 секунд, игра снимает как зависшую.')}
                     ${makeParam('Вылезает, сек', 'burrowReturnTime', attack.burrowReturnTime ?? 0.8, 'За сколько босс выходит из кучи обратно.')}
