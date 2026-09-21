@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='132';
+        var VERSION='133';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1610,32 +1610,43 @@
 
             else if (attack.attackType === 'Drones') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Дронов в первой волне', 'dronesFirstCount', attack.dronesFirstCount ?? 1, 'Сколько дронов в самой первой волне.', 'number', '')}
-                    ${makeParam('Прибавка за круг', 'dronesGrowth', attack.dronesGrowth ?? 1, 'На сколько дронов больше в каждой следующей волне — после каждого вылезания босса из кучи.', 'number', '')}
-                    ${makeParam('Потолок волны', 'dronesMaxCount', attack.dronesMaxCount ?? 4, 'Больше этого дронов в волне не будет. На экране телефона больше четырёх сливаются в кашу.', 'number', '')}
+                    ${makeParam('Дронов в волне', 'dronesCount', attack.dronesCount ?? 2, 'Сколько дронов поднимается из кучи за волну. Самая первая волна боя всегда один дрон — знакомство с правилом.', 'number', '')}
+                    ${makeParam('Бросаются разом', 'dronesSalvo', attack.dronesSalvo ?? 1, '1 — по одному, 2 — парами с разных сторон: от пары уходить надо в разные стороны.', 'number', '')}
                     ${makeParam('Прочность дрона', 'dronesHealth', attack.dronesHealth ?? 40, 'Сколько урона выдерживает один дрон.', 'number', '')}
-                    ${makeParam('Кружат, сек', 'dronesOrbitTime', attack.dronesOrbitTime ?? 5, 'Сколько волна кружит у босса, прежде чем первый дрон пойдёт в атаку. Это окно, чтобы их сбить.')}
-                    ${makeParam('Радиус круга', 'dronesOrbitRadius', attack.dronesOrbitRadius ?? 10, 'Как далеко от центра кучи кружат дроны. Каждый гуляет вокруг этого числа.')}
-                    ${makeParam('Высота круга', 'dronesOrbitHeight', attack.dronesOrbitHeight ?? 11, 'Средняя высота полёта — на уровне груди босса. Ниже 6 дроны теряются на фоне кучи и цепляют её, выше 14 уходят из кадра: камера на арене задирается всего на 20°.')}
+                    ${makeParam('Окно, сек', 'dronesOrbitTime', attack.dronesOrbitTime ?? 4, 'Сколько волна кружит у босса до первого броска. Это окно урона: сбитый в нём дрон падает в босса.')}
+                    ${makeParam('Знакомство, сек', 'dronesIntroTime', attack.dronesIntroTime ?? 8, 'Самый первый дрон боя кружит столько, один и без зомби, — чтобы игрок понял правило. Действует только в первой фазе.')}
+                    ${makeParam('Радиус круга', 'dronesOrbitRadius', attack.dronesOrbitRadius ?? 10, 'Как далеко от центра кучи кружат дроны.')}
+                    ${makeParam('Высота круга', 'dronesOrbitHeight', attack.dronesOrbitHeight ?? 11, 'Средняя высота полёта — на уровне груди босса. Ниже 6 дроны теряются на фоне кучи, выше 14 уходят из кадра.')}
                     ${makeParam('Скорость по кругу, °/сек', 'dronesOrbitSpeed', attack.dronesOrbitSpeed ?? 50, 'Средняя скорость кружения. Каждый дрон гуляет вокруг неё и иногда меняет направление.')}
-                    ${makeParam('Разрыв бросков, сек', 'dronesLaunchGap', attack.dronesLaunchGap ?? 0.7, 'Пауза между бросками дронов одной волны. Меньше — жарче, но уворачиваться от двух сразу почти нельзя.')}
-                    ${makeParam('Предупреждение, сек', 'dronesPrepareTime', attack.dronesPrepareTime ?? 0.8, 'Сколько дрон трясётся красным перед броском. Это его сигнал игроку.')}
-                    ${makeParam('Скорость броска', 'dronesSpeed', attack.dronesSpeed ?? 44, 'С какой скоростью дрон летит в игрока. На 22 он плыл, и от него уходили шагом; уворот держится на предупреждении, а не на медленном полёте.')}
-                    ${makeParam('Упреждение', 'dronesLead', attack.dronesLead ?? 1, '1 — дрон летит туда, где игрок окажется к прилёту; 0 — туда, где он сейчас. Бег по прямой упреждение наказывает, смена направления спасает.')}
-                    ${makeParam('Урон игроку', 'dronesDamage', attack.dronesDamage ?? 15, 'Сколько снимает таран.', 'number', '')}
-                    ${makeParam('Урон боссу от сбитого', 'dronesCrashDamage', attack.dronesCrashDamage ?? 150, 'Сбитый дрон падает в босса и снимает у него столько. Главный источник урона в этом бою: тело берёт мало.', 'number', '')}
+                    ${makeParam('Разрыв бросков, сек', 'dronesLaunchGap', attack.dronesLaunchGap ?? 0.6, 'Пауза между бросками (или между парами).')}
+                    ${makeParam('Предупреждение, сек', 'dronesPrepareTime', attack.dronesPrepareTime ?? 0.8, 'Сколько дрон трясётся красным перед броском. Красный — окно урона для него закрыто, сбить можно только ради защиты.')}
+                    ${makeParam('Скорость броска', 'dronesSpeed', attack.dronesSpeed ?? 44, 'С какой скоростью дрон летит в игрока.')}
+                    ${makeParam('Упреждение', 'dronesLead', attack.dronesLead ?? 1, '1 — летит туда, где игрок окажется к прилёту; 0 — туда, где он сейчас.')}
+                    ${makeParam('Доводка, °/сек', 'dronesHoming', attack.dronesHoming ?? 90, 'Как резко дрон доворачивает на игрока в полёте. 0 — по прямой, и от него уходят любым шагом.')}
+                    ${makeParam('Фиксация курса, м', 'dronesLockDistance', attack.dronesLockDistance ?? 7, 'С этого расстояния дрон перестаёт доворачивать. Уйти можно только резкой сменой направления перед самым ударом. Больше — уйти легче.')}
+                    ${makeParam('Урон игроку', 'dronesDamage', attack.dronesDamage ?? 20, 'Сколько снимает таран.', 'number', '')}
+                    ${makeParam('Урон боссу от сбитого', 'dronesCrashDamage', attack.dronesCrashDamage ?? 150, 'Дрон, сбитый пока кружил, падает в босса и снимает столько. В последней фазе падает в кучу — и так же ранит того, кто внутри.', 'number', '')}
+                    ${makeParam('Поддержка: обычных', 'dronesSupportStandard', attack.dronesSupportStandard ?? 3, 'Сколько стандартных зомби лезет из земли вместе с каждой волной. Отвлекают от окна урона.', 'number', '')}
+                    ${makeParam('Поддержка: бегунов', 'dronesSupportRunners', attack.dronesSupportRunners ?? 0, 'Бегуны в поддержке.', 'number', '')}
+                    ${makeParam('Поддержка: в броне', 'dronesSupportArmored', attack.dronesSupportArmored ?? 0, 'Бронированные в поддержке: их не снять парой выстрелов, и толпа держится дольше.', 'number', '')}
+                    ${makeParam('Кольцо поддержки', 'dronesSupportRadius', attack.dronesSupportRadius ?? 28, 'Радиус кольца вокруг кучи. Игрок бегает по кругу в 45 м. Больше 14 живых зомби на арене не бывает.')}
                 </div>`;
             }
             else if (attack.attackType === 'Burrow') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Крик, сек', 'burrowScreamTime', attack.burrowScreamTime ?? 0.8, 'Сколько босс кричит перед нырком. Всё это время он ещё снаружи, и его можно бить.')}
                     ${makeParam('Нырок, сек', 'burrowHideTime', attack.burrowHideTime ?? 0.5, 'За сколько босс уходит в кучу.')}
-                    ${makeParam('Зомби', 'burrowEnemyCount', attack.burrowEnemyCount ?? 5, 'Сколько зомби вылезет кольцом вокруг кучи. Один всегда встаёт на стороне игрока, остальные делят круг поровну.', 'number', '')}
-                    ${makeParam('Радиус кольца', 'burrowRingRadius', attack.burrowRingRadius ?? 28, 'На каком расстоянии от центра кучи вылезают зомби. Игрок бегает по кругу в 45 м, так что 28 — примерно посередине между ним и кучей. Ближе 13 не встанут — там сама куча.')}
-                    ${makeParam('Разброс по радиусу', 'burrowRingJitter', attack.burrowRingJitter ?? 4, 'Насколько каждый зомби может встать ближе или дальше кольца, чтобы оно не читалось строем.')}
+                    ${makeParam('Обычных', 'burrowStandard', attack.burrowStandard ?? 5, 'Стандартные зомби кольцом вокруг кучи.', 'number', '')}
+                    ${makeParam('Бегунов', 'burrowRunners', attack.burrowRunners ?? 0, 'Бегуны в толпе.', 'number', '')}
+                    ${makeParam('В броне', 'burrowArmored', attack.burrowArmored ?? 0, 'Бронированные в толпе.', 'number', '')}
+                    ${makeParam('Радиус кольца', 'burrowRingRadius', attack.burrowRingRadius ?? 28, 'На каком расстоянии от центра кучи вылезают зомби. Игрок бегает по кругу в 45 м.')}
+                    ${makeParam('Разброс по радиусу', 'burrowRingJitter', attack.burrowRingJitter ?? 4, 'Насколько каждый зомби может встать ближе или дальше кольца.')}
                     ${makeParam('Вылезают, сек', 'burrowEmergeTime', attack.burrowEmergeTime ?? 1, 'Сколько зомби лезет из земли.')}
-                    ${makeParam('Ждёт, сек', 'burrowTimeout', attack.burrowTimeout ?? 10, 'Если за это время зомби не перебили, они закапываются, и босс вылезает сам. Перебили раньше — вылезает сразу. Дольше 13 не ставь: атаку, идущую дольше 20 секунд, игра снимает как зависшую.')}
+                    ${makeParam('Камикадзе', 'burrowKamikaze', attack.burrowKamikaze ?? 3, 'Сколько дронов вылетает из кучи прямо в игрока, пока босс внутри. Сбить можно, но урона боссу они не дают.', 'number', '')}
+                    ${makeParam('Разрыв камикадзе, сек', 'burrowKamikazeGap', attack.burrowKamikazeGap ?? 1.2, 'Пауза между камикадзе.')}
+                    ${makeParam('Ждёт, сек', 'burrowTimeout', attack.burrowTimeout ?? 10, 'Если за это время толпу не перебили, выжившие закапываются, и босс вылезает сам. Дольше 13 не ставь: атаку дольше 20 секунд игра снимает как зависшую.')}
                     ${makeParam('Вылезает, сек', 'burrowReturnTime', attack.burrowReturnTime ?? 0.8, 'За сколько босс выходит из кучи обратно.')}
+                    ${makeParam('Остаться в куче', 'burrowStayHidden', attack.burrowStayHidden ?? false, 'Больше не вылезать — для последней фазы. Выкурить босса можно только его же дронами: сбитый в окне дрон падает в кучу и ранит того, кто внутри. Последний выбрасывает его наружу.', 'checkbox')}
                 </div>`;
             }
 
@@ -1654,6 +1665,7 @@
                 <div class="atk-body" style="display:${atkOpen ? 'block' : 'none'}; margin-top:14px;">
                     <div class="row" style="flex-wrap: wrap;">
                         ${makeParam('В ответ на урон', 'onDamage', attack.onDamage ?? false, 'Атака уходит из расписания и срабатывает, только когда игрок накопит урон по уязвимой точке. Так залп становится ответом на смелость, а не случайностью по таймеру.', 'checkbox')}
+                        ${makeParam('Раз за фазу', 'oncePerPhase', attack.oncePerPhase ?? false, 'Атака идёт один раз в начале фазы и дальше из очереди выпадает. Так ставится сцена на переходе фазы — например, нырок второго босса. Ставь её первой в списке фазы.', 'checkbox')}
                     </div>
                     ${paramsHtml}
                 </div>
