@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-14 00:21",
+  "generated": "2026-09-22 23:28",
   "bosses": [
     {
       "id": "Boss_1",
@@ -17,7 +17,7 @@
       "canSpawnPoints": true,
       "turns": false,
       "rages": false,
-      "wakes": false
+      "wakes": true
     },
     {
       "id": "Boss_3",
