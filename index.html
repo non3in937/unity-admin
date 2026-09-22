@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='136';
+        var VERSION='137';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1637,6 +1637,7 @@
                     ${makeParam('Зона босса, м', 'dronesBossZone', attack.dronesBossZone ?? 13, 'Сбитый дрон, упавший ближе этого к центру кучи, ранит босса. Круг дронов и сама куча — по 10 м, так что кружащий всегда падает в зону, а ушедший в атаку — нет.')}
                     ${makeParam('Радиус взрыва, м', 'dronesBlastRadius', attack.dronesBlastRadius ?? 5, 'Зомби в этом радиусе от места падения получают урон. Игрока взрыв не трогает.')}
                     ${makeParam('Урон зомби', 'dronesZombieDamage', attack.dronesZombieDamage ?? 200, 'Сколько взрыв снимает с каждого зомби рядом. 200 — убивает любого, кроме бронированного.', 'number', '')}
+                    ${makeParam('Показывать взрыв', 'dronesShowDebug', attack.dronesShowDebug, 'Проверочные фигуры, как сфера у ракет: красная сфера — радиус взрыва по зомби, жёлтый диск на земле — зона босса, если дрон упал в неё.', 'checkbox')}
                     ${makeParam('Поддержка: обычных', 'dronesSupportStandard', attack.dronesSupportStandard ?? 3, 'Сколько стандартных зомби лезет из земли вместе с каждой волной. Отвлекают от окна урона.', 'number', '')}
                     ${makeParam('Поддержка: бегунов', 'dronesSupportRunners', attack.dronesSupportRunners ?? 0, 'Бегуны в поддержке.', 'number', '')}
                     ${makeParam('Поддержка: в броне', 'dronesSupportArmored', attack.dronesSupportArmored ?? 0, 'Бронированные в поддержке: их не снять парой выстрелов, и толпа держится дольше.', 'number', '')}
