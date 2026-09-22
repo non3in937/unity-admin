@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-22 23:28",
+  "generated": "2026-09-23 00:13",
   "bosses": [
     {
       "id": "Boss_1",
@@ -8,7 +8,8 @@
       "canSpawnPoints": false,
       "turns": true,
       "rages": true,
-      "wakes": true
+      "wakes": true,
+      "hides": false
     },
     {
       "id": "Boss_2",
@@ -17,7 +18,8 @@
       "canSpawnPoints": true,
       "turns": false,
       "rages": false,
-      "wakes": true
+      "wakes": true,
+      "hides": true
     },
     {
       "id": "Boss_3",
@@ -26,7 +28,8 @@
       "canSpawnPoints": false,
       "turns": false,
       "rages": false,
-      "wakes": false
+      "wakes": false,
+      "hides": false
     }
   ]
 }

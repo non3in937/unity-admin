@@ -322,7 +322,7 @@
         const GIST_ID = '4b5faafac858635664755b821b757d35';
         const FILE_NAME = 'config.json';
         const ENEMY_IDS = ["Enemy_Standard", "Enemy_Runner", "Enemy_armor", "Enemy_Tank_Explotion", "Enemy_Tank_Toxic", "Enemy_Drone", "Helth", "Weapon"];
-        const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde", "Drones", "Burrow"];
+        const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde", "Drones"];
 
         // Справочник боссов: что за префабы есть в проекте и что каждый из них умеет.
         // Генерируется скриптом ExportBossCatalog прямо из префабов и лежит рядом с
@@ -359,7 +359,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='134';
+        var VERSION='135';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1457,7 +1457,16 @@
             if (all || info.wakes)
                 temper += bossParam('Обход до пробуждения, град', 'wakeArc', boss.wakeArc ?? 0, 'Босс начинает бой спящим. Обойди его на столько градусов, и он заметит. Первый — спит спиной, выстрел в рюкзак будит сразу. Второй — сидит на куче с дроном-часовым: сбитый часовой ранит его и будит, выстрел в тело бросает часового в игрока.', '1');
 
-            return row(health) + row(temper);
+            let heap = '';
+            if (all || info.hides) {
+                heap += bossParam('Прячется каждые, %', 'heapHideEvery', boss.heapHideEvery ?? 25, 'Сколько процентов здоровья снять, чтобы босс испугался и ушёл в кучу. 25 — на 75%, 50% и 25%. Больше этого за один выход его не снести.', '1');
+                heap += bossParam('Броня кучи', 'heapShield', boss.heapShield ?? 300, 'Прочность брони при первом укрытии. Рисуется поверх полоски здоровья. Бьют её сбитые дроны, упавшие в кучу; разбита — босс вылезает.', '1');
+                heap += bossParam('Броня: прибавка', 'heapShieldGrowth', boss.heapShieldGrowth ?? 100, 'На сколько крепче броня с каждым следующим укрытием.', '1');
+                heap += bossParam('Зомби при укрытии', 'heapZombies', boss.heapZombies ?? 4, 'Сколько зомби лезет кольцом вокруг кучи, когда босс прячется.', '1');
+                heap += bossParam('Зомби: прибавка', 'heapZombiesGrowth', boss.heapZombiesGrowth ?? 2, 'Сколько бегунов добавляется к толпе с каждым следующим укрытием. С третьего укрытия в толпе появляется броня.', '1');
+            }
+
+            return row(health) + row(temper) + (heap ? row(heap) : '');
         }
 
         // Выбор босса из тех, что реально есть в проекте. Раньше идентификатор вводился
@@ -1610,7 +1619,7 @@
 
             else if (attack.attackType === 'Drones') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Дронов в волне', 'dronesCount', attack.dronesCount ?? 2, 'Сколько дронов поднимается из кучи за волну. До первой волны босс спит, а у кучи кружит один дрон-часовой: сбил — босс ранен и проснулся, выстрелил в босса или обошёл его на угол пробуждения — часовой бросается в игрока.', 'number', '')}
+                    ${makeParam('Дронов в волне', 'dronesCount', attack.dronesCount ?? 2, 'Сколько дронов прилетает за волну из-за края арены. До первой волны босс спит, а у кучи кружит один дрон-часовой: сбил — босс ранен и проснулся, выстрелил в босса или обошёл его на угол пробуждения — часовой бросается в игрока.', 'number', '')}
                     ${makeParam('Бросаются разом', 'dronesSalvo', attack.dronesSalvo ?? 1, '1 — по одному, 2 — парами с разных сторон: от пары уходить надо в разные стороны.', 'number', '')}
                     ${makeParam('Прочность дрона', 'dronesHealth', attack.dronesHealth ?? 40, 'Сколько урона выдерживает один дрон.', 'number', '')}
                     ${makeParam('Окно, сек', 'dronesOrbitTime', attack.dronesOrbitTime ?? 4, 'Сколько волна кружит у босса до первого броска. Это окно урона: сбитый в нём дрон падает в босса.')}
@@ -1624,28 +1633,11 @@
                     ${makeParam('Доводка, °/сек', 'dronesHoming', attack.dronesHoming ?? 90, 'Как резко дрон доворачивает на игрока в полёте. 0 — по прямой, и от него уходят любым шагом.')}
                     ${makeParam('Фиксация курса, м', 'dronesLockDistance', attack.dronesLockDistance ?? 7, 'С этого расстояния дрон перестаёт доворачивать. Уйти можно только резкой сменой направления перед самым ударом. Больше — уйти легче.')}
                     ${makeParam('Урон игроку', 'dronesDamage', attack.dronesDamage ?? 20, 'Сколько снимает таран.', 'number', '')}
-                    ${makeParam('Урон боссу от сбитого', 'dronesCrashDamage', attack.dronesCrashDamage ?? 150, 'Дрон, сбитый пока кружил, падает в босса и снимает столько. В последней фазе падает в кучу — и так же ранит того, кто внутри.', 'number', '')}
+                    ${makeParam('Урон боссу от сбитого', 'dronesCrashDamage', attack.dronesCrashDamage ?? 150, 'Дрон, сбитый пока кружил, падает в босса и снимает столько. Пока босс в куче — бьёт по её броне.', 'number', '')}
                     ${makeParam('Поддержка: обычных', 'dronesSupportStandard', attack.dronesSupportStandard ?? 3, 'Сколько стандартных зомби лезет из земли вместе с каждой волной. Отвлекают от окна урона.', 'number', '')}
                     ${makeParam('Поддержка: бегунов', 'dronesSupportRunners', attack.dronesSupportRunners ?? 0, 'Бегуны в поддержке.', 'number', '')}
                     ${makeParam('Поддержка: в броне', 'dronesSupportArmored', attack.dronesSupportArmored ?? 0, 'Бронированные в поддержке: их не снять парой выстрелов, и толпа держится дольше.', 'number', '')}
                     ${makeParam('Кольцо поддержки', 'dronesSupportRadius', attack.dronesSupportRadius ?? 28, 'Радиус кольца вокруг кучи. Игрок бегает по кругу в 45 м. Больше 14 живых зомби на арене не бывает.')}
-                </div>`;
-            }
-            else if (attack.attackType === 'Burrow') {
-                paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Крик, сек', 'burrowScreamTime', attack.burrowScreamTime ?? 0.8, 'Сколько босс кричит перед нырком. Всё это время он ещё снаружи, и его можно бить.')}
-                    ${makeParam('Нырок, сек', 'burrowHideTime', attack.burrowHideTime ?? 0.5, 'За сколько босс уходит в кучу.')}
-                    ${makeParam('Обычных', 'burrowStandard', attack.burrowStandard ?? 5, 'Стандартные зомби кольцом вокруг кучи.', 'number', '')}
-                    ${makeParam('Бегунов', 'burrowRunners', attack.burrowRunners ?? 0, 'Бегуны в толпе.', 'number', '')}
-                    ${makeParam('В броне', 'burrowArmored', attack.burrowArmored ?? 0, 'Бронированные в толпе.', 'number', '')}
-                    ${makeParam('Радиус кольца', 'burrowRingRadius', attack.burrowRingRadius ?? 28, 'На каком расстоянии от центра кучи вылезают зомби. Игрок бегает по кругу в 45 м.')}
-                    ${makeParam('Разброс по радиусу', 'burrowRingJitter', attack.burrowRingJitter ?? 4, 'Насколько каждый зомби может встать ближе или дальше кольца.')}
-                    ${makeParam('Вылезают, сек', 'burrowEmergeTime', attack.burrowEmergeTime ?? 1, 'Сколько зомби лезет из земли.')}
-                    ${makeParam('Камикадзе', 'burrowKamikaze', attack.burrowKamikaze ?? 3, 'Сколько дронов вылетает из кучи прямо в игрока, пока босс внутри. Сбить можно, но урона боссу они не дают.', 'number', '')}
-                    ${makeParam('Разрыв камикадзе, сек', 'burrowKamikazeGap', attack.burrowKamikazeGap ?? 1.2, 'Пауза между камикадзе.')}
-                    ${makeParam('Ждёт, сек', 'burrowTimeout', attack.burrowTimeout ?? 10, 'Если за это время толпу не перебили, выжившие закапываются, и босс вылезает сам. Дольше 13 не ставь: атаку дольше 20 секунд игра снимает как зависшую.')}
-                    ${makeParam('Вылезает, сек', 'burrowReturnTime', attack.burrowReturnTime ?? 0.8, 'За сколько босс выходит из кучи обратно.')}
-                    ${makeParam('Остаться в куче', 'burrowStayHidden', attack.burrowStayHidden ?? false, 'Больше не вылезать — для последней фазы. Выкурить босса можно только его же дронами: сбитый в окне дрон падает в кучу и ранит того, кто внутри. Последний выбрасывает его наружу.', 'checkbox')}
                 </div>`;
             }
 
@@ -1664,7 +1656,7 @@
                 <div class="atk-body" style="display:${atkOpen ? 'block' : 'none'}; margin-top:14px;">
                     <div class="row" style="flex-wrap: wrap;">
                         ${makeParam('В ответ на урон', 'onDamage', attack.onDamage ?? false, 'Атака уходит из расписания и срабатывает, только когда игрок накопит урон по уязвимой точке. Так залп становится ответом на смелость, а не случайностью по таймеру.', 'checkbox')}
-                        ${makeParam('Раз за фазу', 'oncePerPhase', attack.oncePerPhase ?? false, 'Атака идёт один раз в начале фазы и дальше из очереди выпадает. Так ставится сцена на переходе фазы — например, нырок второго босса. Ставь её первой в списке фазы.', 'checkbox')}
+                        ${makeParam('Раз за фазу', 'oncePerPhase', attack.oncePerPhase ?? false, 'Атака идёт один раз в начале фазы и дальше из очереди выпадает. Так ставится сцена на переходе фазы. Ставь её первой в списке фазы.', 'checkbox')}
                     </div>
                     ${paramsHtml}
                 </div>
