@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='141';
+        var VERSION='142';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1018,17 +1018,33 @@
                 .sort(function(a, b) { return a.t - b.t; });
         }
 
+        // Где окажется игрок: биом, а рядом со сменой — буфер. Считается как в игре
+        // (ChunkManager.PickBiomeForNewTile): окно буфера стоит серединой на конце биома,
+        // первая половина — тихий старый биом, вторая — тихий новый
         function tsWhere(sec) {
-            const et = Array.isArray(currentData.biomeEndTimes) ? currentData.biomeEndTimes : [];
+            const et = Array.isArray(currentData.biomeEndTimes) ? currentData.biomeEndTimes.map(function(x) { return +x || 0; }) : [];
             const names = ['поле', 'городок', 'лес'];
-            let biome = names[names.length - 1];
-            for (let i = 0; i < et.length && i < names.length; i++) if (sec < (+et[i] || 0)) { biome = names[i]; break; }
+            const buf = +currentData.biomeBufferDuration > 0 ? +currentData.biomeBufferDuration : 15;
+            const half = buf / 2;
+            let idx = names.length - 1;
+            for (let i = 0; i < et.length && i < names.length; i++) if (sec < et[i]) { idx = i; break; }
+
+            let place = '<b>' + names[idx] + '</b>';
+            let prevEnd = idx > 0 ? et[idx - 1] : null;
+            let nextEnd = idx < names.length - 1 ? et[idx] : null;
+            if (nextEnd !== null && sec > nextEnd - half)
+                place = '<b>буфер ' + names[idx] + ' → ' + names[idx + 1] + '</b> (тихий край: ' + names[idx] + ', смена через ' + (Math.round((nextEnd - sec) * 10) / 10) + ' с)';
+            else if (prevEnd !== null && sec < prevEnd + half)
+                place = '<b>буфер ' + names[idx - 1] + ' → ' + names[idx] + '</b> (тихий край: ' + names[idx] + ', буфер кончится через ' + (Math.round((prevEnd + half - sec) * 10) / 10) + ' с)';
+            else if (nextEnd !== null)
+                place += ', до буфера с ' + names[idx + 1] + ' — ' + (Math.round((nextEnd - half - sec) * 10) / 10) + ' с';
+
             let bosses = tsBossTimes();
             let passed = bosses.filter(function(b) { return sec >= b.t - 2; }).length;
             let next = bosses[passed];
             let bossTxt = next ? ('следующий — ' + escapeHtml(next.id) + ' на ' + tsFmt(next.t) + ', через ' + Math.round(next.t - sec) + ' с')
                                : 'все боссы позади';
-            return 'Биом: <b>' + biome + '</b> · пройдено боссов: <b>' + passed + '</b> · ' + bossTxt;
+            return 'Биом: ' + place + ' · пройдено боссов: <b>' + passed + '</b> · ' + bossTxt;
         }
 
         // Раскладка в слоты: по порядку карточек, каждая в свою группу
