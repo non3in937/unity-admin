@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='147';
+        var VERSION='148';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1729,7 +1729,7 @@
         // их, и первое же сохранение запишет. Фазы — по процентам здоровья, как у всех.
         const TREE_DEFAULTS = {
             eyes: 4, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
-            flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 1,
+            flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
             phases: [
                 { phaseName: 'Стоят', startAtHpPercent: 100, endAtHpPercent: 70, reload: 2.2, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18, shuffleEvery: 0, diveAfterSalvo: false },
                 { phaseName: 'Напёрстки', startAtHpPercent: 70, endAtHpPercent: 35, reload: 1.4, patterns: ['Burst', 'Pair', 'Single'], gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.7, diveAfterSalvo: false },
@@ -1818,8 +1818,8 @@
             general += treeParam('Упреждение клещей, град', 'pairLead', g('pairLead'), 'На сколько градусов вперёд по бегу целится второй глаз в «клещах». Уходишь по инерции — попадаешь в него, спасает разворот.', '1');
             general += treeParam('Зажмурился от, доля', 'flinchShare', g('flinchShare'), 'Какую долю своего здоровья открытый глаз должен получить, чтобы зажмуриться. Целился — выстрел сорван. 0.08 — восьмая часть от ста.', '0.01');
             general += treeParam('Зажмурился на, сек', 'flinchClosed', g('flinchClosed'), 'Сколько подстреленный глаз лежит закрытым. Закрытый урона не берёт и не стреляет; стрелять в него — спугнуть.');
-            general += treeParam('Замечает в пределах, град', 'noticeArc', g('noticeArc'), 'Пока дерево спит: приоткрытый глаз, смотрящий на игрока не дальше этого угла, замечает его. Выстрел или прицел в глаз будят сразу.', '1');
-            general += treeParam('Замечает за, сек', 'noticeTime', g('noticeTime'), 'Сколько секунд глаз должен видеть игрока, чтобы дерево проснулось.');
+            general += treeParam('Замечает в пределах, град', 'noticeArc', g('noticeArc'), 'Пока дерево спит: приоткрытый глаз видит игрока, если тот перед ним не дальше этого угла. Выстрел в глаз будит сразу.', '1');
+            general += treeParam('Просыпается за, сек', 'noticeTime', g('noticeTime'), 'Сколько секунд глаза должны видеть игрока в сумме, чтобы дерево проснулось. Пока не видит никто, подозрение спадает вдвое медленнее. Даёт игроку пару секунд побегать вокруг спящего.');
 
             let cards = '';
             phases.forEach((p0, i) => {
