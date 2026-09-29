@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='144';
+        var VERSION='145';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1722,13 +1722,13 @@
         // Те же числа, что стоят в префабе (TreeEyes). Ключа tree в гисте нет — показываем
         // их, и первое же сохранение запишет. Ступени — по числу живых глаз, от 4 до 1.
         const TREE_DEFAULTS = {
-            damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, swapAfter: 3,
-            flinchShare: 0.25, flinchClosed: 1.2, aimReact: 0.15, fleeClosed: 2.5, noticeArc: 22, noticeTime: 1,
+            damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, faceTurn: 35,
+            flinchShare: 0.08, flinchClosed: 2.5, noticeArc: 22, noticeTime: 1,
             stages: [
-                { eyes: 4, hunters: 1, lookTime: 1.4, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18 },
-                { eyes: 3, hunters: 2, lookTime: 1.2, patterns: ['Sequence', 'Pair', 'Burst'], gap: 0.6, aimTime: 1.1, lockTime: 0.35, fireTime: 1.5, sweepSpeed: 22 },
-                { eyes: 2, hunters: 2, lookTime: 1.0, patterns: ['Pair', 'Sequence', 'Burst'], gap: 0.5, aimTime: 1.0, lockTime: 0.3, fireTime: 1.5, sweepSpeed: 26 },
-                { eyes: 1, hunters: 1, lookTime: 0.7, patterns: ['Burst', 'Single'], gap: 0.4, aimTime: 0.9, lockTime: 0.3, fireTime: 1.8, sweepSpeed: 32 },
+                { eyes: 4, hunters: 1, moves: 0, lookTime: 1.4, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18 },
+                { eyes: 3, hunters: 1, moves: 1, lookTime: 1.2, patterns: ['Burst', 'Single'], gap: 0.45, aimTime: 1.1, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 22 },
+                { eyes: 2, hunters: 2, moves: 1, lookTime: 1.0, patterns: ['Pair', 'Sequence', 'Burst'], gap: 0.5, aimTime: 1.0, lockTime: 0.3, fireTime: 1.5, sweepSpeed: 26 },
+                { eyes: 1, hunters: 1, moves: 2, lookTime: 0.7, patterns: ['Burst', 'Single'], gap: 0.4, aimTime: 0.9, lockTime: 0.3, fireTime: 1.8, sweepSpeed: 32 },
             ]
         };
         // Узоры по-русски в поле, в гисте — как их читает игра
@@ -1761,11 +1761,9 @@
             general += treeParam('Тик урона, сек', 'tickRate', g('tickRate'), 'Как часто луч бьёт, пока игрок в нём. Зацепило краем — один-два тика, стоял до конца — все.', '0.05');
             general += treeParam('Ширина луча', 'beamWidth', g('beamWidth'), 'У земли, в единицах мира. Шире — труднее увернуться.');
             general += treeParam('Упреждение клещей, град', 'pairLead', g('pairLead'), 'На сколько градусов вперёд по бегу целится второй глаз в «клещах». Уходишь по инерции — попадаешь в него, спасает разворот.', '1');
-            general += treeParam('Смена охотника, залпов', 'swapAfter', g('swapAfter'), 'Через сколько залпов охотник уходит за ствол и выходит другой глаз — одного и того же весь бой не постоишь.', '1');
-            general += treeParam('Зажмурился от, доля', 'flinchShare', g('flinchShare'), 'Какой долей своего здоровья целящийся глаз должен получить, чтобы зажмуриться и сорвать выстрел. 0.25 — четверть. Награда за точную стрельбу.', '0.05');
-            general += treeParam('Зажмурился на, сек', 'flinchClosed', g('flinchClosed'), 'Сколько подстреленный глаз лежит закрытым.');
-            general += treeParam('Наблюдатель бежит через, сек', 'aimReact', g('aimReact'), 'Сколько надо держать наблюдателя в прицеле, чтобы он зажмурился и уполз за ствол.', '0.05');
-            general += treeParam('Наблюдатель прячется, сек', 'fleeClosed', g('fleeClosed'), 'Сколько сбежавший лежит закрытым, прежде чем осторожно приоткрыться.');
+            general += treeParam('Поворот лица, град/с', 'faceTurn', g('faceTurn'), 'Как быстро дерево поворачивает глаза к игроку — всем лицом, глаза друг относительно друга не ездят. Игрок бегает на 40: меньше — от лица можно убежать.', '1');
+            general += treeParam('Зажмурился от, доля', 'flinchShare', g('flinchShare'), 'Какую долю своего здоровья открытый глаз должен получить, чтобы зажмуриться. Целился — выстрел сорван, был охотником — лицо поворачивает следующего. 0.08 — восьмая часть от ста.', '0.01');
+            general += treeParam('Зажмурился на, сек', 'flinchClosed', g('flinchClosed'), 'Сколько подстреленный глаз лежит закрытым. Закрытый урона не берёт.');
             general += treeParam('Замечает в пределах, град', 'noticeArc', g('noticeArc'), 'Пока дерево спит: приоткрытый глаз, смотрящий на игрока не дальше этого угла, замечает его. Выстрел или прицел в глаз будят сразу.', '1');
             general += treeParam('Замечает за, сек', 'noticeTime', g('noticeTime'), 'Сколько секунд глаз должен видеть игрока, чтобы дерево проснулось.');
 
@@ -1777,7 +1775,8 @@
                     <div style="font-size:12px; font-weight:600; margin-bottom:8px;">Когда живо глаз: ${s.eyes}</div>
                     <input type="hidden" class="ts-param" data-key="eyes" value="${s.eyes}">
                     <div class="row" style="flex-wrap:wrap;">
-                        ${treeStageParam('Охотников', 'hunters', s.hunters, 'Сколько глаз выходят к игроку и стреляют. Остальные — наблюдатели: бродят по стволу и прячутся от прицела.', '1')}
+                        ${treeStageParam('Охотников', 'hunters', s.hunters, 'Сколько глаз стреляют. Лицо поворачивает их на игрока. Остальные открыты и смотрят, бьются, но не стреляют.', '1')}
+                        ${treeStageParam('Движение, 0–2', 'moves', s.moves ?? 0, '0 — глаза стоят на местах. 1 — зажмурившийся ныряет под кору и выныривает на другом месте. 2 — вдобавок охотник ныряет после каждого залпа.', '1')}
                         ${treeStageParam('Окно, сек', 'lookTime', s.lookTime, 'Сколько охотники стоят открытыми и смотрят перед залпом, не стреляя. Главное время, когда их бьют.')}
                         ${treeStageParam('Разрыв, сек', 'gap', s.gap, 'Пауза между глазами в «очереди» и между выстрелами «двойного».', '0.05')}
                     </div>
