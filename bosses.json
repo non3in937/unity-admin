@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-23 00:45",
+  "generated": "2026-09-29 21:03",
   "bosses": [
     {
       "id": "Boss_1",
@@ -9,7 +9,8 @@
       "turns": true,
       "rages": true,
       "wakes": true,
-      "hides": false
+      "hides": false,
+      "ownAttacks": false
     },
     {
       "id": "Boss_2",
@@ -19,7 +20,8 @@
       "turns": true,
       "rages": false,
       "wakes": true,
-      "hides": true
+      "hides": true,
+      "ownAttacks": false
     },
     {
       "id": "Boss_3",
@@ -29,7 +31,8 @@
       "turns": false,
       "rages": false,
       "wakes": false,
-      "hides": false
+      "hides": false,
+      "ownAttacks": true
     }
   ]
 }

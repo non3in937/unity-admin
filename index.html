@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='142';
+        var VERSION='143';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1212,22 +1212,27 @@
                         let attackTotal = phases.reduce((n, ph) => n + ((ph.attackSequence || []).length), 0);
                         let emptyBlocks = phases.filter(ph => !ph.attackSequence || ph.attackSequence.length === 0).length;
 
+                        // Босс, который атакует сам (дерево — глазами): блоки фаз у него только
+                        // пороги здоровья, и пустые они нарочно — ругаться на это значило бы врать
+                        const own = !!(bossInfo(boss.bossID) || {}).ownAttacks;
                         let problems = [];
                         if ((boss.bossID || '').trim() === '') problems.push('Пустой ID — не найдётся префаб босса');
-                        if (attackTotal === 0) problems.push('Ни одной атаки — босс появится и будет просто стоять');
-                        else if (emptyBlocks > 0) problems.push('Блоков без атаки: ' + emptyBlocks);
+                        if (!own && attackTotal === 0) problems.push('Ни одной атаки — босс появится и будет просто стоять');
+                        else if (!own && emptyBlocks > 0) problems.push('Блоков без атаки: ' + emptyBlocks);
+                        if (own && attackTotal > 0) problems.push('Этот босс атакует сам — атаки в блоках он не запускает, их можно убрать');
 
                         bh += `<div class="panel boss-panel boss-card" style="padding-bottom:5px;">
                             <div class="header-row" data-foldid="${bIdStr}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'colBoss')">
                                 <span class="fold-icon" style="color:var(--e1); font-size:14px;">${bIcon}</span>
                                 <span style="font-size:20px;">👹</span>
                                 ${bossPicker(boss.bossID)}
-                                <span style="font-size:11px; color:var(--dim); white-space:nowrap;">#${bIdx + 1} · ${attackTotal} атак</span>
+                                <span style="font-size:11px; color:var(--dim); white-space:nowrap;">#${bIdx + 1} · ${own ? 'атакует сам' : attackTotal + ' атак'}</span>
                                 <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.boss-panel').remove(); syncData(); render();">✖</button>
                             </div>
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 ${bossSettings(boss)}
+                                ${own ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--dim); color:var(--dim); font-size:11px; line-height:1.5; white-space:normal;">Атаки ведёт сам босс: глаза стреляют своим циклом — охотник выходит к игроку и бьёт лазером, остальные прячутся за ствол, и с каждым выбитым глазом охотников больше. Блоки ниже задают только пороги здоровья: на переходе босс вздрагивает. Атаки в них не добавляй — он их не запускает. Его темп и узоры пока правятся в префабе.</div>` : ''}
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--e1); color:var(--e1); font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
