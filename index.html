@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='151';
+        var VERSION='152';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1146,6 +1146,10 @@
             let taken = t.cards.slice();
             let picks = 0; t.levels.forEach(function(l) { picks += +l || 0; });
             h += '<div class="panel ts-block"><div class="ts-title">🃏 Карточки</div>';
+            h += '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">';
+            TS_PRESETS.forEach(function(p) { h += '<button onclick="tsPreset(' + p.min + ')">Как к ' + p.min + ':00</button>'; });
+            h += '<button onclick="tsPreset(0)">Очистить</button></div>';
+            h += '<div style="color:var(--dim); font-size:11px; margin-bottom:8px;">Раскладывает столько левелапов, сколько игрок набирает к этой минуте, случайно, но с перевесом в модификаторы. Каждое нажатие — новая раскладка. Эволюция — только если к модификатору нашлась его пара в состояниях, как в игре.</div>';
             TS_SLOTS.forEach(function(g) {
                 h += '<div style="color:var(--warn); font-size:12px; margin:6px 0 4px;">' + g[1] + '</div>';
                 for (let i = 0; i < g[2]; i++) {
@@ -1207,6 +1211,60 @@
         }
 
         function tsChanged() { syncTestStart(); renderTestStart(); }
+
+        // Сколько левелапов у игрока к минуте забега. Опыт на уровень — baseXP + growthFactor ×
+        // (уровень − 1), то есть к уровню L нужно около 2·L·(L−1) кристаллов при 4 и 4. Числа —
+        // оценка по волнам гиста: сколько игрок реально выбивает, а не сколько спавнится.
+        // Потолок — 38: три модификатора по 6 (с эволюцией), три состояния по 5, ульта 5
+        const TS_PRESETS = [ { min: 5, picks: 12 }, { min: 10, picks: 24 }, { min: 15, picks: 34 } ];
+
+        function tsPreset(min) {
+            syncTestStart();
+            let t = tsData();
+            if (!min) { t.cards = []; t.levels = []; renderTestStart(); return; }
+            let preset = TS_PRESETS.find(function(p) { return p.min === min; });
+            let picks = preset ? preset.picks : 0;
+            let byGroup = function(g) { return Object.keys(TS_CARDS).filter(function(c) { return TS_CARDS[c].slot === g; }); };
+            let shuffle = function(a) { for (let i = a.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); let x = a[i]; a[i] = a[j]; a[j] = x; } return a; };
+
+            // Три модификатора; урон и скорострельность берут чаще — это самые очевидные карточки
+            let modPool = byGroup('mod'), mods = [];
+            while (mods.length < 3 && modPool.length) {
+                let w = modPool.map(function(c) { return (c === 'Damage' || c === 'FireRate') ? 3 : 1; });
+                let sum = w.reduce(function(a, b) { return a + b; }, 0), r = Math.random() * sum, k = 0;
+                while (r > w[k]) { r -= w[k]; k++; }
+                mods.push(modPool.splice(k, 1)[0]);
+            }
+            // Три состояния; к поздним минутам одно из них — пара к модификатору, ради эволюции
+            let statePool = shuffle(byGroup('state')), states = [];
+            if (min >= 10) {
+                let pair = shuffle(mods.slice()).map(function(m) { return TS_CARDS[m].evo; }).find(function(e) { return statePool.indexOf(e) >= 0; });
+                if (pair) { states.push(pair); statePool.splice(statePool.indexOf(pair), 1); }
+            }
+            while (states.length < 3 && statePool.length) states.push(statePool.shift());
+            let ult = byGroup('ult');
+
+            let cards = mods.concat(states).concat(ult), levels = cards.map(function() { return 0; });
+            let cap = function(i) {
+                let c = cards[i];
+                if (TS_CARDS[c].slot === 'mod') return states.indexOf(TS_CARDS[c].evo) >= 0 ? TS_MAX + 1 : TS_MAX;
+                return TS_MAX;
+            };
+            // Каждый левелап — в модификатор с вероятностью 60%, в состояние 30%, в ульту 10%
+            for (let n = 0; n < picks; n++) {
+                let roll = Math.random(), group = roll < 0.6 ? 'mod' : roll < 0.9 ? 'state' : 'ult';
+                let open = cards.map(function(c, i) { return i; }).filter(function(i) { return levels[i] < cap(i); });
+                if (!open.length) break;
+                let inGroup = open.filter(function(i) { return TS_CARDS[cards[i]].slot === group; });
+                let pool = inGroup.length ? inGroup : open;
+                let i = pool[Math.floor(Math.random() * pool.length)];
+                // Эволюция — только после пятого уровня, как в игре
+                levels[i]++;
+            }
+            t.cards = []; t.levels = [];
+            cards.forEach(function(c, i) { if (levels[i] > 0) { t.cards.push(c); t.levels.push(levels[i]); } });
+            renderTestStart();
+        }
         // Пока печатают в числовом поле, вкладку не перерисовываем: поле пересоздавалось
         // на каждую цифру, и на телефоне слетали фокус и клавиатура — вводилось по одной
         // цифре. Обновляем только подсказку, целиком — по onchange, когда ввод закончен
