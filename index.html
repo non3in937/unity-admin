@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='153';
+        var VERSION='154';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1805,12 +1805,12 @@
         // Те же числа, что стоят в префабе (TreeEyes). Ключа tree в гисте нет — показываем
         // их, и первое же сохранение запишет. Фазы — по процентам здоровья, как у всех.
         const TREE_DEFAULTS = {
-            eyes: 4, eyeMode: 'Split', smallHealth: 1750, bigSize: 3.7, smallSize: 2.3, sizeJitter: 0.12, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
+            eyes: 4, eyeMode: 'Split', smallHealth: 1750, bigSize: 3.7, smallSize: 2.3, sizeJitter: 0.12, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, viewArc: 100, hideHits: 3,
             flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
             phases: [
-                { phaseName: 'Знакомство', startAtHpPercent: 100, endAtHpPercent: 75, reload: 2.6, patterns: ['Single', 'Single', 'Burst'], gap: 0.5, aimTime: 1.4, lockTime: 0.45, fireTime: 1.4, sweepSpeed: 16, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 6, dazeAfter: 0 },
-                { phaseName: 'Проверка', startAtHpPercent: 75, endAtHpPercent: 40, reload: 1.5, patterns: ['Burst', 'Pair', 'Sequence'], gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.9, diveAfterSalvo: true, beamDamage: 8, dazeAfter: 0 },
-                { phaseName: 'Трэш', startAtHpPercent: 40, endAtHpPercent: 0, reload: 0.8, patterns: ['Barrage', 'Pair', 'Barrage', 'Sequence'], gap: 0.35, aimTime: 0.9, lockTime: 0.3, fireTime: 2.0, sweepSpeed: 30, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 10, dazeAfter: 2.2 },
+                { phaseName: 'Знакомство', startAtHpPercent: 100, endAtHpPercent: 75, reload: 4, patterns: [], groupEvery: 0, gap: 0.5, aimTime: 1.4, lockTime: 0.45, fireTime: 1.4, sweepSpeed: 16, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 6, dazeAfter: 0 },
+                { phaseName: 'Проверка', startAtHpPercent: 75, endAtHpPercent: 40, reload: 3, patterns: ['Pair', 'Sequence', 'Burst'], groupEvery: 7, gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.9, diveAfterSalvo: true, beamDamage: 8, dazeAfter: 0 },
+                { phaseName: 'Трэш', startAtHpPercent: 40, endAtHpPercent: 0, reload: 2.4, patterns: ['Barrage', 'Pair', 'Barrage', 'Sequence'], groupEvery: 6, gap: 0.35, aimTime: 0.9, lockTime: 0.3, fireTime: 2.0, sweepSpeed: 30, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 10, dazeAfter: 2.2 },
             ]
         };
         // Узоры по-русски в поле, в гисте — как их читает игра
@@ -1854,14 +1854,15 @@
                     <div class="row" style="flex-wrap:wrap;">
                         ${treePhaseParam('Включается на HP %', 'startAtHpPercent', p.startAtHpPercent, 'С какого процента здоровья босса начинается фаза. Перекрылись диапазоны — действует та, что включилась последней, то есть с меньшим порогом.', '1')}
                         ${treePhaseParam('Работает до HP %', 'endAtHpPercent', p.endAtHpPercent, 'До какого процента длится. Следующая фаза обычно начинается с этого же числа.', '1')}
-                        ${treePhaseParam('Перезарядка, сек', 'reload', p.reload, 'Пауза между залпами. Потом стреляет глаз, который смотрит на игрока; такого нет — ближний ныряет и выныривает прямо перед ним.')}
+                        ${treePhaseParam('Перезарядка, сек', 'reload', p.reload, 'Перезарядка каждого глаза: у всех своя, со сдвигом, чтобы не били в такт. Видит глаз игрока — стреляет, стоит боком — сперва ныряет и выныривает перед ним. Больше глаз (раздвоение!) — чаще лучи.')}
                     </div>
                     <div style="flex:1; margin-bottom:10px; display:flex; flex-direction:column;">
-                        <div class="lrow"><label>Узоры по кругу</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                        <div class="lrow"><label>Групповые атаки по кругу</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
                         <input type="text" class="tp-patterns" value="${escapeHtml(pats)}" placeholder="одиночный, двойной">
-                        <div class="hint-text">Через запятую, идут по кругу. Одиночный — стреляет глаз перед игроком. Двойной — он же два раза подряд. Очередь — выстрелил и нырнул, следующий выныривает перед игроком и стреляет, до трёх раз. Клещи — двое выныривают по бокам от игрока и бьют разом, второй с упреждением по бегу. Стена — все открытые глаза (до пяти) выныривают веером перед игроком и бьют разом; в веере одна дыра, туда и уходить; после стены — оглушение, если задано. Неизвестное слово пропускается.</div>
+                        <div class="hint-text">Через запятую, идут по кругу, раз в «групповая атака каждые». Пусто — только одиночные выстрелы каждого глаза. Одиночный — стреляет глаз перед игроком. Двойной — он же два раза подряд. Очередь — выстрелил и нырнул, следующий выныривает перед игроком и стреляет, до трёх раз. Клещи — двое выныривают по бокам от игрока и бьют разом, второй с упреждением по бегу. Стена — все открытые глаза (до пяти) выныривают веером перед игроком и бьют разом; в веере одна дыра, туда и уходить; после стены — оглушение, если задано. Неизвестное слово пропускается.</div>
                     </div>
                     <div class="row" style="flex-wrap:wrap;">
+                        ${treePhaseParam('Групповая атака каждые, сек', 'groupEvery', p.groupEvery ?? 0, 'Раз в столько секунд — атака из «узоров» выше (клещи, очередь, стена): одиночные выстрелы замолкают, и глаза бьют вместе. Ноль — только одиночные выстрелы.')}
                         ${treePhaseParam('Разрыв, сек', 'gap', p.gap, 'Пауза между глазами в «очереди» и между выстрелами «двойного».', '0.05')}
                         ${treePhaseParam('Прицел, сек', 'aimTime', p.aimTime, 'Сколько глаз ведёт игрока тонкой линией перед выстрелом. Убежал из виду за это время — выстрел сорван.')}
                         ${treePhaseParam('Замер, сек', 'lockTime', p.lockTime, 'Последние секунды прицела линия стоит и светлеет — окно отпрыгнуть. Входит в прицел.', '0.05')}
@@ -1922,6 +1923,7 @@
             general += treeParam('Урон луча за тик', 'damagePerTick', g('damagePerTick'), 'Сколько снимает луч за один тик, пока игрок в нём. Здоровье игрока — 100, к пятнадцатой минуте он прокачан.', '1');
             general += treeParam('Тик урона, сек', 'tickRate', g('tickRate'), 'Как часто луч бьёт, пока игрок в нём. Зацепило краем — один-два тика, стоял до конца — все.', '0.05');
             general += treeParam('Ширина луча', 'beamWidth', g('beamWidth'), 'У земли, в единицах мира. Шире — труднее увернуться.');
+            general += treeParam('Глаз видит, град', 'viewArc', g('viewArc'), 'Глаз замечает игрока, если тот не дальше этого угла по кругу ствола, и начинает стрелять. 180 — видит всегда, с любой стороны.', '1');
             general += treeParam('Стреляет в пределах, град', 'fireArc', g('fireArc'), 'Стреляет только глаз, перед которым игрок не дальше этого угла по кругу ствола. Такого нет — ближний ныряет и выныривает перед игроком. Шире — луч идёт вскользь, с бока ствола.', '1');
             general += treeParam('Прячется после попаданий', 'hideHits', g('hideHits'), 'Сколько попаданий по закрытому глазу — и он пугается: ныряет и выныривает за спиной ствола. Урона закрытый не берёт.', '1');
             general += treeParam('Упреждение клещей, град', 'pairLead', g('pairLead'), 'На сколько градусов вперёд по бегу целится второй глаз в «клещах». Уходишь по инерции — попадаешь в него, спасает разворот.', '1');
