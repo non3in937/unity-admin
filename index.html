@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='148';
+        var VERSION='149';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1763,11 +1763,11 @@
             try { expA = JSON.parse(localStorage.getItem('expAttack') || '[]'); } catch (e) {}
             const open = expA.includes(foldId);
             const pats = (p.patterns || []).map(x => TREE_PATTERNS_RU[x] || x).join(', ');
-            return `<div class="phase-card tree-phase" style="padding-bottom:5px;">
+            return `<div class="phase-card tree-phase" style="padding-bottom:5px;" oninput="treePhaseHead(this)" onchange="treePhaseHead(this)">
                 <div class="header-row" data-foldid="${foldId}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'expAttack', true)">
                     <span class="fold-icon" style="color:var(--e3); font-size:12px;">${open ? '▼' : '▶'}</span>
-                    <span style="flex:1; color:var(--e3); font-weight:bold; font-size:13px; white-space:normal;">${escapeHtml(p.phaseName || 'Фаза')}${p.shuffleEvery > 0 ? ' · напёрстки' : ''}${p.diveAfterSalvo ? ' · засада' : ''}</span>
-                    <span style="font-size:11px; color:var(--dim); white-space:nowrap;">${p.startAtHpPercent}→${p.endAtHpPercent}%</span>
+                    <span style="flex:1; white-space:normal;"><span class="tp-title" style="color:var(--e3); font-weight:bold; font-size:13px;">${escapeHtml(p.phaseName || 'Фаза')}</span><span class="tp-tags" style="color:var(--dim); font-size:11px; margin-left:6px;">${treePhaseTags(p.shuffleEvery, p.diveAfterSalvo)}</span></span>
+                    <span class="tp-range" style="font-size:11px; color:var(--dim); white-space:nowrap;">${p.startAtHpPercent}→${p.endAtHpPercent}%</span>
                     <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.tree-phase').remove(); syncData(); render();">✖</button>
                 </div>
                 <div class="phase-content" style="display:${open ? 'block' : 'none'}; margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
@@ -1775,7 +1775,7 @@
                         <div style="flex:1"><label style="margin-bottom:3px;">Название</label><input type="text" class="tp-name" value="${escapeHtml(p.phaseName || '')}" style="margin:0;"></div>
                     </div>
                     <div class="row" style="flex-wrap:wrap;">
-                        ${treePhaseParam('Включается на HP %', 'startAtHpPercent', p.startAtHpPercent, 'С какого процента здоровья босса начинается фаза.', '1')}
+                        ${treePhaseParam('Включается на HP %', 'startAtHpPercent', p.startAtHpPercent, 'С какого процента здоровья босса начинается фаза. Перекрылись диапазоны — действует та, что включилась последней, то есть с меньшим порогом.', '1')}
                         ${treePhaseParam('Работает до HP %', 'endAtHpPercent', p.endAtHpPercent, 'До какого процента длится. Следующая фаза обычно начинается с этого же числа.', '1')}
                         ${treePhaseParam('Перезарядка, сек', 'reload', p.reload, 'Пауза между залпами. Потом стреляет глаз, который смотрит на игрока; такого нет — ближний ныряет и выныривает прямо перед ним.')}
                     </div>
@@ -1801,6 +1801,24 @@
                     </div>
                 </div>
             </div>`;
+        }
+
+        // Метки в шапке фазы — что в ней особенного. Не повторяют название: фаза
+        // «Напёрстки» с перестановками читалась «Напёрстки · напёрстки»
+        function treePhaseTags(shuffle, dive) {
+            const t = [];
+            if (clean(shuffle) > 0) t.push('перестановки ' + clean(shuffle) + ' с');
+            if (dive) t.push('ныряет после залпа');
+            return t.join(' · ');
+        }
+
+        // Шапка фазы следит за полями: правишь пороги или название — шапка тут же
+        // показывает новое. Раньше она рисовалась один раз и врала до перезагрузки
+        function treePhaseHead(card) {
+            const v = k => card.querySelector('.tp-param[data-key="' + k + '"]').value;
+            card.querySelector('.tp-title').textContent = card.querySelector('.tp-name').value || 'Фаза';
+            card.querySelector('.tp-range').textContent = clean(v('startAtHpPercent')) + '→' + clean(v('endAtHpPercent')) + '%';
+            card.querySelector('.tp-tags').textContent = treePhaseTags(v('shuffleEvery'), card.querySelector('.tp-dive').checked);
         }
 
         function treeSettings(tree, bossKey) {
