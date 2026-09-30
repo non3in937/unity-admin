@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='152';
+        var VERSION='153';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1146,10 +1146,15 @@
             let taken = t.cards.slice();
             let picks = 0; t.levels.forEach(function(l) { picks += +l || 0; });
             h += '<div class="panel ts-block"><div class="ts-title">🃏 Карточки</div>';
-            h += '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">';
+            let pp = tsPresetPicks(t);
+            h += '<div class="row" style="margin-bottom:6px;">';
+            TS_PRESETS.forEach(function(p, i) {
+                h += '<div style="flex:1"><label>Левелапов к ' + p.min + ':00</label><input type="number" step="1" min="0" max="' + TS_PICKS_MAX + '" class="ts-picks" value="' + pp[i] + '" oninput="tsTyping()" onchange="tsChanged()"></div>';
+            });
+            h += '</div><div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">';
             TS_PRESETS.forEach(function(p) { h += '<button onclick="tsPreset(' + p.min + ')">Как к ' + p.min + ':00</button>'; });
             h += '<button onclick="tsPreset(0)">Очистить</button></div>';
-            h += '<div style="color:var(--dim); font-size:11px; margin-bottom:8px;">Раскладывает столько левелапов, сколько игрок набирает к этой минуте, случайно, но с перевесом в модификаторы. Каждое нажатие — новая раскладка. Эволюция — только если к модификатору нашлась его пара в состояниях, как в игре.</div>';
+            h += '<div style="color:var(--dim); font-size:11px; margin-bottom:8px;">Раскладывает столько левелапов, сколько задано в полях выше (своё число сохраняется в гист), случайно, но с перевесом в модификаторы. Каждое нажатие — новая раскладка. Эволюция — только если к модификатору нашлась его пара в состояниях, как в игре.</div>';
             TS_SLOTS.forEach(function(g) {
                 h += '<div style="color:var(--warn); font-size:12px; margin:6px 0 4px;">' + g[1] + '</div>';
                 for (let i = 0; i < g[2]; i++) {
@@ -1193,6 +1198,8 @@
             let w2 = document.getElementById('ts_w2'); if (w2) t.weapon2 = w2.value;
             let sl = document.getElementById('ts_slot'); if (sl) t.activeSlot = parseInt(sl.value) === 2 ? 2 : 1;
             let hp = document.getElementById('ts_hp'); if (hp) t.health = Math.max(0, parseInt(hp.value) || 0);
+            let pk = host.querySelectorAll('.ts-picks');
+            if (pk.length) t.presetPicks = Array.from(pk).map(function(inp) { return Math.max(0, Math.min(TS_PICKS_MAX, parseInt(inp.value) || 0)); });
 
             let cards = [], levels = [], states = [];
             host.querySelectorAll('.ts-row').forEach(function(row) {
@@ -1217,13 +1224,21 @@
         // оценка по волнам гиста: сколько игрок реально выбивает, а не сколько спавнится.
         // Потолок — 38: три модификатора по 6 (с эволюцией), три состояния по 5, ульта 5
         const TS_PRESETS = [ { min: 5, picks: 12 }, { min: 10, picks: 24 }, { min: 15, picks: 34 } ];
+        const TS_PICKS_MAX = 38;
+        // Свои числа левелапов лежат в гисте рядом с тест-стартом; нет — берутся оценки выше
+        function tsPresetPicks(t) {
+            return TS_PRESETS.map(function(p, i) {
+                let v = Array.isArray(t.presetPicks) ? parseInt(t.presetPicks[i]) : NaN;
+                return isNaN(v) ? p.picks : v;
+            });
+        }
 
         function tsPreset(min) {
             syncTestStart();
             let t = tsData();
             if (!min) { t.cards = []; t.levels = []; renderTestStart(); return; }
-            let preset = TS_PRESETS.find(function(p) { return p.min === min; });
-            let picks = preset ? preset.picks : 0;
+            let idx = TS_PRESETS.findIndex(function(p) { return p.min === min; });
+            let picks = idx >= 0 ? tsPresetPicks(t)[idx] : 0;
             let byGroup = function(g) { return Object.keys(TS_CARDS).filter(function(c) { return TS_CARDS[c].slot === g; }); };
             let shuffle = function(a) { for (let i = a.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); let x = a[i]; a[i] = a[j]; a[j] = x; } return a; };
 
