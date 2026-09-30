@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='149';
+        var VERSION='150';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -805,6 +805,8 @@
                         if (treeEl) {
                             const tree = { phases: [] };
                             treeEl.querySelectorAll('.t-param').forEach(inp => { tree[inp.dataset.key] = clean(inp.value); });
+                            const modeEl = treeEl.querySelector('.t-mode');
+                            if (modeEl) tree.eyeMode = modeEl.value;
                             treeEl.querySelectorAll('.tree-phase').forEach(pEl => {
                                 const ph = { phaseName: pEl.querySelector('.tp-name').value };
                                 pEl.querySelectorAll('.tp-param').forEach(inp => { ph[inp.dataset.key] = clean(inp.value); });
@@ -1728,7 +1730,7 @@
         // Те же числа, что стоят в префабе (TreeEyes). Ключа tree в гисте нет — показываем
         // их, и первое же сохранение запишет. Фазы — по процентам здоровья, как у всех.
         const TREE_DEFAULTS = {
-            eyes: 4, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
+            eyes: 4, eyeMode: 'Split', smallHealth: 350, bigSize: 3.7, smallSize: 2.3, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
             flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
             phases: [
                 { phaseName: 'Стоят', startAtHpPercent: 100, endAtHpPercent: 70, reload: 2.2, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18, shuffleEvery: 0, diveAfterSalvo: false },
@@ -1827,6 +1829,14 @@
             const g = (k) => (t[k] ?? TREE_DEFAULTS[k]);
 
             let general = '';
+            general += `<div style="flex: 1; min-width: 150px; margin-bottom: 12px; display: flex; flex-direction: column;">
+                <div class="lrow"><label>Глаза на нуле</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
+                <select class="t-mode">${[['Pool', 'не умирают, общее здоровье'], ['Die', 'лопаются'], ['Split', 'раздваиваются']].map(([v, t]) => `<option value="${v}"${g('eyeMode') === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+                <div class="hint-text">Что с глазом, когда его прочность кончилась. Не умирают — у дерева одна полоска на всех, глаза живут до конца. Лопаются — глаз лопается и уходит под кору насовсем. Раздваиваются — большой лопается и выпускает из раны два малых, малые лопаются насовсем; полоска с первой секунды считает и малых.</div>
+            </div>`;
+            general += treeParam('Прочность малого', 'smallHealth', g('smallHealth'), 'Прочность глаза из раздвоения. Большой берёт «прочность точки» выше.', '10');
+            general += treeParam('Размер глаза', 'bigSize', g('bigSize'), 'Поперечник глаза в начале боя, единиц. Все одного размера. Самый большой раньше был 4.6.');
+            general += treeParam('Размер малого', 'smallSize', g('smallSize'), 'Поперечник малого глаза из раздвоения.');
             general += treeParam('Глаз', 'eyes', g('eyes'), 'Сколько глаз у дерева. Прочность каждого — «Прочность точки» выше, здоровье босса — их сумма. После ролика глаза встают по стволу на равные доли круга.', '1');
             general += treeParam('Урон луча за тик', 'damagePerTick', g('damagePerTick'), 'Сколько снимает луч за один тик, пока игрок в нём. Здоровье игрока — 100, к пятнадцатой минуте он прокачан.', '1');
             general += treeParam('Тик урона, сек', 'tickRate', g('tickRate'), 'Как часто луч бьёт, пока игрок в нём. Зацепило краем — один-два тика, стоял до конца — все.', '0.05');
