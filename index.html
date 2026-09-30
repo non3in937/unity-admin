@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='150';
+        var VERSION='151';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1261,7 +1261,7 @@
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 ${bossSettings(boss)}
-                                ${own ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--dim); color:var(--dim); font-size:11px; line-height:1.5; white-space:normal;">Атаки ведёт сам босс: глаза стоят по кругу ствола и не ползают — ныряют под кору и выныривают в другом месте; стреляет только тот, кто смотрит на игрока. Всё поведение — в разделе «Глаза» выше: сколько глаз и фазы по здоровью.</div>` : ''}
+                                ${own ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--dim); color:var(--dim); font-size:11px; line-height:1.5; white-space:normal;">Атаки ведёт сам босс: глаза стоят по кругу ствола и не ползают — ныряют под кору и выныривают в другом месте; стреляет только тот, кто смотрит на игрока. Три фазы — три разных боя: знакомство, проверка, трэш со «стеной» и оглушением. Всё поведение и прочность малых глаз — в разделе «Глаза» выше. Всё поведение — в разделе «Глаза» выше: сколько глаз и фазы по здоровью.</div>` : ''}
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--e1); color:var(--e1); font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
@@ -1694,7 +1694,9 @@
                         ${bossParam('Наклон орбиты', 'pointTilt', boss.pointTilt ?? 0, 'Градусы. Ноль — сферы ходят горизонтально, 90 — колесом.')}
                     </div>`;
             } else if (built > 0) {
-                health += bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, `У этого босса уязвимых мест ${built}, они стоят в самой модели. Здесь задаётся прочность каждого, всё здоровье босса — их сумма.`);
+                health += info.ownAttacks
+                    ? bossParam('Прочность глаза', 'pointHealth', boss.pointHealth ?? 100, 'Прочность обычного (большого) глаза. Здоровье дерева — сумма всех глаз; при раздвоении к ней прибавляются будущие малые (по два на большой, прочность малого — ниже, в «Глазах»).')
+                    : bossParam('Прочность точки', 'pointHealth', boss.pointHealth ?? 100, `У этого босса уязвимых мест ${built}, они стоят в самой модели. Здесь задаётся прочность каждого, всё здоровье босса — их сумма.`);
                 health += bossParam('Урон по телу', 'bodyChipDamage', boss.bodyChipDamage ?? 2, 'Сколько снимает попадание мимо уязвимого места, пока оно цело. Держи маленьким: это не путь к победе, а отклик, чтобы игрок понимал, что попал. Убить одним телом нельзя в любом случае, урон останавливается на единице здоровья. Ноль — тело неуязвимо совсем.', '1');
             } else {
                 health += bossParam('Здоровье тела', 'bodyHealth', boss.bodyHealth ?? 2000, 'У этого босса уязвимых мест нет, его бьют прямо в тело. Здесь его живучесть.');
@@ -1730,16 +1732,16 @@
         // Те же числа, что стоят в префабе (TreeEyes). Ключа tree в гисте нет — показываем
         // их, и первое же сохранение запишет. Фазы — по процентам здоровья, как у всех.
         const TREE_DEFAULTS = {
-            eyes: 4, eyeMode: 'Split', smallHealth: 350, bigSize: 3.7, smallSize: 2.3, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
+            eyes: 4, eyeMode: 'Split', smallHealth: 1750, bigSize: 3.7, smallSize: 2.3, sizeJitter: 0.12, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
             flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
             phases: [
-                { phaseName: 'Стоят', startAtHpPercent: 100, endAtHpPercent: 70, reload: 2.2, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18, shuffleEvery: 0, diveAfterSalvo: false },
-                { phaseName: 'Напёрстки', startAtHpPercent: 70, endAtHpPercent: 35, reload: 1.4, patterns: ['Burst', 'Pair', 'Single'], gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.7, diveAfterSalvo: false },
-                { phaseName: 'Засада', startAtHpPercent: 35, endAtHpPercent: 0, reload: 1.0, patterns: ['Pair', 'Burst', 'Sequence'], gap: 0.4, aimTime: 0.9, lockTime: 0.3, fireTime: 1.8, sweepSpeed: 30, shuffleEvery: 0, diveAfterSalvo: true },
+                { phaseName: 'Знакомство', startAtHpPercent: 100, endAtHpPercent: 75, reload: 2.6, patterns: ['Single', 'Single', 'Burst'], gap: 0.5, aimTime: 1.4, lockTime: 0.45, fireTime: 1.4, sweepSpeed: 16, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 6, dazeAfter: 0 },
+                { phaseName: 'Проверка', startAtHpPercent: 75, endAtHpPercent: 40, reload: 1.5, patterns: ['Burst', 'Pair', 'Sequence'], gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.9, diveAfterSalvo: true, beamDamage: 8, dazeAfter: 0 },
+                { phaseName: 'Трэш', startAtHpPercent: 40, endAtHpPercent: 0, reload: 0.8, patterns: ['Barrage', 'Pair', 'Barrage', 'Sequence'], gap: 0.35, aimTime: 0.9, lockTime: 0.3, fireTime: 2.0, sweepSpeed: 30, shuffleEvery: 0, diveAfterSalvo: false, beamDamage: 10, dazeAfter: 2.2 },
             ]
         };
         // Узоры по-русски в поле, в гисте — как их читает игра
-        const TREE_PATTERNS = { 'одиночный': 'Single', 'двойной': 'Burst', 'очередь': 'Sequence', 'клещи': 'Pair' };
+        const TREE_PATTERNS = { 'одиночный': 'Single', 'двойной': 'Burst', 'очередь': 'Sequence', 'клещи': 'Pair', 'стена': 'Barrage' };
         const TREE_PATTERNS_RU = Object.fromEntries(Object.entries(TREE_PATTERNS).map(([ru, en]) => [en, ru]));
 
         function treeParam(label, key, val, tooltip, step = '0.1') {
@@ -1768,7 +1770,7 @@
             return `<div class="phase-card tree-phase" style="padding-bottom:5px;" oninput="treePhaseHead(this)" onchange="treePhaseHead(this)">
                 <div class="header-row" data-foldid="${foldId}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'expAttack', true)">
                     <span class="fold-icon" style="color:var(--e3); font-size:12px;">${open ? '▼' : '▶'}</span>
-                    <span style="flex:1; white-space:normal;"><span class="tp-title" style="color:var(--e3); font-weight:bold; font-size:13px;">${escapeHtml(p.phaseName || 'Фаза')}</span><span class="tp-tags" style="color:var(--dim); font-size:11px; margin-left:6px;">${treePhaseTags(p.shuffleEvery, p.diveAfterSalvo)}</span></span>
+                    <span style="flex:1; white-space:normal;"><span class="tp-title" style="color:var(--e3); font-weight:bold; font-size:13px;">${escapeHtml(p.phaseName || 'Фаза')}</span><span class="tp-tags" style="color:var(--dim); font-size:11px; margin-left:6px;">${treePhaseTags(p.shuffleEvery, p.diveAfterSalvo, p.dazeAfter)}</span></span>
                     <span class="tp-range" style="font-size:11px; color:var(--dim); white-space:nowrap;">${p.startAtHpPercent}→${p.endAtHpPercent}%</span>
                     <button class="btn-remove" onclick="event.stopPropagation(); this.closest('.tree-phase').remove(); syncData(); render();">✖</button>
                 </div>
@@ -1784,7 +1786,7 @@
                     <div style="flex:1; margin-bottom:10px; display:flex; flex-direction:column;">
                         <div class="lrow"><label>Узоры по кругу</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
                         <input type="text" class="tp-patterns" value="${escapeHtml(pats)}" placeholder="одиночный, двойной">
-                        <div class="hint-text">Через запятую, идут по кругу. Одиночный — стреляет глаз перед игроком. Двойной — он же два раза подряд. Очередь — выстрелил и нырнул, следующий выныривает перед игроком и стреляет, до трёх раз. Клещи — двое выныривают по бокам от игрока и бьют разом, второй с упреждением по бегу. Неизвестное слово пропускается.</div>
+                        <div class="hint-text">Через запятую, идут по кругу. Одиночный — стреляет глаз перед игроком. Двойной — он же два раза подряд. Очередь — выстрелил и нырнул, следующий выныривает перед игроком и стреляет, до трёх раз. Клещи — двое выныривают по бокам от игрока и бьют разом, второй с упреждением по бегу. Стена — все открытые глаза (до пяти) выныривают веером перед игроком и бьют разом; в веере одна дыра, туда и уходить; после стены — оглушение, если задано. Неизвестное слово пропускается.</div>
                     </div>
                     <div class="row" style="flex-wrap:wrap;">
                         ${treePhaseParam('Разрыв, сек', 'gap', p.gap, 'Пауза между глазами в «очереди» и между выстрелами «двойного».', '0.05')}
@@ -1792,6 +1794,10 @@
                         ${treePhaseParam('Замер, сек', 'lockTime', p.lockTime, 'Последние секунды прицела линия стоит и светлеет — окно отпрыгнуть. Входит в прицел.', '0.05')}
                         ${treePhaseParam('Луч, сек', 'fireTime', p.fireTime, 'Сколько горит лазер.')}
                         ${treePhaseParam('Догон, град/с', 'sweepSpeed', p.sweepSpeed, 'Как быстро горящий луч поворачивается за игроком. Игрок бегает на 40 — меньше, и от луча убегают; стоишь — попадёт.', '1')}
+                    </div>
+                    <div class="row" style="flex-wrap:wrap;">
+                        ${treePhaseParam('Урон луча за тик', 'beamDamage', p.beamDamage ?? 0, 'Урон луча в этой фазе. Ноль — общий «урон луча за тик» выше. Растёт от фазы к фазе: ошибка в конце стоит дороже.', '1')}
+                        ${treePhaseParam('Оглушение после стены, сек', 'dazeAfter', p.dazeAfter ?? 0, 'После «стены» глаза оглушены: открыты, не стреляют, не жмурятся и не прячутся — окно для урона в самой жёсткой фазе. Ноль — без оглушения.')}
                     </div>
                     <div class="row" style="flex-wrap:wrap; align-items:flex-end;">
                         ${treePhaseParam('Перестановки, сек', 'shuffleEvery', p.shuffleEvery ?? 0, 'Напёрстки: раз в столько секунд перезарядки один глаз ныряет под кору и выныривает на другом месте — следи, где кто. 0 — глаза стоят.')}
@@ -1807,10 +1813,11 @@
 
         // Метки в шапке фазы — что в ней особенного. Не повторяют название: фаза
         // «Напёрстки» с перестановками читалась «Напёрстки · напёрстки»
-        function treePhaseTags(shuffle, dive) {
+        function treePhaseTags(shuffle, dive, daze = 0) {
             const t = [];
             if (clean(shuffle) > 0) t.push('перестановки ' + clean(shuffle) + ' с');
             if (dive) t.push('ныряет после залпа');
+            if (daze > 0) t.push('оглушение ' + daze + ' с');
             return t.join(' · ');
         }
 
@@ -1820,7 +1827,7 @@
             const v = k => card.querySelector('.tp-param[data-key="' + k + '"]').value;
             card.querySelector('.tp-title').textContent = card.querySelector('.tp-name').value || 'Фаза';
             card.querySelector('.tp-range').textContent = clean(v('startAtHpPercent')) + '→' + clean(v('endAtHpPercent')) + '%';
-            card.querySelector('.tp-tags').textContent = treePhaseTags(v('shuffleEvery'), card.querySelector('.tp-dive').checked);
+            card.querySelector('.tp-tags').textContent = treePhaseTags(v('shuffleEvery'), card.querySelector('.tp-dive').checked, clean(v('dazeAfter')));
         }
 
         function treeSettings(tree, bossKey) {
@@ -1837,6 +1844,7 @@
             general += treeParam('Прочность малого', 'smallHealth', g('smallHealth'), 'Прочность глаза из раздвоения. Большой берёт «прочность точки» выше.', '10');
             general += treeParam('Размер глаза', 'bigSize', g('bigSize'), 'Поперечник глаза в начале боя, единиц. Все одного размера. Самый большой раньше был 4.6.');
             general += treeParam('Размер малого', 'smallSize', g('smallSize'), 'Поперечник малого глаза из раздвоения.');
+            general += treeParam('Разброс размера', 'sizeJitter', g('sizeJitter'), 'Каждый глаз чуть больше или меньше своего размера: 0.12 — от −12% до +12%. Ровно одинаковые читались штамповкой.', '0.01');
             general += treeParam('Глаз', 'eyes', g('eyes'), 'Сколько глаз у дерева. Прочность каждого — «Прочность точки» выше, здоровье босса — их сумма. После ролика глаза встают по стволу на равные доли круга.', '1');
             general += treeParam('Урон луча за тик', 'damagePerTick', g('damagePerTick'), 'Сколько снимает луч за один тик, пока игрок в нём. Здоровье игрока — 100, к пятнадцатой минуте он прокачан.', '1');
             general += treeParam('Тик урона, сек', 'tickRate', g('tickRate'), 'Как часто луч бьёт, пока игрок в нём. Зацепило краем — один-два тика, стоял до конца — все.', '0.05');
