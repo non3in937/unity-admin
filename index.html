@@ -647,6 +647,16 @@
                 let lb = fv('w_lodBias'); if (lb < 0.25 || lb > 4) return 'Множитель дальности — от 0.25 до 4.';
                 let ld = fv('w_lodDetail'); if (ld < 50) return 'Трава гаснет не ближе 50, иначе у ног будет голая земля.';
             }
+            let bs = fv('w_blSpeed');
+            if (bs !== null) {
+                if (bs < 0.25 || bs > 6) return 'Темп клипа смерти от взрыва — от 0.25 до 6.';
+                let bn = fv('w_blNear'); if (bn < 0 || bn > 1) return 'Близко — доля радиуса, от 0 до 1.';
+                if (fv('w_blExtraNear') < 0 || fv('w_blExtraFar') < 0) return 'Добавка дальности не может быть меньше нуля.';
+                if (fv('w_blExtraNear') > 40 || fv('w_blExtraFar') > 40) return 'Добавка больше 40 единиц — это уже полкартины, игра её срежет до 40.';
+                if (fv('w_blLiftNear') < 0 || fv('w_blLiftFar') < 0) return 'Подброс не может быть меньше нуля.';
+                if (fv('w_blLiftNear') > 20 || fv('w_blLiftFar') > 20) return 'Подброс больше 20 единиц — в три роста зомби, игра его срежет до 20.';
+                let br = fv('w_blRandom'); if (br < 0 || br > 0.9) return 'Разброс — от 0 до 0.9.';
+            }
             if (t0 <= 0) return 'Время поля должно быть больше нуля.';
             if (t1 <= t0) return 'Город должен кончаться позже поля — иначе он выпадет из забега целиком.';
             if (buf > 0 && t0 < buf) return `Поле короче буферной зоны (${buf} с): тихий старт и тихий конец наложатся, и застроенного поля не будет вовсе.`;
@@ -655,6 +665,7 @@
         }
 
         const GLOW_IDS = ['w_glowHeight', 'w_glowS0', 'w_glowS1', 'w_glowS2'];
+        const BLAST_IDS = ['w_blSpeed', 'w_blNear', 'w_blExtraNear', 'w_blExtraFar', 'w_blLiftNear', 'w_blLiftFar', 'w_blRandom'];
         const LOD_IDS = ['w_lodFull', 'w_lodSimple', 'w_lodCull', 'w_lodFade', 'w_lodBias', 'w_lodDetail'];
         const FOG_IDS = ['w_fogStart', 'w_fogEnd', 'w_mistCurve', 'w_mistHeight', 'w_mistTopClear', 'w_mistPatch', 'w_mistPatchSize', 'w_gm0', 'w_gm1', 'w_gm2', 'w_gmHeight', 'w_gmStart'];
 
@@ -662,7 +673,7 @@
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).concat(LOD_IDS).concat(GLOW_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(FOG_IDS).concat(LOD_IDS).concat(GLOW_IDS).concat(BLAST_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -887,6 +898,13 @@
                     currentData.lod = {
                         fullDetail: fv('w_lodFull'), simplified: fv('w_lodSimple'), cull: fv('w_lodCull'),
                         fade: fv('w_lodFade'), bias: fv('w_lodBias'), detail: fv('w_lodDetail')
+                    };
+                }
+                if (document.getElementById('w_blSpeed')) {
+                    currentData.blast = {
+                        speed: fv('w_blSpeed'), nearShare: fv('w_blNear'),
+                        extraNear: fv('w_blExtraNear'), extraFar: fv('w_blExtraFar'),
+                        liftNear: fv('w_blLiftNear'), liftFar: fv('w_blLiftFar'), random: fv('w_blRandom')
                     };
                 }
                 if (document.getElementById('w_fogStart')) {
@@ -1439,6 +1457,8 @@
                 // Дальность пропсов: то, что стоит в префабах, пока из админки ничего не сохраняли.
                 const lod = Object.assign({ fullDetail: 200, simplified: 350, cull: 480, fade: 0.5, bias: 1, detail: 260 }, currentData.lod || {});
                 const lv = (k, def) => (typeof lod[k] === 'number' && lod[k] > 0) ? lod[k] : def;
+                // Смерть от взрыва: значения из кода (BlastDeathSettings), пока из админки не сохраняли
+                const bl = Object.assign({ speed: 2.5, nearShare: 0.6, extraNear: 4, extraFar: 1.5, liftNear: 2, liftFar: 0, random: 0.3 }, currentData.blast || {});
                 // Свечение у горизонта: то, что стоит в сцене, пока из админки ничего не сохраняли.
                 const glow = currentData.glow || {};
                 const glowDefS = [0.5, 0.45, 0.5], glowDefC = ['A79B84', '9AA3AD', '5A6880'];
@@ -1523,6 +1543,22 @@
                         ${fld('w_lodFade', lv('fade', 0.5), 'Растворение, 0..1', 'На какой доле последнего кольца пропс проявляется из пустоты. 0 — появляется разом, 1 — растворяется на всём кольце.', 0.05)}
                         ${fld('w_lodBias', lv('bias', 1), 'Множитель дальности', 'Сдвигает все кольца разом: 1 — как задано выше, 1.5 — всё в полтора раза дальше, 0.75 — ближе. Быстрый рычаг, если на телефоне тяжело или, наоборот, мир кажется пустым.', 0.05)}
                         ${fld('w_lodDetail', lv('detail', 260), 'Трава гаснет на, ед.', 'Трава, подстилка и бурьян гаснут отдельно и раньше пропсов: вдали их не разобрать в тумане, а рисуется их много.', 10)}
+                    </div>
+                </div>
+                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Смерть от взрыва</div></div>
+                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Как зомби разлетаются от гранаты, ульты, взрыва танка и обломков дрона. Полёт — клип из Blender по направлению волны: в лицо — на спину, в спину — ничком, в бок — через бок. Сам клип уносит вблизи примерно на 7 единиц, на краю — на 3. Здесь — темп клипа и сколько добавить сверху. Добавка идёт по той же кривой, что полёт в клипе, поэтому тело не зависает в воздухе и не едет, уже улёгшись. Танк, который сам взрывается при смерти, не летит.</div></div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_blSpeed', bl.speed, 'Темп клипа', 'Во сколько раз быстрее исходной анимации. 1 — как собрано в Blender, медленно и подробно. 2.5 — весь полёт вблизи около 0.8 с. Быстрее 4 позы в воздухе уже не успеваешь разглядеть.', 0.1)}
+                        ${fld('w_blNear', bl.nearShare, 'Близко — доля радиуса', 'Кто ближе этой доли радиуса взрыва — летит. Дальше — только сбило с ног: пара шагов от взрыва и падение. 0.6 — летит центр толпы, края валятся.', 0.05)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_blExtraNear', bl.extraNear, 'Добавка вблизи, ед.', 'Насколько дальше клипа уносит тех, кто летит. У самого центра — вся добавка, у границы «близко» — 60% от неё. 0 — только клип. Дальше ~7 полёт уже мультяшный: поза рассчитана на удар слабее.', 0.5)}
+                        ${fld('w_blExtraFar', bl.extraFar, 'Добавка на краю, ед.', 'То же для тех, кого только сбило с ног. Тут скромнее: они делают шаги, и большая добавка превращает шаги в скольжение.', 0.5)}
+                    </div>
+                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        ${fld('w_blLiftNear', bl.liftNear, 'Подброс вблизи, ед.', 'Насколько выше клипа подбрасывает тех, кто летит. Дугой и только пока тело в воздухе по клипу: к касанию земли добавка сходит в ноль, так что не зависает и не проваливается. Клип сам поднимает бёдра примерно на 1.3. 0 — высота как в клипе.', 0.5)}
+                        ${fld('w_blLiftFar', bl.liftFar, 'Подброс на краю, ед.', 'То же для тех, кого только сбило с ног. Они не летят, а падают с шагами — подброс превращает это в подскок. Обычно 0.', 0.5)}
+                        ${fld('w_blRandom', bl.random, 'Разброс, доля', 'Каждый зомби получает добавку дальности и подброса ±эта доля: 0.3 — от 70% до 130%. Чтобы толпа от одной гранаты не разлеталась одинаково. 0 — все ровно.', 0.05)}
                     </div>
                 </div>`;
                 validateWorld();
