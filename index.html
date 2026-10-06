@@ -333,7 +333,7 @@
         const GIST_ID = '4b5faafac858635664755b821b757d35';
         const FILE_NAME = 'config.json';
         const ENEMY_IDS = ["Enemy_Standard", "Enemy_Runner", "Enemy_armor", "Enemy_Tank_Explotion", "Enemy_Tank_Toxic", "Enemy_Drone", "Helth", "Weapon"];
-        const ATTACK_TYPES = ["Rift", "Laser", "EarthThrow", "Rockets", "SummonHorde", "Drones"];
+        const ATTACK_TYPES = ["Rift", "EarthThrow", "Rockets", "SummonHorde", "Drones"];
 
         // Справочник боссов: что за префабы есть в проекте и что каждый из них умеет.
         // Генерируется скриптом ExportBossCatalog прямо из префабов и лежит рядом с
@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='159';
+        var VERSION='160';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -823,10 +823,6 @@
                             treeEl.querySelectorAll('.tree-phase').forEach(pEl => {
                                 const ph = { phaseName: pEl.querySelector('.tp-name').value };
                                 pEl.querySelectorAll('.tp-param').forEach(inp => { ph[inp.dataset.key] = clean(inp.value); });
-                                ph.patterns = pEl.querySelector('.tp-patterns').value.split(',')
-                                    .map(w => w.trim().toLowerCase()).filter(Boolean)
-                                    .map(w => TREE_PATTERNS[w] || null).filter(Boolean);
-                                ph.diveAfterSalvo = pEl.querySelector('.tp-dive').checked;
                                 tree.phases.push(ph);
                             });
                             boss.tree = tree;
@@ -1354,7 +1350,7 @@
                             <div class="boss-content" style="display:${bDisp}; margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
                                 <div class="row" style="margin-bottom:12px;"><div style="flex:1"><label style="margin-bottom:3px;">Появляется на секунде</label><input type="number" id="b_${bIdx}_time" class="b-time" value="${boss.spawnTime}" style="margin:0;"></div></div>
                                 ${bossSettings(boss)}
-                                ${own ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--dim); color:var(--dim); font-size:11px; line-height:1.5; white-space:normal;">Атаки ведёт сам босс: глаза стоят по кругу ствола и не ползают — ныряют под кору и выныривают в другом месте; стреляет только тот, кто смотрит на игрока. Всё поведение — в разделе «Глаза» выше: сколько глаз и фазы по здоровью.</div>` : ''}
+                                ${own ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--dim); color:var(--dim); font-size:11px; line-height:1.5; white-space:normal;">Атаки ведёт сам босс — ива: плети, топот и коконы по актам. Глаза — только мишени: открыт один, остальные зажмурены. Всё — в разделах «Глаза» и «Атаки ивы» ниже, блоки атак здесь не нужны.</div>` : ''}
                                 ${problems.length ? `<div style="margin-bottom:12px; padding:8px; border-radius:4px; background:var(--panel2); border-left:3px solid var(--e1); color:var(--e1); font-size:11px; line-height:1.5; white-space:normal;">⚠️ ${problems.join('<br>⚠️ ')}</div>` : ''}
                                 <div class="phases-list">`;
 
@@ -1838,20 +1834,16 @@
         }
 
         // ---------- Третий босс, дерево: атакует сам, глазами ----------
-        // Те же числа, что стоят в префабе (TreeEyes). Ключа tree в гисте нет — показываем
-        // их, и первое же сохранение запишет. Фазы — по процентам здоровья, как у всех.
+        // Те же числа, что стоят в префабе (TreeEyes). Глаза не атакуют — лазер убран (06.10.2026),
+        // бьёт само дерево (блок «Атаки ивы»). Фазы по здоровью держат только «напёрстки».
         const TREE_DEFAULTS = {
-            eyes: 4, damagePerTick: 8, tickRate: 0.25, beamWidth: 1.8, pairLead: 16, fireArc: 20, hideHits: 3,
-            flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
+            eyes: 4, hideHits: 3, flinchShare: 0.08, flinchClosed: 4, noticeArc: 22, noticeTime: 3,
             phases: [
-                { phaseName: 'Стоят', startAtHpPercent: 100, endAtHpPercent: 70, reload: 2.2, patterns: ['Single', 'Burst'], gap: 0.5, aimTime: 1.2, lockTime: 0.4, fireTime: 1.6, sweepSpeed: 18, shuffleEvery: 0, diveAfterSalvo: false },
-                { phaseName: 'Напёрстки', startAtHpPercent: 70, endAtHpPercent: 35, reload: 1.4, patterns: ['Burst', 'Pair', 'Single'], gap: 0.45, aimTime: 1.0, lockTime: 0.35, fireTime: 1.6, sweepSpeed: 24, shuffleEvery: 0.7, diveAfterSalvo: false },
-                { phaseName: 'Засада', startAtHpPercent: 35, endAtHpPercent: 0, reload: 1.0, patterns: ['Pair', 'Burst', 'Sequence'], gap: 0.4, aimTime: 0.9, lockTime: 0.3, fireTime: 1.8, sweepSpeed: 30, shuffleEvery: 0, diveAfterSalvo: true },
+                { phaseName: 'Стоят', startAtHpPercent: 100, endAtHpPercent: 70, shuffleEvery: 0 },
+                { phaseName: 'Напёрстки', startAtHpPercent: 70, endAtHpPercent: 35, shuffleEvery: 0.7 },
+                { phaseName: 'Засада', startAtHpPercent: 35, endAtHpPercent: 0, shuffleEvery: 0 },
             ]
         };
-        // Узоры по-русски в поле, в гисте — как их читает игра
-        const TREE_PATTERNS = { 'одиночный': 'Single', 'двойной': 'Burst', 'очередь': 'Sequence', 'клещи': 'Pair' };
-        const TREE_PATTERNS_RU = Object.fromEntries(Object.entries(TREE_PATTERNS).map(([ru, en]) => [en, ru]));
 
         function treeParam(label, key, val, tooltip, step = '0.1') {
             return `<div style="flex: 1; min-width: 150px; margin-bottom: 12px; display: flex; flex-direction: column;">
@@ -1875,7 +1867,6 @@
             let expA = [];
             try { expA = JSON.parse(localStorage.getItem('expAttack') || '[]'); } catch (e) {}
             const open = expA.includes(foldId);
-            const pats = (p.patterns || []).map(x => TREE_PATTERNS_RU[x] || x).join(', ');
             return `<div class="phase-card tree-phase" style="padding-bottom:5px;">
                 <div class="header-row" data-foldid="${foldId}" style="cursor:pointer; border-bottom:none; margin-bottom:0; gap:8px;" onclick="togglePanelDisplay(this, 'expAttack', true)">
                     <span class="fold-icon" style="color:var(--e3); font-size:12px;">${open ? '▼' : '▶'}</span>
@@ -1890,27 +1881,9 @@
                     <div class="row" style="flex-wrap:wrap;">
                         ${treePhaseParam('Включается на HP %', 'startAtHpPercent', p.startAtHpPercent, 'С какого процента здоровья босса начинается фаза.', '1')}
                         ${treePhaseParam('Работает до HP %', 'endAtHpPercent', p.endAtHpPercent, 'До какого процента длится. Следующая фаза обычно начинается с этого же числа.', '1')}
-                        ${treePhaseParam('Перезарядка, сек', 'reload', p.reload, 'Пауза между залпами. Потом стреляет глаз, который смотрит на игрока; такого нет — ближний ныряет и выныривает прямо перед ним.')}
-                    </div>
-                    <div style="flex:1; margin-bottom:10px; display:flex; flex-direction:column;">
-                        <div class="lrow"><label>Узоры по кругу</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
-                        <input type="text" class="tp-patterns" value="${escapeHtml(pats)}" placeholder="одиночный, двойной">
-                        <div class="hint-text">Через запятую, идут по кругу. Одиночный — стреляет глаз перед игроком. Двойной — он же два раза подряд. Очередь — выстрелил и нырнул, следующий выныривает перед игроком и стреляет, до трёх раз. Клещи — двое выныривают по бокам от игрока и бьют разом, второй с упреждением по бегу. Неизвестное слово пропускается.</div>
-                    </div>
-                    <div class="row" style="flex-wrap:wrap;">
-                        ${treePhaseParam('Разрыв, сек', 'gap', p.gap, 'Пауза между глазами в «очереди» и между выстрелами «двойного».', '0.05')}
-                        ${treePhaseParam('Прицел, сек', 'aimTime', p.aimTime, 'Сколько глаз ведёт игрока тонкой линией перед выстрелом. Убежал из виду за это время — выстрел сорван.')}
-                        ${treePhaseParam('Замер, сек', 'lockTime', p.lockTime, 'Последние секунды прицела линия стоит и светлеет — окно отпрыгнуть. Входит в прицел.', '0.05')}
-                        ${treePhaseParam('Луч, сек', 'fireTime', p.fireTime, 'Сколько горит лазер.')}
-                        ${treePhaseParam('Догон, град/с', 'sweepSpeed', p.sweepSpeed, 'Как быстро горящий луч поворачивается за игроком. Игрок бегает на 40 — меньше, и от луча убегают; стоишь — попадёт.', '1')}
                     </div>
                     <div class="row" style="flex-wrap:wrap; align-items:flex-end;">
                         ${treePhaseParam('Перестановки, сек', 'shuffleEvery', p.shuffleEvery ?? 0, 'Напёрстки: раз в столько секунд перезарядки один глаз ныряет под кору и выныривает на другом месте — следи, где кто. 0 — глаза стоят.')}
-                        <div style="flex:1; min-width:150px; margin-bottom:10px; display:flex; flex-direction:column;">
-                            <div class="lrow"><label>Ныряет после залпа</label><button class="hint-btn" onclick="toggleHint(this)">i</button></div>
-                            <input type="checkbox" class="tp-dive" ${p.diveAfterSalvo ? 'checked' : ''} style="width:auto; align-self:flex-start;">
-                            <div class="hint-text">Засада: отстрелявший глаз сразу уходит под кору и выныривает за спиной ствола. Бить его надо, пока он целится.</div>
-                        </div>
                     </div>
                 </div>
             </div>`;
@@ -1923,12 +1896,7 @@
 
             let general = '';
             general += treeParam('Глаз', 'eyes', g('eyes'), 'Сколько глаз у дерева. Прочность каждого — «Прочность точки» выше, здоровье босса — их сумма. После ролика глаза встают по стволу на равные доли круга.', '1');
-            general += treeParam('Урон луча за тик', 'damagePerTick', g('damagePerTick'), 'Сколько снимает луч за один тик, пока игрок в нём. Здоровье игрока — 100, к пятнадцатой минуте он прокачан.', '1');
-            general += treeParam('Тик урона, сек', 'tickRate', g('tickRate'), 'Как часто луч бьёт, пока игрок в нём. Зацепило краем — один-два тика, стоял до конца — все.', '0.05');
-            general += treeParam('Ширина луча', 'beamWidth', g('beamWidth'), 'У земли, в единицах мира. Шире — труднее увернуться.');
-            general += treeParam('Стреляет в пределах, град', 'fireArc', g('fireArc'), 'Стреляет только глаз, перед которым игрок не дальше этого угла по кругу ствола. Такого нет — ближний ныряет и выныривает перед игроком. Шире — луч идёт вскользь, с бока ствола.', '1');
             general += treeParam('Прячется после попаданий', 'hideHits', g('hideHits'), 'Сколько попаданий по закрытому глазу — и он пугается: ныряет и выныривает за спиной ствола. Урона закрытый не берёт.', '1');
-            general += treeParam('Упреждение клещей, град', 'pairLead', g('pairLead'), 'На сколько градусов вперёд по бегу целится второй глаз в «клещах». Уходишь по инерции — попадаешь в него, спасает разворот.', '1');
             general += treeParam('Зажмурился от, доля', 'flinchShare', g('flinchShare'), 'Какую долю своего здоровья открытый глаз должен получить, чтобы зажмуриться. Целился — выстрел сорван. 0.08 — восьмая часть от ста.', '0.01');
             general += treeParam('Зажмурился на, сек', 'flinchClosed', g('flinchClosed'), 'Сколько подстреленный глаз лежит закрытым. Закрытый урона не берёт и не стреляет; стрелять в него — спугнуть.');
             general += treeParam('Замечает в пределах, град', 'noticeArc', g('noticeArc'), 'Пока дерево спит: приоткрытый глаз видит игрока, если тот перед ним не дальше этого угла. Выстрел в глаз будит сразу.', '1');
@@ -2051,7 +2019,7 @@
             });
             return `<div style="border-top:1px solid var(--line); padding-top:12px; margin-top:4px;">
                 <div style="font-size:12px; color:var(--dim); margin-bottom:4px;">🌳 Атаки ивы</div>
-                <div style="font-size:11px; color:var(--dim); line-height:1.5; margin-bottom:8px; white-space:normal;">Бой — четыре акта по выбитым глазам: плети узорами → «Кокон» → топот → «Завал» → связки → «Ярость» → последний акт. Открыт один глаз. Лазер выключен — числа луча и фазы выше на бой не влияют, кроме перестановок и пробуждения.</div>
+                <div style="font-size:11px; color:var(--dim); line-height:1.5; margin-bottom:8px; white-space:normal;">Бой — четыре акта по выбитым глазам: плети узорами → «Кокон» → топот → «Завал» → связки → «Ярость» → последний акт. Открыт один глаз — глаз акта. Фазы по здоровью выше держат только «напёрстки».</div>
                 ${html}
             </div>`;
         }
@@ -2155,19 +2123,7 @@
                 </div>`;
             }
 
-            if (attack.attackType === 'Laser') {
-                paramsHtml = `<div class="row" style="flex-wrap: wrap;">
-                    ${makeParam('Подготовка, сек', 'laserPreparationTime', attack.laserPreparationTime ?? 1.5, 'Сколько секунд показывается красная линия до выстрела.')}
-                    ${makeParam('Длительность, сек', 'laserDuration', attack.laserDuration ?? 5.0, 'Как долго лазер сжигает арену (в секундах).')}
-                    ${makeParam('Скорость вращения, °/сек', 'laserRotationSpeed', attack.laserRotationSpeed ?? 45, 'Скорость поворота луча (в градусах за секунду).')}
-                    ${makeParam('Ширина луча', 'laserBeamWidth', attack.laserBeamWidth ?? 3.0, 'Толщина лазерного луча.')}
-                    ${makeParam('Длина луча', 'laserBeamLength', attack.laserBeamLength ?? 40.0, 'Длина луча (обычно 40 хватает до края арены).')}
-                    ${makeParam('Лучей', 'laserBeamCount', attack.laserBeamCount ?? 1, 'Сколько лучей крутится (1=линия, 2=пропеллер, 4=крест).', 'number', '')}
-                    ${makeParam('Урон за касание', 'laserDamagePerTick', attack.laserDamagePerTick ?? 1, 'Сколько урона наносит одно касание лазера.', 'number', '')}
-                    ${makeParam('Частота урона, сек', 'laserTickRate', attack.laserTickRate ?? 0.5, 'Если игрок стоит в лазере, как часто (в сек) он получает урон.')}
-                </div>`;
-            } 
-            else if (attack.attackType === 'Rift') {
+            if (attack.attackType === 'Rift') {
                 paramsHtml = `<div class="row" style="flex-wrap: wrap;">
                     ${makeParam('Прицеливание, сек', 'riftPreparationTime', attack.riftPreparationTime ?? 2.0, 'Сколько секунд красная разметка ведёт игрока. Всё это время она ползёт за ним, и только в конце застывает.')}
                     ${makeParam('Замах, сек', 'riftStrikeDelay', attack.riftStrikeDelay ?? 0.5, 'Пауза от начала анимации удара до момента, когда из земли лезут шипы. Подгони под тот кадр, где кулак встречает землю.')}
@@ -2276,7 +2232,7 @@
 
         function addBoss() {
             if (!currentData.bosses) currentData.bosses = [];
-            currentData.bosses.push({ bossID: "Boss_1", spawnTime: 300, phases: [{ phaseName: "Блок 1", startAtHpPercent: 100, endAtHpPercent: 0, timeBetweenAttacks: 3, attackSequence: [{ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 }] }] });
+            currentData.bosses.push({ bossID: "Boss_1", spawnTime: 300, phases: [{ phaseName: "Блок 1", startAtHpPercent: 100, endAtHpPercent: 0, timeBetweenAttacks: 3, attackSequence: [{ attackType: "Rift" }] }] });
             render();
         }
         function addPhase(btn) {
@@ -2302,7 +2258,7 @@
                 startAtHpPercent: newStart,
                 endAtHpPercent: Math.max(0, Math.floor(newStart / 2)),
                 timeBetweenAttacks: 3,
-                attackSequence: [{ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 }]
+                attackSequence: [{ attackType: "Rift" }]
             });
             render();
         }
@@ -2312,7 +2268,7 @@
             let bossPanel = phasePanel.closest('.boss-panel');
             let bIdx = Array.from(bossPanel.parentNode.children).indexOf(bossPanel);
             let pIdx = Array.from(phasePanel.parentNode.children).indexOf(phasePanel);
-            currentData.bosses[bIdx].phases[pIdx].attackSequence.push({ attackType: "Laser", laserRotationSpeed: 45, laserBeamCount: 1 });
+            currentData.bosses[bIdx].phases[pIdx].attackSequence.push({ attackType: "Rift" });
             render();
         }
 
