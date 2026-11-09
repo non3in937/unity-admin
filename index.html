@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='164';
+        var VERSION='165';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -1136,6 +1136,13 @@
                + '<b>Начинать забег по этим настройкам</b></label>';
             h += '<div style="color:var(--dim); font-size:11px; padding-top:6px;">Пока галочка стоит, каждый забег из лобби («Играть») начинается отсюда, в любой сборке. Обучение на нём выключено, настоящий чекпоинт игрока не трогается. В лобби под циклом горит «ТЕСТ-СТАРТ». <b style="color:var(--e1)">Перед релизом снять.</b></div></div>';
 
+            // Счётчик кадров (FpsMeter в игре) — отдельно от тест-старта: нужен и в обычном забеге
+            h += '<div class="panel ts-block" style="border-color:' + (t.showFps ? 'var(--warn)' : 'var(--line)') + '">';
+            h += '<label style="display:flex; align-items:center; gap:10px; white-space:normal; font-size:15px; cursor:pointer; color:' + (t.showFps ? 'var(--warn)' : 'var(--txt)') + '">'
+               + '<input type="checkbox" id="ts_fps" ' + (t.showFps ? 'checked' : '') + ' onchange="tsChanged()" style="width:auto; margin:0;">'
+               + '<b>📊 Счётчик кадров на экране</b></label>';
+            h += '<div style="color:var(--dim); font-size:11px; padding-top:6px;">FPS и время кадра в левом верхнем углу, под ними — процессор и видеокарта, стройка травы, прогрев шейдеров и кнопки, что прячут слои мира (деревья, плющ, траву, растения, силуэты). Работает в любом забеге, не только в тест-старте; игра подхватывает при запуске. <b style="color:var(--e1)">Перед релизом снять.</b></div></div>';
+
             // Время и цикл
             h += '<div class="panel ts-block"><div class="ts-title">⏱ Время и цикл</div>';
             h += '<div class="row"><div style="flex:1"><label>Секунда старта</label><input type="number" step="1" min="0" id="ts_time" value="' + sec + '" oninput="tsTyping()" onchange="tsChanged()"></div>'
@@ -1208,6 +1215,7 @@
             if (!host || !host.firstChild || !currentData) return;
             let t = tsData();
             let on = document.getElementById('ts_on'); if (on) t.enabled = on.checked;
+            let fp = document.getElementById('ts_fps'); if (fp) t.showFps = fp.checked;
             let tm = document.getElementById('ts_time'); if (tm) t.time = Math.max(0, parseFloat(tm.value) || 0);
             let cy = document.getElementById('ts_cycle'); if (cy) t.cycle = parseInt(cy.value) || 0;
             let w1 = document.getElementById('ts_w1'); if (w1) t.weapon1 = w1.value;
