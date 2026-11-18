@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Просмотр моделей</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@500;600&display=swap">
+<style>
+/* layout: one screen — the 3D stage fills it, a slim bar of controls floats at the bottom */
+:root {
+  --bg: #d9dcd6;
+  --stage: #c9cdc5;
+  --fg: #1f2420;
+  --muted: #5d655e;
+  --chip: rgba(255,255,255,.78);
+  --chip-on: #3e5a43;
+  --chip-on-fg: #f3f5ef;
+  --line: rgba(31,36,32,.14);
+  --font-ui: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b1e1c; --stage: #242825; --fg: #e8ebe5; --muted: #9aa39b;
+  --chip: rgba(40,44,41,.82); --chip-on: #8fb394; --chip-on-fg: #142016; --line: rgba(232,235,229,.14); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1b1e1c; --stage: #242825; --fg: #e8ebe5; --muted: #9aa39b;
+  --chip: rgba(40,44,41,.82); --chip-on: #8fb394; --chip-on-fg: #142016; --line: rgba(232,235,229,.14); color-scheme: dark }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 14px var(--font-ui); overflow: hidden; }
+#stage { position: fixed; inset: 0; background: radial-gradient(120% 90% at 50% 35%, var(--stage), var(--bg)); touch-action: none; }
+#stage canvas { display: block; width: 100%; height: 100%; }
+#stage.drop { outline: 3px dashed var(--chip-on); outline-offset: -12px; }
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; pointer-events: auto; }
+button, label.btn {
+  font: 500 14px/1 var(--font-ui); color: var(--fg); background: var(--chip);
+  border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; cursor: pointer;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+label.btn.primary { background: var(--chip-on); color: var(--chip-on-fg); border-color: transparent; }
+button[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-fg); border-color: transparent; }
+button:focus-visible, label.btn:focus-within { outline: 2px solid var(--chip-on); outline-offset: 2px; }
+input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.hint { text-align: center; font: 12px/1.4 var(--font-data); color: var(--muted); }
+.info {
+  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px)); display: flex; justify-content: space-between; gap: 12px;
+  font: 12px/1.4 var(--font-data); color: var(--muted); pointer-events: none; letter-spacing: .02em;
+}
+.info > div { min-width: 0; overflow-wrap: anywhere; }
+.info b { color: var(--fg); font-weight: 600; font-family: var(--font-ui); font-size: 15px; letter-spacing: 0; }
+#status { text-align: right; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="info">
+  <div><b id="name">Нет модели</b><br><span id="meta">открой FBX, GLB или OBJ</span></div>
+  <div id="status"></div>
+</div>
+<div class="bar">
+  <div class="row">
+    <label class="btn primary" for="files">Открыть модель<input id="files" type="file" multiple></label>
+    <label class="btn" for="texfile">Текстура<input id="texfile" type="file"></label>
+    <button id="b-flat" aria-pressed="true">Плоский свет</button>
+    <button id="b-reset">Сбросить вид</button>
+  </div>
+  <div class="hint">FBX, GLB или OBJ; текстуру — вместе с моделью или кнопкой «Текстура»</div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+
+const stage = document.getElementById("stage");
+const statusEl = document.getElementById("status");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 2000);
+camera.position.set(3, 2, 4);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.screenSpacePanning = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f86, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(6, 10, 8); scene.add(sun);
+
+let current = null; let flat = true; let fit = null;
+
+// every mesh keeps its own map; flat = unlit (like Use Flat Lighting in Maya), lit = Lambert.
+// alphaTest cuts leaf cards out of their atlas; an opaque map (alpha 1 everywhere) is untouched by it
+function prepare(obj, override) {
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const src = Array.isArray(o.material) ? o.material : [o.material];
+    const mk = m => {
+      const map = override || (m && m.map) || null;
+      if (map) map.colorSpace = THREE.SRGBColorSpace;
+      const color = map ? 0xffffff : ((m && m.color) ? m.color.getHex() : 0xbfbfbf);
+      const alphaTest = map ? 0.5 : 0;
+      return { flat: new THREE.MeshBasicMaterial({ map, color, side: THREE.DoubleSide, alphaTest }),
+               lit: new THREE.MeshLambertMaterial({ map, color, side: THREE.DoubleSide, alphaTest }) };
+    };
+    o.userData.m = src.map(mk);
+  });
+}
+function applyMat(obj) {
+  obj.traverse(o => { if (o.isMesh && o.userData.m) {
+    const ms = o.userData.m.map(p => flat ? p.flat : p.lit); o.material = ms.length === 1 ? ms[0] : ms; } });
+}
+function show(obj, name, meta) {
+  if (current) scene.remove(current);
+  current = obj; applyMat(obj); scene.add(obj);
+  const box = new THREE.Box3().setFromObject(obj); const size = box.getSize(new THREE.Vector3()); const c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(size.length() / 2, 1e-3);
+  fit = { target: c.clone(), pos: c.clone().add(new THREE.Vector3(0.75, 0.35, 1).normalize().multiplyScalar(r * 2.6)) };
+  camera.near = r / 200; camera.far = r * 50; camera.updateProjectionMatrix();
+  controls.minDistance = r * 0.05; controls.maxDistance = r * 10; resetView();
+  let tris = 0; obj.traverse(o => { if (o.isMesh) { const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+  document.getElementById("name").textContent = name; document.getElementById("meta").textContent = meta;
+  statusEl.textContent = Math.round(tris).toLocaleString("ru-RU") + " треуг.";
+}
+function resetView() { if (!fit) return; camera.position.copy(fit.pos); controls.target.copy(fit.target); controls.update(); }
+
+// the chosen files: a model plus any textures; the model's texture paths resolve to them by file name
+async function openFiles(list) {
+  const files = [...list];
+  const model = files.find(f => /\.(fbx|glb|gltf|obj)$/i.test(f.name));
+  const images = files.filter(f => /\.(png|jpe?g|webp)$/i.test(f.name));
+  if (!model) {
+    if (images.length && current) return retexture(images[0]);
+    statusEl.textContent = images.length ? "сначала открой модель" : "нет файла модели: выбери .fbx, .glb или .obj"; return;
+  }
+  statusEl.textContent = "загрузка…";
+  const urls = {}; files.forEach(f => urls[f.name.toLowerCase()] = URL.createObjectURL(f));
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier(u => { const base = decodeURIComponent(u.split(/[\\/]/).pop()).toLowerCase(); return urls[base] || u; });
+  try {
+    const ext = model.name.split(".").pop().toLowerCase();
+    const buf = await model.arrayBuffer();
+    let obj;
+    if (ext === "fbx") obj = new FBXLoader(manager).parse(buf, "");
+    else if (ext === "obj") obj = new OBJLoader(manager).parse(new TextDecoder().decode(buf));
+    else { obj = (await new GLTFLoader(manager).parseAsync(buf, "")).scene; obj.userData.gltf = true; }
+    if (ext === "fbx") obj.scale.setScalar(0.01);        // Maya centimetres to metres
+    let override = null;
+    if (images.length === 1) {                           // one picture chosen with the model: it is the map
+      override = await new THREE.TextureLoader().loadAsync(urls[images[0].name.toLowerCase()]);
+      if (ext === "glb" || ext === "gltf") override.flipY = false;
+    }
+    await new Promise(r => setTimeout(r, 300));          // let referenced textures start loading
+    prepare(obj, override);
+    show(obj, model.name.replace(/\.[^.]+$/, ""), (images.length ? images.map(i => i.name).join(", ") : "без отдельной текстуры"));
+  } catch (e) { statusEl.textContent = "не открылось: " + (e.message || e); }
+}
+
+// a picture laid on the model already open, as its only map
+async function retexture(file) {
+  if (!current) { statusEl.textContent = "сначала открой модель"; return; }
+  if (!/\.(png|jpe?g|webp)$/i.test(file.name) && !/^image\//.test(file.type)) { statusEl.textContent = "это не картинка: нужен PNG, JPG или WEBP"; return; }
+  try {
+    const tex = await new THREE.TextureLoader().loadAsync(URL.createObjectURL(file));
+    if (current.userData.gltf) tex.flipY = false;
+    prepare(current, tex); applyMat(current);
+    document.getElementById("meta").textContent = file.name;
+  } catch (e) { statusEl.textContent = "текстура не открылась: " + (e.message || e); }
+}
+document.getElementById("files").addEventListener("change", e => { if (e.target.files.length) openFiles(e.target.files); e.target.value = ""; });
+document.getElementById("texfile").addEventListener("change", e => { if (e.target.files.length) retexture(e.target.files[0]); e.target.value = ""; });
+["dragenter", "dragover"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.add("drop"); }));
+["dragleave", "drop"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.remove("drop"); }));
+stage.addEventListener("drop", e => { if (e.dataTransfer.files.length) openFiles(e.dataTransfer.files); });
+const flatBtn = document.getElementById("b-flat");
+flatBtn.addEventListener("click", () => { flat = !flat; flatBtn.setAttribute("aria-pressed", String(flat)); if (current) applyMat(current); });
+document.getElementById("b-reset").addEventListener("click", resetView);
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>
