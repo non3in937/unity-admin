@@ -71,6 +71,7 @@ input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
     <label class="btn primary" for="files">Открыть модель<input id="files" type="file" multiple></label>
     <label class="btn" for="texfile">Текстура<input id="texfile" type="file"></label>
     <button id="b-flat" aria-pressed="true">Плоский свет</button>
+    <button id="b-wire" aria-pressed="false">Сетка</button>
     <button id="b-reset">Сбросить вид</button>
   </div>
   <div class="hint">FBX, GLB или OBJ; текстуру — вместе с моделью или кнопкой «Текстура»</div>
@@ -103,7 +104,23 @@ controls.enableDamping = true; controls.dampingFactor = 0.08; controls.screenSpa
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f86, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(6, 10, 8); scene.add(sun);
 
-let current = null; let flat = true; let fit = null;
+let current = null; let flat = true; let fit = null; let wire = false;
+
+// wireframe: triangle edges drawn over the shaded model, built once per model and only shown/hidden after.
+// polygonOffset pushes the surface back a little so the lines don't flicker through it
+const wireMat = new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.55, depthWrite: false });
+function applyWire(obj) {
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    if (wire && !o.userData.wire) {
+      const l = new THREE.LineSegments(new THREE.WireframeGeometry(o.geometry), wireMat);
+      l.raycast = () => {}; o.add(l); o.userData.wire = l;
+    }
+    if (o.userData.wire) o.userData.wire.visible = wire;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      m.polygonOffset = wire; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; m.needsUpdate = true; });
+  });
+}
 
 // every mesh keeps its own map; flat = unlit (like Use Flat Lighting in Maya), lit = Lambert.
 // alphaTest cuts leaf cards out of their atlas; an opaque map (alpha 1 everywhere) is untouched by it
@@ -125,6 +142,7 @@ function prepare(obj, override) {
 function applyMat(obj) {
   obj.traverse(o => { if (o.isMesh && o.userData.m) {
     const ms = o.userData.m.map(p => flat ? p.flat : p.lit); o.material = ms.length === 1 ? ms[0] : ms; } });
+  applyWire(obj);
 }
 function show(obj, name, meta) {
   if (current) scene.remove(current);
@@ -190,6 +208,8 @@ document.getElementById("texfile").addEventListener("change", e => { if (e.targe
 stage.addEventListener("drop", e => { if (e.dataTransfer.files.length) openFiles(e.dataTransfer.files); });
 const flatBtn = document.getElementById("b-flat");
 flatBtn.addEventListener("click", () => { flat = !flat; flatBtn.setAttribute("aria-pressed", String(flat)); if (current) applyMat(current); });
+const wireBtn = document.getElementById("b-wire");
+wireBtn.addEventListener("click", () => { wire = !wire; wireBtn.setAttribute("aria-pressed", String(wire)); if (current) applyWire(current); });
 document.getElementById("b-reset").addEventListener("click", resetView);
 
 function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
