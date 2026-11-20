@@ -370,7 +370,7 @@
         // Поднимается КАЖДОЙ правкой — по нему видно, что телефон догрузил свежий файл,
         // а не показывает старый из кэша. Счёт не с нуля нарочно: панель жила и до того,
         // как мы взялись за её вид.
-        var VERSION='166';
+        var VERSION='167';
 
         let token = null;
         try { token = localStorage.getItem('gh_token'); } catch (e) { console.warn('Хранилище недоступно, токен придётся вводить каждый раз'); }
@@ -617,16 +617,6 @@
             let g = document.getElementById('w_groundBlend');
             if (g) { let gv = clean(g.value); if (gv < 0.05 || gv > 1) return 'Переход земли — от 0.05 до 1: это доля клетки.'; }
             let fv = id => { let el = document.getElementById(id); return el ? clean(el.value) : null; };
-            let lf = fv('w_lodFull'), ls = fv('w_lodSimple'), lc = fv('w_lodCull');
-            if (lf !== null && ls !== null && lc !== null) {
-                if (lf < 50) return 'Полная детализация — не ближе 50: враги спавнятся на 195, их окружение должно быть видно целиком.';
-                if (ls <= lf) return 'Упрощение должно начинаться дальше полной детализации.';
-                if (lc <= ls) return 'Отсечение должно быть дальше упрощения.';
-                if (lc > 600) return 'Отсечение дальше 600 бессмысленно: сетка клеток кончается раньше, дальше пропсов просто нет.';
-                let lfd = fv('w_lodFade'); if (lfd < 0 || lfd > 1) return 'Растворение — от 0 до 1.';
-                let lb = fv('w_lodBias'); if (lb < 0.25 || lb > 4) return 'Множитель дальности — от 0.25 до 4.';
-                let ld = fv('w_lodDetail'); if (ld < 50) return 'Трава гаснет не ближе 50, иначе у ног будет голая земля.';
-            }
             let bs = fv('w_blSpeed');
             if (bs !== null) {
                 if (bs < 0.25 || bs > 6) return 'Темп клипа смерти от взрыва — от 0.25 до 6.';
@@ -645,13 +635,12 @@
         }
 
         const BLAST_IDS = ['w_blSpeed', 'w_blNear', 'w_blExtraNear', 'w_blExtraFar', 'w_blLiftNear', 'w_blLiftFar', 'w_blRandom'];
-        const LOD_IDS = ['w_lodFull', 'w_lodSimple', 'w_lodCull', 'w_lodFade', 'w_lodBias', 'w_lodDetail'];
 
         function validateWorld() {
             let msg = worldProblem();
             let w = document.getElementById('w_warn');
             if (w) { w.textContent = msg ? '⚠ ' + msg : ''; w.style.display = msg ? 'block' : 'none'; }
-            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(LOD_IDS).concat(BLAST_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
+            ['w_bEnd0', 'w_bEnd1', 'w_biomeBuffer', 'w_groundBlend'].concat(BLAST_IDS).forEach(id => { let el = document.getElementById(id); if (el) el.style.borderColor = msg ? 'var(--e1)' : ''; });
             return msg;
         }
 
@@ -867,12 +856,9 @@
                 // Туман и свечение у горизонта живут в игре (ассет атмосферы, стенд редактора тайлов),
                 // не в админке — старые ключи из гиста выбрасываем.
                 delete currentData.fog; delete currentData.glow;
-                if (document.getElementById('w_lodFull')) {
-                    currentData.lod = {
-                        fullDetail: fv('w_lodFull'), simplified: fv('w_lodSimple'), cull: fv('w_lodCull'),
-                        fade: fv('w_lodFade'), bias: fv('w_lodBias'), detail: fv('w_lodDetail')
-                    };
-                }
+                // Дальность пропсов (кольца LOD) — тоже в игре, в конфиге уровня, раздельно для
+                // деревьев и остальных пропсов (20.11.2026).
+                delete currentData.lod;
                 if (document.getElementById('w_blSpeed')) {
                     currentData.blast = {
                         speed: fv('w_blSpeed'), nearShare: fv('w_blNear'),
@@ -1422,9 +1408,6 @@
                 const t0 = et[0] || 60, t1 = et[1] || 120;
                 const buf = currentData.biomeBufferDuration || 15;
                 const gb = currentData.biomeGroundBlend || 1;
-                // Дальность пропсов: то, что стоит в префабах, пока из админки ничего не сохраняли.
-                const lod = Object.assign({ fullDetail: 200, simplified: 350, cull: 480, fade: 0.5, bias: 1, detail: 260 }, currentData.lod || {});
-                const lv = (k, def) => (typeof lod[k] === 'number' && lod[k] > 0) ? lod[k] : def;
                 // Смерть от взрыва: значения из кода (BlastDeathSettings), пока из админки не сохраняли
                 const bl = Object.assign({ speed: 2.5, nearShare: 0.6, extraNear: 4, extraFar: 1.5, liftNear: 2, liftFar: 0, random: 0.3 }, currentData.blast || {});
                 const fld = (id, val, label, hint, step = 1) => `<div style="flex:1; min-width:150px; display:flex; flex-direction:column;">
@@ -1444,19 +1427,6 @@
                     <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
                         ${fld('w_biomeBuffer', buf, 'Буферная зона, с', 'Сколько секунд вокруг смены биома идут тихие тайлы — земля без пропсов. Окно делится пополам: первая половина — пустой старый биом, вторая — пустой новый (для города это окраина), и только за ними новый биом целиком. Без перемешивания: пятна двух биомов вперемешку читались кашей.<br><br>Начало забега тоже тихое — первые полокна идёт пустое поле. Иначе игрок мог появиться прямо внутри ангара: ферма ставит его в центр клетки, а забег начинается в центре.<br><br>Клетка — 100 единиц, игрок бежит 15 единиц в секунду, так что 15 секунд — это около двух тихих клеток. Меньше — переход резче; больше — длиннее пустырь.<br><br>Ноль не применяется: гист без ключа отдаёт ноль, и буфер выключался бы сам. Нужен резкий переход — поставь 1.')}
                         ${fld('w_groundBlend', gb, 'Переход земли, доля клетки', 'Насколько плавно земля одного биома перетекает в землю другого — например, сухое поле в тёмный город. 1 — градиентом от центра одной клетки до центра соседней, это самый мягкий переход. 0.3 — узкая полоса у самого стыка. Меньше 0.05 не бывает: получилась бы ступенька, от которой переход и делался.<br><br>Работает на земле и заплатках между клетками. Трава, кусты и пропсы привязаны к своей клетке и не смешиваются — на стыке их прикрывает буферная зона.')}
-                    </div>
-                </div>
-                <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Дальность пропсов</div></div>
-                    <div class="row" style="margin-bottom:10px;"><div style="flex:1; color:var(--dim); font-size:13px;">Кольца вокруг игрока, в единицах мира: в каком виде пропсы рисуются вблизи, где упрощаются и где исчезают. Одинаковые для всех пропсов — дом и гидрант меняются на одних расстояниях. Враги спавнятся на 195.</div></div>
-                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
-                        ${fld('w_lodFull', lv('fullDetail', 200), 'Полная детализация до, ед.', 'До этого расстояния пропс в полном виде (LOD0). Держи не ближе спавна врагов — 195: всё, что рядом с ними, должно быть видно целиком.', 10)}
-                        ${fld('w_lodSimple', lv('simplified', 350), 'Упрощение до, ед.', 'До этого расстояния — первое упрощение (LOD1), дальше второе (LOD2).<br><br>Пока LOD1 и LOD2 — копии полного вида, и это число на картинку не влияет. Заработает, когда в уровни лягут облегчённые модели.', 10)}
-                        ${fld('w_lodCull', lv('cull', 480), 'Отсечение, ед.', 'Дальше этого пропс не рисуется. Сетка клеток кончается на 400–570 единицах, так что дальше 600 ставить бессмысленно: там пропсов просто нет.<br><br>Ближе — дешевле и мир теснее; дальше — пропсы выходят из тумана раньше.', 10)}
-                    </div>
-                    <div class="row" style="margin-bottom:10px; gap:10px; flex-wrap:wrap;">
-                        ${fld('w_lodFade', lv('fade', 0.5), 'Растворение, 0..1', 'На какой доле последнего кольца пропс проявляется из пустоты. 0 — появляется разом, 1 — растворяется на всём кольце.', 0.05)}
-                        ${fld('w_lodBias', lv('bias', 1), 'Множитель дальности', 'Сдвигает все кольца разом: 1 — как задано выше, 1.5 — всё в полтора раза дальше, 0.75 — ближе. Быстрый рычаг, если на телефоне тяжело или, наоборот, мир кажется пустым.', 0.05)}
-                        ${fld('w_lodDetail', lv('detail', 260), 'Трава гаснет на, ед.', 'Трава, подстилка и бурьян гаснут отдельно и раньше пропсов: вдали их не разобрать в тумане, а рисуется их много.', 10)}
                     </div>
                 </div>
                 <div class="upgrade-card player-card"><div class="card-header"><div class="card-title">Смерть от взрыва</div></div>
